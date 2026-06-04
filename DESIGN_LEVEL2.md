@@ -143,7 +143,7 @@ Response:
     - batch pipeline
     - should NOT run in Level 2 query path
 
-#🔹 RAG-service (NEW, Level 2 core)
+🔹 RAG-service (NEW, Level 2 core)
     - takes query
     - calls embedding-service
     - queries OpenSearch
@@ -153,6 +153,7 @@ Response:
     - routing only
     - no ML logic
     - future auth layer lives here
+
 
 
 ## 🚀 Level 2 system flow (final mental model)
