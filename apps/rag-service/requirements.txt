@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+clickhouse-driver
+opensearch-py
+boto3

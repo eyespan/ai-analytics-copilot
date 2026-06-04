@@ -1,0 +1,9 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY scripts/opensearch/init_index.py /app/init_index.py
+
+RUN pip install opensearch-py
+
+CMD ["python", "init_index.py"]
