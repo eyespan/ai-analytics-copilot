@@ -63,11 +63,13 @@ POST /embed
 
 ```bash
 make up
+```
 
 2. Verify services
 
 ```bash
 docker-compose ps
+```
 
 Expected:
 
@@ -81,7 +83,7 @@ opensearch → healthy
 
 ```bash
 docker-compose run indexer-service
-
+```
 
 Test Embedding Service
 
@@ -92,7 +94,7 @@ curl http://localhost:8002/health
 curl -X POST http://localhost:8002/embed \
 -H "Content-Type: application/json" \
 -d '{"text": "hello world"}'
-
+```
 
 Test OpenSearch
 
@@ -100,7 +102,7 @@ Test OpenSearch
 curl -k -u "admin:Opensearch2026!Aa" \
 "https://localhost:9200/_cat/indices?v"
 
-
+```
 Test Search
 ```bash
 curl -k -u "admin:Opensearch2026!Aa" \
@@ -114,7 +116,7 @@ curl -k -u "admin:Opensearch2026!Aa" \
     }
   }
 }'
-
+```
 
 Environment Variables
 
@@ -124,13 +126,13 @@ Indexer Service
 CLICKHOUSE_HOST=clickhouse
 CLICKHOUSE_USER=admin
 CLICKHOUSE_PASSWORD=admin123
-
+```
 
 Embedding Service
 
 ```bash
 RUN_ONCE=true
-
+```
 ⚠️ Known Limitations (Level 1)
 - Uses BM25 keyword search (no vector search yet)
 - No semantic similarity (embeddings stored but not queried)
