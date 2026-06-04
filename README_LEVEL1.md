@@ -15,24 +15,17 @@ The system extracts GitHub repository data, generates embeddings, and indexes do
 ## 🧱 Architecture
 
 
-            +--------------------+
-            |  ClickHouse DB     |
-            | github.github_events
-            +---------+----------+
-                      |
-                      v
-            +--------------------+
-            | indexer-service    |
-            | (Python pipeline)  |
-            +---------+----------+
-                      |
-      +---------------+----------------+
-      |                                |
-      v                                v
-+--------------------+ +----------------------+
-| embedding-service | | OpenSearch |
-| FastAPI + SBERT | | github-repos index |
-+--------------------+ +----------------------+
+```mermaid
+flowchart TD
+    CH[(ClickHouse DB\ngithub.github_events)]
+    IDX[indexer-service\nPython pipeline]
+    EMB[embedding-service\nFastAPI + SBERT]
+    OS[(OpenSearch\ngithub-repos index)]
+
+    CH --> IDX
+    IDX --> EMB
+    IDX --> OS
+```
 
 
 
