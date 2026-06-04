@@ -14,6 +14,14 @@ The system extracts GitHub repository data, generates embeddings, and indexes do
 
 ## 🧱 Architecture
 
+ClickHouse → source of GitHub repo data
+Embedding Service (FastAPI + sentence-transformers)
+Indexer Service (ClickHouse → Embeddings → OpenSearch)
+OpenSearch → vector + keyword search storage
+API Gateway → entry point (FastAPI)
+RAG Service → query layer
+
+1. Offline / Ingestion Layer (your current diagram)
 
 ```mermaid
 flowchart TD
@@ -26,12 +34,38 @@ flowchart TD
     IDX --> EMB
     IDX --> OS
 ```
+✔ This is perfect for Level 1 “data pipeline”
 
+2. Online / Query Layer (add this separately)
 
+```mermaid
+flowchart TD
+    API[API Gateway\nFastAPI :8000]
+    RAG[RAG Service\nFastAPI :8001]
+    EMB[embedding-service\nFastAPI + SBERT]
+    OS[(OpenSearch\ngithub-repos index)]
 
----
+    API --> RAG
+    RAG --> EMB
+    RAG --> OS
+```
+
+✔ This represents:
+
+- user queries
+- embedding search
+- retrieval from OpenSearch
+
 
 ## ⚙️ Services
+
+| Service           | URL                                              |
+| ----------------- | ------------------------------------------------ |
+| API Gateway       | [http://localhost:8000](http://localhost:8000)   |
+| Embedding Service | [http://localhost:8002](http://localhost:8002)   |
+| ClickHouse        | [http://localhost:8123](http://localhost:8123)   |
+| OpenSearch        | [https://localhost:9200](https://localhost:9200) |
+
 
 ### 1. ClickHouse
 - Stores GitHub repository metadata
@@ -77,6 +111,11 @@ embedding-service → Up
 indexer-service → Exited 0 (batch job)
 clickhouse → healthy
 opensearch → healthy
+
+```bash
+curl http://localhost:8002/health
+curl http://localhost:8000/health
+```
 
 
 3. Run ingestion manually (if needed)
@@ -133,6 +172,17 @@ Embedding Service
 ```bash
 RUN_ONCE=true
 ```
+⚠️ Known behavior (Level 1)
+- Indexer is batch-run (not streaming)
+- Embedding service is CPU-based (slow but stable)
+- OpenSearch security warnings ignored in dev
+- ClickHouse must be healthy before indexer starts
+
+🎯 Success criteria
+- Embedding service responds
+- Indexer successfully processes rows
+- OpenSearch index github-repos contains embeddings
+
 ⚠️ Known Limitations (Level 1)
 - Uses BM25 keyword search (no vector search yet)
 - No semantic similarity (embeddings stored but not queried)
