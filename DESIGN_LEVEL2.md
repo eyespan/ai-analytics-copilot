@@ -1,4 +1,4 @@
-# AI Analytics Copilot — Level 2 (Keyword + Embedding Ingestion Pipeline + Query / RAG Retrieval)
+# AI Analytics Copilot — Level 2: Semantic Search & RAG Retrieval Layer 
 
 ##  🧠 LEVEL 2 GOAL (what we are building)
 
@@ -15,6 +15,8 @@ Level 2 adds this missing piece:
 “Ask a question → retrieve relevant repos → return ranked results”
 
 This is a RAG retrieval system (no LLM generation yet, just retrieval).
+
+i.e. Semantic Search & RAG Retrieval Layer which is Query-Time Embeddings & Retrieval System.
 
 
 ## 🧩 LEVEL 2 ARCHITECTURE (clean separation)
