@@ -4,9 +4,9 @@
 
 In Level1 we built:
 
-✔ Ingest GitHub data
-✔ Generate embeddings
-✔ Store in OpenSearch
+- ✔ Ingest GitHub data
+- ✔ Generate embeddings
+- ✔ Store in OpenSearch
 
 That’s offline indexing
 
@@ -134,22 +134,22 @@ Response:
 
 ## 🧱 Service responsibilities (clean separation)
 
-### 🔹 embedding-service
+🔹 embedding-service
     - input: text
     - output: vector
     - stateless
 
-### 🔹 indexer-service (Level 1 only)
+🔹 indexer-service (Level 1 only)
     - batch pipeline
     - should NOT run in Level 2 query path
 
-### 🔹 RAG-service (NEW, Level 2 core)
+#🔹 RAG-service (NEW, Level 2 core)
     - takes query
     - calls embedding-service
     - queries OpenSearch
     - returns ranked results
 
-### 🔹 API Gateway
+🔹 API Gateway
     - routing only
     - no ML logic
     - future auth layer lives here
