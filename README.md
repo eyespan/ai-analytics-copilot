@@ -13,14 +13,14 @@ startup order
 9. API Gateway
 
 
-yohannesm@Yohanness-MacBook-Pro-2 ai-analytics-copilot % aws dynamodb list-tables \
+ % aws dynamodb list-tables \
   --endpoint-url http://localhost:8005 \
   --region eu-west-2
 {
     "TableNames": []
 }
 
-yohannesm@Yohanness-MacBook-Pro-2 ai-analytics-copilot % docker-compose ps
+ % docker-compose ps
              Name                            Command                  State                                     Ports                               
 ----------------------------------------------------------------------------------------------------------------------------------------------------
 ai-analytics-copilot_seed-job_1   python ingest_clickhouse.py      Exit 0                                                                           
@@ -33,7 +33,7 @@ opensearch                        ./opensearch-docker-entryp ...   Up (healthy) 
 opensearch-init                   python init_index.py             Exit 0                                                                           
 rag-service                       uvicorn main:app --host 0. ...   Up             0.0.0.0:8001->8001/tcp                                            
 
-yohannesm@Yohanness-MacBook-Pro-2 ai-analytics-copilot % curl http://localhost:8002/health
+% curl http://localhost:8002/health
 {"status":"ok"}%                                 
 
 
