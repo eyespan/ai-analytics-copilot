@@ -1,4 +1,6 @@
-🧠 LEVEL 2 GOAL (what we are building)
+# AI Analytics Copilot — Level 2 (Keyword + Embedding Ingestion Pipeline + Query / RAG Retrieval)
+
+##  🧠 LEVEL 2 GOAL (what we are building)
 
 In Level1 we built:
 
@@ -15,7 +17,7 @@ Level 2 adds this missing piece:
 This is a RAG retrieval system (no LLM generation yet, just retrieval).
 
 
-🧩 LEVEL 2 ARCHITECTURE (clean separation)
+## 🧩 LEVEL 2 ARCHITECTURE (clean separation)
 
 We split into 3 layers:
 
@@ -70,19 +72,19 @@ RAG Service
 4. Return ranked results
 
 
-🧠 What Level 2 DOES NOT include (important boundaries)
+## 🧠 What Level 2 DOES NOT include (important boundaries)
 
 We are explicitly NOT doing yet:
 
-❌ LLM response generation
-❌ multi-step agents
-❌ reranking models
-❌ caching layer
-❌ streaming ingestion
+- ❌ LLM response generation
+- ❌ multi-step agents
+- ❌ reranking models
+- ❌ caching layer
+- ❌ streaming ingestion
 
 We will Keep it focused.
 
-🔍 OpenSearch becomes our “vector database”
+## 🔍 OpenSearch becomes our “vector database”
 
 At Level 2, OpenSearch is used for:
 
@@ -106,7 +108,7 @@ Query pattern we’ll implement:
 }
 ```
 
-🧭 API DESIGN (Level 2 core contract)
+## 🧭 API DESIGN (Level 2 core contract)
 
 API Gateway
 POST /search
@@ -130,30 +132,30 @@ Response:
 ```
 
 
-🧱 Service responsibilities (clean separation)
+## 🧱 Service responsibilities (clean separation)
 
-🔹 embedding-service
+### 🔹 embedding-service
     - input: text
     - output: vector
     - stateless
 
-🔹 indexer-service (Level 1 only)
+### 🔹 indexer-service (Level 1 only)
     - batch pipeline
     - should NOT run in Level 2 query path
 
-🔹 RAG-service (NEW, Level 2 core)
+### 🔹 RAG-service (NEW, Level 2 core)
     - takes query
     - calls embedding-service
     - queries OpenSearch
     - returns ranked results
 
-🔹 API Gateway
+### 🔹 API Gateway
     - routing only
     - no ML logic
     - future auth layer lives here
 
 
-🚀 Level 2 system flow (final mental model)
+## 🚀 Level 2 system flow (final mental model)
 
 ```mermaid
 flowchart LR
@@ -169,25 +171,25 @@ flowchart LR
     R --> G --> U
 ```
 
-🎯 Level 2 success criteria
+## 🎯 Level 2 success criteria
 
 We are done when:
 
-✔ We can send a query
-✔ It is embedded in real-time
-✔ OpenSearch returns nearest vectors
-✔ API returns ranked GitHub repos
+- ✔ We can send a query
+- ✔ It is embedded in real-time
+- ✔ OpenSearch returns nearest vectors
+- ✔ API returns ranked GitHub repos
 
 That’s a real search engine.
 
-⚠️ Key design decision (important)
+## ⚠️ Key design decision (important)
 
 We are currently doing:
-
+```
 embeddings at ingestion time
-
+```
 Level 2 adds:
-
+```
 embeddings at query time
-
+```
 This is the defining difference between Level 1 and Level 2
