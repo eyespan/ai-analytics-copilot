@@ -356,7 +356,9 @@ rag-service/
 ```
 
 ## Module Responsibilities
+
 ### retrieval/bm25.py
+
 Responsible for:
 ```bash
 query
@@ -367,7 +369,9 @@ results
 ```
 
 Example:
-**`search_bm25(query)`**
+```bash
+search_bm25(query)
+```
 
 
 
