@@ -208,3 +208,169 @@ We are done when:
 - ✔ Query embedding is used at runtime
 - ✔ Top-K merged results are returned
 - ✔ LLM generates final answer from retrieved context
+
+
+
+## Detailed design Level3
+
+### Level 3 branch structure (services + new modules)
+
+Since Level 2 is stable, Level 3 should be an evolution, not a rewrite.
+
+#### 🎯 Level 3 Goal - recap
+
+Transform:
+```bash
+User Query
+    ↓
+BM25 Search
+    ↓
+Results
+```
+
+into: 
+
+```bash
+User Query
+    ↓
+Hybrid Retrieval
+(BM25 + Vector Search)
+    ↓
+Rank Fusion
+    ↓
+LLM Generation
+    ↓
+Natural Language Answer
+```
+
+#### 🏗️ Proposed Level 3 Branch Structure
+
+We should avoid introducing new microservices unless they provide clear value.
+
+##### Existing Services
+
+```bash
+apps/
+
+├── api-gateway/
+├── rag-service/
+├── embedding-service/
+├── indexer-service/
+```
+These remain.
+
+### Level 3 Responsibilities
+
+#### 🔹 embedding-service
+No major changes.
+
+**Current**
+```bash
+text
+ ↓
+embedding
+```
+
+**Used by**
+- indexer-service
+- rag-service
+
+#### 🔹 indexer-service
+Minor upgrade.
+
+**Current**
+```bash
+ClickHouse
+   ↓
+embedding-service
+   ↓
+OpenSearch
+```
+**Level 3**
+Same flow, but OpenSearch index must support:
+```bash
+description
+repo_name
+language
+embedding_vector
+```
+No LLM logic here.
+
+### 🔹 rag-service
+This becomes the heart of Level 3.
+
+**Current**
+```bash
+/search
+   ↓
+BM25
+   ↓
+results
+```
+
+**Level 3**
+
+```bash
+/search
+   ↓
+query embedding
+   ↓
+BM25 retrieval
+   ↓
+Vector retrieval
+   ↓
+Fusion
+   ↓
+  LLM
+   ↓
+Answer
+```
+
+## Recommended Internal Structure
+
+Inside:
+```bash
+apps/rag-service/
+```
+
+create:
+```bash
+rag-service/
+
+├── main.py
+
+├── retrieval/
+│   ├── bm25.py
+│   ├── vector.py
+│   └── hybrid.py
+
+├── llm/
+│   └── generator.py
+
+├── models/
+│   └── schemas.py
+
+└── clients/
+    ├── opensearch_client.py
+    └── embedding_client.py
+```
+
+## Module Responsibilities
+### retrieval/bm25.py
+Responsible for:
+```bash
+query
+  ↓
+OpenSearch multi_match
+  ↓
+results
+```
+
+Example:
+</python>
+search_bm25(query)
+</>
+
+
+
+
