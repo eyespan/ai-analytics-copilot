@@ -80,7 +80,7 @@ flowchart TD
    - Executes BM25 search using OpenSearch
    - Returns top-K ranked repositories
 
-## 📡  PI Endpoints
+## 📡  API Endpoints
 
 🔹 POST /search
 
