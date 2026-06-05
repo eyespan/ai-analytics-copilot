@@ -158,3 +158,53 @@ Final Response
 
 #### Response:
 
+```json
+{
+  "query": "best deep learning frameworks",
+  "results": [
+    {
+      "repo_name": "pytorch/pytorch",
+      "score": 0.92,
+      "reason": "Strong deep learning ecosystem with dynamic computation graph"
+    }
+  ],
+  "answer": "PyTorch and TensorFlow are the leading frameworks..."
+}
+```
+
+## 🧠 Key Design Shift (VERY IMPORTANT)
+### Level 2
+- OpenSearch = keyword search engine (BM25 only)
+### Level 3
+- OpenSearch = hybrid retrieval engine
+    - BM25 (lexical)
+    - k-NN (semantic)
+
+👉 It is no longer “just search”
+👉 It becomes a **retrieval brain**
+
+
+## ⚠️ Critical Design Decision (Level 3)
+
+We are now moving from “search engine” → “retrieval-augmented generation system”.
+
+OpenSearch is no longer just a datastore:
+it becomes a hybrid retrieval layer combining:
+
+- lexical relevance (BM25)
+- semantic similarity (vector k-NN)
+
+The RAG service becomes the orchestration layer that:
+- retrieves
+- ranks
+- generates
+
+## 🚀 Level 3 success criteria
+
+We are done when:
+
+- ✔ BM25 + vector search both work in OpenSearch
+- ✔ Hybrid ranking is implemented
+- ✔ Query embedding is used at runtime
+- ✔ Top-K merged results are returned
+- ✔ LLM generates final answer from retrieved context
