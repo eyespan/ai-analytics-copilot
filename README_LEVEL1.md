@@ -192,18 +192,23 @@ RUN_ONCE=true
 
 🎯 What Level 1 Achieves
 
-✔ Distributed microservice ingestion pipeline
-✔ Embedding generation service
-✔ OpenSearch indexing
-✔ ClickHouse integration
-✔ End-to-end data flow validated
+- ✔ Distributed microservice ingestion pipeline
+- ✔ Embedding generation service
+- ✔ OpenSearch indexing
+- ✔ ClickHouse integration
+- ✔ End-to-end data flow validated
 
 
 🚀 Next Step: Level 2
 
 Level 2 will introduce:
 
-- kNN vector search in OpenSearch
-- semantic retrieval using embeddings
-- query embedding pipeline
-- RAG-ready architecture
+- OpenSearch BM25 full-text search using `multi_match`
+- keyword-based retrieval over repository metadata
+- search across fields such as:
+  - description
+  - repo_name
+  - language
+- ranked results using OpenSearch relevance scoring
+
+This stage focuses on building a solid **lexical search foundation** before introducing semantic or hybrid retrieval in later levels.
