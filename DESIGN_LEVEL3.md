@@ -367,9 +367,7 @@ results
 ```
 
 Example:
-</python>
-search_bm25(query)
-</>
+**`search_bm25(query)`**
 
 
 
