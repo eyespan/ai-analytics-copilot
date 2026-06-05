@@ -584,25 +584,28 @@ Answer
 Inside rag-service:
 
 ```bash
-rag-service/
+apps/
+└── rag-service/
+    ├── main.py
 
-├── main.py
+    ├── retrieval/
+    │   ├── bm25.py
+    │   ├── vector.py
+    │   └── hybrid.py
 
-├── retrieval/
-│   ├── bm25.py
-│   ├── vector.py
-│   └── hybrid.py
+    ├── llm/
+    │   ├── generator.py
+    │   └── prompts.py
 
-├── llm/
-│   |── ollama_client.py
-|   └── prompts.py
+    ├── models/
+    │   └── schemas.py
 
-├── models/
-│   └── schemas.py
+    ├── clients/
+    │   ├── opensearch_client.py
+    │   ├── embedding_client.py
+    │   └── ollama_client.py
 
-└── clients/
-    ├── opensearch_client.py
-    └── embedding_client.py
+    └── config.py
 ```
 
 ### Prompt Construction
