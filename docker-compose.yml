@@ -114,6 +114,7 @@ services:
       CLICKHOUSE_USER: admin
       CLICKHOUSE_PASSWORD: admin123
       CLICKHOUSE_DB: github
+      EMBEDDING_SERVICE: http://embedding-service:8002/embed
       OPENSEARCH_HOST: opensearch
     depends_on:
       - clickhouse

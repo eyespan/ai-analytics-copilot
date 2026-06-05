@@ -1,8 +1,10 @@
-# AI Analytics Copilot — Level 2: Semantic Search & RAG Retrieval Layer 
+# AI Analytics Copilot — Level 2: Keyword (BM25) Retrieval (RAG layer) + Embedding Ingestion Pipeline
+
+
 
 ##  🧠 LEVEL 2 GOAL (what we are building)
 
-In Level1 we built:
+In Level1 we built: 
 
 - ✔ Ingest GitHub data
 - ✔ Generate embeddings
@@ -10,16 +12,44 @@ In Level1 we built:
 
 That’s offline indexing
 
+Level 2 implements BM25-based retrieval over repository metadata stored in OpenSearch. Repository embeddings are generated and stored during ingestion, preparing the platform for semantic vector search in Level 3.
+
 Level 2 adds this missing piece:
 
 “Ask a question → retrieve relevant repos → return ranked results”
 
-This is a RAG retrieval system (no LLM generation yet, just retrieval).
-
-i.e. Semantic Search & RAG Retrieval Layer which is Query-Time Embeddings & Retrieval System.
+This is a RAG retrieval system (no LLM generation yet, just retrieval). i.e. Keyword Search & RAG Retrieval Layer which is Query-Time Embeddings & Retrieval System.
 
 
 ## 🧩 LEVEL 2 ARCHITECTURE (clean separation)
+
+```mermaid
+flowchart LR
+
+    CH[(ClickHouse)]
+
+    IDX[indexer-service]
+
+    EMB[embedding-service
+    FastAPI + SBERT]
+
+    OS[(OpenSearch)]
+
+    USER[User Query]
+
+    RAG[rag-service]
+
+    CH --> IDX
+
+    IDX --> EMB
+    EMB --> IDX
+
+    IDX --> OS
+
+    USER --> RAG
+    RAG --> OS
+    OS --> RAG  
+```
 
 We split into 3 layers:
 
@@ -46,12 +76,10 @@ flowchart TD
     USER[User Query]
     API[API Gateway :8000]
     RAG[RAG Service :8001]
-    EMBQ[Embedding Service :8002]
     OS[(OpenSearch)]
 
     USER --> API
     API --> RAG
-    RAG --> EMBQ
     RAG --> OS
 ```
 
@@ -65,19 +93,18 @@ API Gateway
    ↓
 RAG Service
    ↓
-1. Convert query → embedding (embedding-service)
+BM25 Search in OpenSearch
    ↓
-2. Vector search in OpenSearch
+Retrieve Top K Repositories
    ↓
-3. Retrieve top K repos
-   ↓
-4. Return ranked results
+Return Ranked Results
 
 
 ## 🧠 What Level 2 DOES NOT include (important boundaries)
 
 We are explicitly NOT doing yet:
 
+- ❌ Semantic vector search
 - ❌ LLM response generation
 - ❌ multi-step agents
 - ❌ reranking models
@@ -86,27 +113,30 @@ We are explicitly NOT doing yet:
 
 We will Keep it focused.
 
-## 🔍 OpenSearch becomes our “vector database”
+## 🔍 OpenSearch acts us our search engine / search index.
 
 At Level 2, OpenSearch is used for:
 
-- k-NN similarity search
-- hybrid ranking (optional later)
-- filtering (language, stars, etc.)
+- Full-text search engine
+- Inverted index
+- BM25 ranking engine
+- Document store
 
 Query pattern we’ll implement:
 
 ```json
 {
-  "size": 5,
-  "query": {
-    "knn": {
-      "embedding": {
-        "vector": [...],
-        "k": 5
-      }
+    "size": 5,
+    "query": {
+        "multi_match": {
+            "query": query,
+            "fields": [
+                "description",
+                "repo_name",
+                "language"
+             ]
+        }
     }
-  }
 }
 ```
 
@@ -137,62 +167,119 @@ Response:
 ## 🧱 Service responsibilities (clean separation)
 
 🔹 embedding-service
-    - input: text
-    - output: vector
-    - stateless
+   - input: text
+   - output: dense embedding vector (SBERT)
+   - stateless
 
 🔹 indexer-service (Level 1 only)
-    - batch pipeline
-    - should NOT run in Level 2 query path
+   - batch ingestion pipeline (ClickHouse → OpenSearch)
+   - generates embeddings for documents
+   - must NOT be used in query-time retrieval path
 
-🔹 RAG-service (NEW, Level 2 core)
-    - takes query
-    - calls embedding-service
-    - queries OpenSearch
-    - returns ranked results
+🔹 RAG-service (Level 2 core)
+   - receive user query
+   - execute BM25 keyword search over OpenSearch repository index
+   - return top matching repositories
 
 🔹 API Gateway
-    - routing only
-    - no ML logic
-    - future auth layer lives here
+   - request routing only
+   - no ML / retrieval logic
+   - future auth, rate limiting, observability layer
 
 
 
 ## 🚀 Level 2 system flow (final mental model)
 
 ```mermaid
-flowchart LR
-    U[User]
-    G[API Gateway]
-    R[RAG Service]
-    E[Embedding Service]
-    O[OpenSearch]
+sequenceDiagram
 
-    U --> G --> R
-    R --> E
-    R --> O
-    R --> G --> U
+    participant User
+    participant RAG
+    participant OS
+
+    User->>RAG: Search Query
+
+    RAG->>OS: BM25 Keyword Search
+
+    OS-->>RAG: Top Matches
+
+    RAG-->>User: Search Results
 ```
+
+
+## Level 2 Deliverables
+
+✅ ClickHouse ingestion
+
+✅ Embedding generation using SBERT
+
+✅ Embedding FastAPI service
+
+✅ OpenSearch document indexing
+
+✅ Duplicate prevention via repo_name IDs
+
+✅ BM25 keyword retrieval API
+
+✅ End-to-end retrieval pipeline
+
+✅ Embeddings persisted for future semantic search
+
 
 ## 🎯 Level 2 success criteria
 
 We are done when:
 
-- ✔ We can send a query
-- ✔ It is embedded in real-time
-- ✔ OpenSearch returns nearest vectors
-- ✔ API returns ranked GitHub repos
+- ✔ We can send a natural language query to the RAG service
+- ✔ OpenSearch performs BM25 full-text search using multi_match
+- ✔ Queries are matched against repository metadata fields (description, repo_name, language)
+- ✔ Top-K relevant GitHub repositories are returned
+- ✔ Results are ranked using OpenSearch relevance scoring
+- ✔ End-to-end flow works: Query → OpenSearch → Ranked results API
 
 That’s a real search engine.
 
 ## ⚠️ Key design decision (important)
 
-We are currently doing:
-```
-embeddings at ingestion time
-```
-Level 2 adds:
-```
-embeddings at query time
-```
-This is the defining difference between Level 1 and Level 2
+## ⚠️ Key design decision (Level 2)
+
+Level 2 is intentionally designed as a **lexical retrieval system using OpenSearch BM25**, not a semantic or vector-based search system.
+
+Even though embeddings are generated during ingestion (for future use), **they are not used in the query-time retrieval path in Level 2**.
+
+---
+
+### 🔴 Critical decision
+
+- OpenSearch is used as a **full-text search engine (BM25 via `multi_match`)**
+- Query-time retrieval is based purely on:
+  - `description`
+  - `repo_name`
+  - `language`
+- Ranking is driven by **lexical relevance scoring (BM25) only**
+
+---
+
+### 🧠 Why this matters
+
+- Keeps Level 2 simple, deterministic, and debuggable
+- Separates concerns clearly:
+  - ingestion = enrichment (embeddings optional)
+  - retrieval = keyword search
+- Avoids premature complexity of hybrid or vector search systems
+- Establishes a strong baseline before introducing semantic retrieval in Level 3
+
+---
+
+### 🚫 What Level 2 is NOT
+
+- Not a vector search system
+- Not using k-NN similarity search
+- Not a full semantic RAG system
+- Not combining BM25 + embeddings (that comes later)
+
+---
+
+### 🟢 Outcome
+
+Level 2 acts as a **traditional search-powered retrieval layer**, providing fast and explainable results, forming the foundation for future semantic and hybrid RAG upgrades.
