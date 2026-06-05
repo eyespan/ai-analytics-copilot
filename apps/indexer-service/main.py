@@ -127,7 +127,8 @@ def main():
         if not description:
             continue
 
-        embedding = get_embedding(description)
+        text = f"{repo_name} {description} {language}"
+        embedding = get_embedding(text)
 
         doc = {
             "repo_name": repo_name,

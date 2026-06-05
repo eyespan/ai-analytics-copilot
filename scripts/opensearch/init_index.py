@@ -8,6 +8,28 @@ OPENSEARCH_PASS = "Opensearch2026!Aa"
 
 INDEX_NAME = "github-repos"
 
+mapping = {
+    "settings": {
+        "index": {
+            "knn": True
+        }
+    },
+    "mappings": {
+        "properties": {
+            "repo_name": {"type": "text"},
+            "description": {"type": "text"},
+            "language": {"type": "text"},
+            "stars": {"type": "long"},
+            "forks": {"type": "long"},
+            "embedding": {
+                "type": "knn_vector",
+                "dimension": 384
+            }
+        }
+    }
+}
+
+
 
 def get_client():
     return OpenSearch(
@@ -35,54 +57,19 @@ def wait_for_opensearch(client, retries=30):
 
 def create_index_if_not_exists(client):
     if client.indices.exists(index=INDEX_NAME):
-        print(f"Index '{INDEX_NAME}' already exists")
-        return
-
-    body = {
-        "settings": {
-            "index": {
-                "knn": True
-            }
-        },
-        "mappings": {
-            "properties": {
-                "repo_name": {
-                    "type": "text"
-                },
-                "description": {
-                    "type": "text"
-                },
-                "language": {
-                    "type": "text"
-                },
-                "stars": {
-                    "type": "long"
-                },
-                "forks": {
-                    "type": "long"
-                },
-                "embedding": {
-                    "type": "knn_vector",
-                    "dimension": 384
-                }
-            }
-        }
-    }
-
-    if client.indices.exists(INDEX_NAME):
-        print(f"Deleting existing index: {INDEX_NAME}")
+        print("Deleting existing index...")
         client.indices.delete(index=INDEX_NAME)
 
     print(f"Creating index: {INDEX_NAME}")
     client.indices.create(index=INDEX_NAME, body=mapping)
 
-    print("Index ready for Level 3 (kNN enabled)") 
-
 
 def main():
-    client = get_client()
+    print("Waiting for OpenSearch...")
+    client = get_client()   
     wait_for_opensearch(client)
     create_index_if_not_exists(client)
+    print("Index ready for Level 3 (kNN enabled)")
 
 
 if __name__ == "__main__":

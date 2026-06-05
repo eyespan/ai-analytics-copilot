@@ -743,6 +743,20 @@ Vector
 RRF
 ```
 
+```mermaid
+flowchart TD
+    U[User Query] --> RAG[RAG Service]
+
+    RAG --> BM25[BM25 Search OpenSearch]
+    RAG --> EMB[Embedding Service]
+    EMB --> VEC[kNN Vector Search OpenSearch]
+
+    BM25 --> FUSION[Hybrid Ranker (RRF)]
+    VEC --> FUSION
+
+    FUSION --> OUT[Final Ranked Results]
+```
+
 ### Phase 4
 
 LLM generation
