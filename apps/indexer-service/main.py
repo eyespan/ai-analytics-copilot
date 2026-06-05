@@ -140,6 +140,7 @@ def main():
 
         opensearch.index(
             index=INDEX_NAME,
+            id=repo_name,
             body=doc
         )
 
