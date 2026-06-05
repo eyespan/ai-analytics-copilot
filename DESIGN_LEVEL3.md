@@ -42,7 +42,7 @@ flowchart TD
     BM25 --> FUSE[Hybrid Fusion Layer]
     VEC --> FUSE
 
-    FUSE --> LLM[LLM Generator<br/>OpenAI / Local Model]
+    FUSE --> LLM[LLM Generator<br/> Local Model]
 
     LLM --> OUT[Final Answer + Citations]
 ```
@@ -345,7 +345,7 @@ rag-service/
 │   └── hybrid.py
 
 ├── llm/
-│   └── generator.py
+│
 
 ├── models/
 │   └── schemas.py
@@ -357,7 +357,7 @@ rag-service/
 
 ## Module Responsibilities
 
-### retrieval/bm25.py
+**retrieval/bm25.py**
 
 Responsible for:
 ```bash
@@ -373,6 +373,424 @@ Example:
 search_bm25(query)
 ```
 
+**retrieval/vector.py**
+
+Responsible for:
+```bash
+query
+  ↓
+embedding-service
+  ↓
+OpenSearch kNN
+  ↓
+results
+```
+Example:
+```bash
+search_vector(query)
+```
+
+**retrieval/hybrid.py**
+
+Responsible for:
+```bash
+BM25 results
+Vector results
+     ↓
+Fusion
+     ↓
+Ranked list
+```
+Example:
+```bash
+hybrid_search(query)
+```
+
+## Fusion Strategy
+
+For Level 3 MVP:
+
+Use:
+```bash
+Reciprocal Rank Fusion (RRF)
+```
+
+instead of weighted scores.
+
+Reason:
+- industry standard
+- simple
+- robust
+- BM25 score and vector score use different scales
+
+Formula:
+```bash
+RRF = Σ 1/(k + rank)
+```
+This avoids score normalization headaches.
+
+**llm/generator.py**
+
+New Level 3 capability.
+Input:
+```bash
+query
++
+top repositories
+```
+
+Output:
+```bash
+natural language answer
+```
+Example:
+```bash
+generate_answer(query, docs)
+```
+
+## LLM options
+
+Level3 is fully local RAG , we will upgrade this to Cloud-hosted enterprise AI layer in Level4
+
+Everything runs on out local machine:
+
+Local model
+
+Examples:
+- Ollama
+- LM Studio
+
+Pros:
+- no API costs
+
+Cons:
+- more setup
+
+### Components
+
+| Component      | Technology            |
+| -------------- | --------------------- |
+| Embeddings     | SBERT (existing)      |
+| Search         | OpenSearch            |
+| Hybrid Ranking | RRF                   |
+| LLM            | Ollama                |
+| Orchestration  | FastAPI (rag-service) |
+
+**Why Ollama?**
+
+We will use Ollama for Level 3 because:
+
+- Runs locally on macOS/Linux/Windows
+- Very simple API
+- Docker-friendly
+- No API keys
+- Easy upgrade path later
+
+Example:
+
+```bash
+ollama pull llama3.2
+```
+or
+
+```bash
+ollama pull qwen3:8b
+```
+
+### Recommended Model
+
+Given our project size:
+
+**Option 1 (best balance)**
+
+Qwen 3 8B
+
+Pros:
+- Excellent reasoning
+- Good coding ability
+- Runs well locally
+
+**Option 2 (lighter)**
+
+Llama 3.2 3B
+
+Pros:
+- Fast
+- Low memory
+
+Cons:
+- Weaker answers
+
+**Option 3 (strongest local)**
+
+Llama 3.1 8B
+
+Pros:
+- Very capable
+
+Cons:
+- More RAM
+
+### Level 3 Service Layout
+We would add a new service:
+
+```bash
+apps/
+
+api-gateway/
+embedding-service/
+indexer-service/
+rag-service/
+
+ollama/
+```
+
+Docker compose:
+```bash
+ollama:
+  image: ollama/ollama
+  container_name: ollama
+  ports:
+    - "11434:11434"
+```
+
+### RAG Service Evolution
+Current Level 2:
+```bash
+query
+ ↓
+BM25
+ ↓
+results
+```
+Level 3:
+```bash
+query
+ ↓
+BM25
+ ↓
+Vector Search
+ ↓
+Hybrid Fusion
+ ↓
+Context Builder
+ ↓
+Local LLM
+ ↓
+Answer
+```
+
+### New Modules
+Inside rag-service:
+
+```bash
+rag-service/
+
+├── main.py
+
+├── retrieval/
+│   ├── bm25.py
+│   ├── vector.py
+│   └── hybrid.py
+
+├── llm/
+│   |── ollama_client.py
+|   └── prompts.py
+
+├── models/
+│   └── schemas.py
+
+└── clients/
+    ├── opensearch_client.py
+    └── embedding_client.py
+```
+
+### Prompt Construction
+
+Example context:
+```bash
+Repository: pytorch/pytorch
+Description: PyTorch deep learning library
+
+Repository: tensorflow/tensorflow
+Description: Deep learning framework
+```
+
+Prompt:
+```bash
+Answer the user question using only the provided repositories.
+
+Question:
+Which deep learning framework should I use?
+
+Repositories:
+...
+
+Answer:
+```
+This is a classic RAG pattern.
 
 
+## API Contract Evolution
+
+**Level 2**
+
+Request
+
+```json
+{
+  "query": "deep learning"
+}
+```
+
+Response
+
+```json
+{
+  "results": [...]
+}
+```
+
+**Level 3**
+
+Request
+```json
+{
+  "query": "deep learning frameworks"
+}
+```
+Response
+```json
+{
+  "query": "deep learning frameworks",
+  "answer": "PyTorch and TensorFlow are the leading deep learning frameworks...",
+  "sources": [
+    {
+      "repo_name": "pytorch/pytorch"
+    },
+    {
+      "repo_name": "tensorflow/tensorflow"
+    }
+  ]
+}
+```
+
+### Level 3 Architecture
+
+```mermaid
+flowchart TD
+
+    U[User Query]
+
+    U --> API[API Gateway]
+
+    API --> RAG[RAG Service]
+
+    RAG --> EMB[Embedding Service]
+
+    RAG --> BM25[BM25 Retrieval]
+
+    RAG --> VEC[Vector Retrieval]
+
+    BM25 --> FUSE[Hybrid Fusion]
+    VEC --> FUSE
+
+    FUSE --> LLM[LLM Generator]
+
+    LLM --> ANSWER[Generated Answer]
+
+    CH[(ClickHouse)] --> IDX[Indexer Service]
+    IDX --> EMB
+    IDX --> OS[(OpenSearch)]
+
+    BM25 --> OS
+    VEC --> OS
+```
+
+
+## 🎯 Level 3 Milestones
+
+We will implement Level 3 in four small phases:
+
+### Phase 1
+
+OpenSearch vector index support
+```bash
+dense vector mapping
+kNN enabled
+```
+
+### Phase 2
+
+Vector search
+```bash
+query embedding
+kNN retrieval
+```
+
+### Phase 3
+
+Hybrid retrieval
+
+```bash
+BM25
++
+Vector
++
+RRF
+```
+
+### Phase 4
+
+LLM generation
+
+```bash
+retrieved context
+↓
+LLM
+↓
+answer
+```
+This keeps every phase independently testable and gives us a working checkpoint after each stage.
+
+## 🎯 Level 3 Success Criteria
+
+We are done when:
+
+- ✔ OpenSearch supports vector search
+- ✔ Query embeddings are generated at runtime
+- ✔ BM25 retrieval works
+- ✔ Vector retrieval works
+- ✔ Hybrid ranking (RRF) works
+- ✔ Retrieved repositories are used as context
+- ✔ Local LLM generates answers
+- ✔ No cloud-hosted AI services are required
+
+
+## Level 4 (Future)
+
+Then Level 4 becomes very clear:
+
+```bash
+Level 3
+--------
+Local Ollama
+
+Level 4
+--------
+OpenAI / Claude / Bedrock
+Model abstraction layer
+Prompt management
+Conversation memory
+Streaming responses
+```
+
+So architecturally:
+
+- Level 1: Data ingestion
+- Level 2: BM25 retrieval
+- Level 3: Hybrid RAG + local LLM
+- Level 4: Cloud-hosted enterprise AI layer
+
+That's a clean progression and a great learning journey.
 
