@@ -239,9 +239,7 @@ We are done when:
 
 That’s a real search engine.
 
-## ⚠️ Key design decision (important)
-
-## ⚠️ Key design decision (Level 2)
+## ⚠️ Level2 Key design decision (important)
 
 Level 2 is intentionally designed as a **lexical retrieval system using OpenSearch BM25**, not a semantic or vector-based search system.
 
