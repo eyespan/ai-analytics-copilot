@@ -46,9 +46,21 @@ def create_index_if_not_exists(client):
         },
         "mappings": {
             "properties": {
-                "repo_name": {"type": "keyword"},
-                "description": {"type": "text"},
-                "language": {"type": "keyword"},
+                "repo_name": {
+                    "type": "text"
+                },
+                "description": {
+                    "type": "text"
+                },
+                "language": {
+                    "type": "text"
+                },
+                "stars": {
+                    "type": "long"
+                },
+                "forks": {
+                    "type": "long"
+                },
                 "embedding": {
                     "type": "knn_vector",
                     "dimension": 384
@@ -57,8 +69,14 @@ def create_index_if_not_exists(client):
         }
     }
 
-    client.indices.create(index=INDEX_NAME, body=body)
-    print(f"Index '{INDEX_NAME}' created successfully")
+    if client.indices.exists(INDEX_NAME):
+        print(f"Deleting existing index: {INDEX_NAME}")
+        client.indices.delete(index=INDEX_NAME)
+
+    print(f"Creating index: {INDEX_NAME}")
+    client.indices.create(index=INDEX_NAME, body=mapping)
+
+    print("Index ready for Level 3 (kNN enabled)") 
 
 
 def main():
