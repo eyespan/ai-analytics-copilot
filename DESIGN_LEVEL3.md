@@ -70,13 +70,13 @@ flowchart TD
 
 ## 🔧 What changes in each service
 
-🔹 embedding-service (unchanged)
+### 🔹 embedding-service (unchanged)
    - still SBERT embeddings
    - used for:
      - query embedding
      - document embedding (optional future update)
 
-🔹 OpenSearch (upgraded role)
+### 🔹 OpenSearch (upgraded role)
 Now becomes a hybrid search engine:
 
 **Supports:**
@@ -87,11 +87,74 @@ Now becomes a hybrid search engine:
 - text fields (repo_name, description, language)
 - vector field (embedding)
 
-🔹 RAG-service (Level 3 core upgrade)
+### 🔹 RAG-service (Level 3 core upgrade)
 Now responsible for:
 1. Query embedding
 2. BM25 retrieval
 3. vector k-NN retrieval
 4. score fusion
 5. LLM generation
+
+
+### 🔹 New component: Hybrid Ranker
+
+This is the key Level 3 addition.
+
+**Responsibilities:**
+- normalize BM25 + vector scores
+- combine scores (weighted or RRF)
+- produce final ranked list
+
+Example:
+
+```bash
+ final_score =
+     0.4 * bm25_score +
+     0.6 * vector_score
+```
+
+(or Reciprocal Rank Fusion later)
+
+### 🔹 New component: LLM layer
+
+Takes:
+
+- top-K repositories
+- user query
+
+Outputs:
+
+- natural language answer
+- optionally structured citations
+
+## 🧪 Level 3 API Flow
+
+### POST /search
+
+#### Request:
+
+```json
+{
+  "query": "best deep learning frameworks"
+}
+```
+
+#### Internal flow:
+``` bash
+User Query
+   ↓
+Embedding Service
+   ↓
+BM25 Search (OpenSearch)
+   ↓
+Vector Search (k-NN OpenSearch)
+   ↓
+Hybrid Ranker
+   ↓
+LLM Generation
+   ↓
+Final Response
+```
+
+#### Response:
 
