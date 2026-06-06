@@ -554,37 +554,74 @@ ollama pull qwen3:8b
 
 ### Recommended Model
 
-Given our project size:
+Given our project size and local development environment (Apple M2 Max, 32GB RAM):
 
-**Option 1 (best balance)**
+#### Option 1 (Recommended)
 
-Qwen 3 8B
-
-Pros:
-- Excellent reasoning
-- Good coding ability
-- Runs well locally
-
-**Option 2 (lighter)**
-
-Llama 3.2 3B
+# ### Qwen2.5:7B
 
 Pros:
-- Fast
-- Low memory
+
+- Excellent balance of quality and performance
+- Strong reasoning and instruction following
+- Good coding and technical knowledge
+- Stable local inference via Ollama
+- Runs reliably on Apple Silicon with 32GB RAM
+- Well-suited for RAG workloads
 
 Cons:
-- Weaker answers
 
-**Option 3 (strongest local)**
+- Slightly weaker reasoning than larger frontier models
+- No native "thinking" mode like Qwen3
 
-Llama 3.1 8B
+---
+
+#### Option 2 (Lightweight)
+
+#### Llama 3.2 3B
 
 Pros:
-- Very capable
+
+- Fast inference
+- Lower memory consumption
+- Good for laptops with limited RAM
 
 Cons:
-- More RAM
+
+- Weaker retrieval-grounded answers
+- Less capable for complex technical questions
+
+---
+
+#### Option 3 (Higher Capability)
+
+#### Llama 3.1 8B
+
+Pros:
+
+- Strong reasoning and general knowledge
+- Good coding performance
+- Mature ecosystem and community support
+
+Cons:
+
+- Higher memory requirements
+- Slower inference compared to Qwen2.5:7B on local hardware
+
+---
+
+### Level 3 Implementation Choice
+
+For Level 3 we selected:
+
+**Qwen2.5:7B running locally in Ollama**
+
+Reason:
+
+- Best balance of quality, speed, and memory usage
+- Stable operation on Apple M2 Max (32GB)
+- Successfully tested with the hybrid RAG pipeline
+- No external LLM dependency required
 
 ### Level 3 Service Layout
 We would add a new service:
