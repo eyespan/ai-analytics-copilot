@@ -58,22 +58,15 @@ flowchart TD
 ## 🔄 Retrieval Flow 
 
 ```mermaid
-flowchart LR
-
-User --> Gateway[RAG Service API]
-
-Gateway --> Expand[Query Expansion]
-Expand --> BM25[BM25 Engine]
-Expand --> Vector[Vector Search Engine]
-
-BM25 --> Fusion[RRF Fusion Layer]
-Vector --> Fusion
-
-Fusion --> Context[Context Builder]
-Context --> Ollama[Local LLM - Qwen2.5:7B]
-
-Ollama --> Response[Generated Answer]
-Response --> User
+sequenceDiagram
+User->>RAG API: query
+RAG API->>BM25: lexical search
+RAG API->>Vector: semantic search
+BM25-->>Fusion: results
+Vector-->>Fusion: results
+Fusion-->>LLM: context
+LLM-->>RAG API: answer
+RAG API-->>User: response
 ```
 
 
