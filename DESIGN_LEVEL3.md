@@ -873,33 +873,35 @@ We are done when:
 - ✔ Hybrid ranking (RRF) works
 - ✔ Retrieved repositories are used as context
 - ✔ Local LLM generates answers
+- ✔ Query Expansion works
 - ✔ No cloud-hosted AI services are required
 
 
-## Level 4 (Future)
+## Level 4 (Planned)
 
-Then Level 4 becomes very clear:
+- Cross-encoder re-ranking
+- Retrieval evaluation metrics
+- Source citations
+- Streaming responses
+- Advanced RAG optimization
 
-```bash
-Level 3
---------
-Local Ollama
+## Level 5 (Planned)
 
-Level 4
---------
-OpenAI / Claude / Bedrock
-Model abstraction layer
-Prompt management
-Conversation memory
-Streaming responses
-```
+- Multi-LLM: OpenAI / Claude / Bedrock integration
+- Model abstraction layer
+- Prompt management
+- Conversation memory
+- Agentic workflows
+- Multi-LLM routing
 
 So architecturally:
 
-- Level 1: Data ingestion
-- Level 2: BM25 retrieval
-- Level 3: Hybrid RAG + local LLM
-- Level 4: Cloud-hosted enterprise AI layer
+- Level 1: Data ingestion (Analytics API)
+- Level 2: BM25 Retrieval + Embeddings Foundation
+- Level 3: Hybrid RAG + Local LLM + Query Expansion
+- Level 4: Advanced RAG
+- Level 5: Enterprise / Agentic AI Platform
+
 
 That's a clean progression and a great learning journey.
 
