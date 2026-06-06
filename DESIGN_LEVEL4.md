@@ -25,24 +25,36 @@ Instead, it improves:
 
 ## 🏗️ Architecture Overview
 
-```bash
-Query
-↓
-Query Expansion (Level 3)
-↓
-BM25 + Vector Search (OpenSearch)
-↓
-RRF Fusion (Hybrid Ranker)
-↓
-Cross-Encoder Re-ranking (Level 4)
-↓
-Top-K Selection
-↓
-Context Builder
-↓
-Qwen2.5:7B (Ollama)
-↓
-Final Answer + Sources
+```mermaid
+flowchart TD
+
+    %% ========== USER LAYER ==========
+    U[User Query]
+
+    %% ========== LEVEL 3 PIPELINE ==========
+    U --> QX[Query Expansion<br/>(Level 3)]
+    
+    QX --> BM25[BM25 Search<br/>OpenSearch]
+    QX --> VEC[Vector Search<br/>OpenSearch kNN]
+
+    BM25 --> RRF[Hybrid Fusion<br/>RRF Ranker]
+    VEC --> RRF
+
+    %% ========== LEVEL 4 ADDITION ==========
+    RRF --> RERANK[Cross-Encoder Reranker<br/>(Level 4)]
+
+    RERANK --> TOPK[Top-K Selection]
+
+    TOPK --> CTX[Context Builder<br/>Repository Metadata]
+
+    %% ========== LLM LAYER ==========
+    CTX --> LLM[Ollama LLM<br/>Qwen2.5:7B]
+
+    LLM --> OUT[Final Answer]
+
+    %% ========== OBSERVABILITY ==========
+    RERANK --> METRICS[Retrieval Metrics<br/>Recall@K, MRR]
+    RRF --> METRICS
 ```
 
 
@@ -155,24 +167,35 @@ Responsible for:
 
 ## 🔄 Data Flow (Final)
 
-```bash 
-User Query
-   ↓
-Query Expansion (Level 3)
-   ↓
-BM25 + Vector Search
-   ↓
-RRF Fusion
-   ↓
-Cross-Encoder Reranker (Level 4)
-   ↓
-Top-K Context Builder
-   ↓
-Qwen2.5:7B (Ollama)
-   ↓
-Final Answer
-   ↓
-Sources + Metadata + Scores
+```mermaid
+flowchart LR
+
+    A[User Question] --> B[Query Expansion<br/>synonyms + heuristics]
+
+    B --> C1[BM25 Retrieval]
+    B --> C2[Vector Retrieval]
+
+    C1 --> D[RRR / RRF Fusion]
+    C2 --> D
+
+    D --> E[Candidate Set<br/>Top 10–20 docs]
+
+    E --> F[Cross-Encoder Reranker]
+
+    F --> G[Final Top-K<br/>Top 3–5 docs]
+
+    G --> H[Context Builder<br/>truncate + format]
+
+    H --> I[Qwen2.5:7B via Ollama]
+
+    I --> J[Generated Answer]
+
+    J --> K[Sources + Metadata]
+
+    %% optional observability path
+    E --> M[Evaluation Metrics]
+    F --> M
+    G --> M
 ```
 
 ## 📊 Evaluation Strategy
