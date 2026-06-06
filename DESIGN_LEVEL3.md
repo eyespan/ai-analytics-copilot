@@ -16,7 +16,15 @@ In Level2 we extened level1 with these features:
 Upgrade the system from keyword search (Level 2) to a true hybrid RAG pipeline:
 - BM25 keyword relevance (precision)
 - vector similarity search (semantic recall)
+- Hybrid ranking
 - LLM-based answer generation (reasoning layer)
+
+We will build a production-style Retrieval-Augmented Generation system combining:
+- Lexical search (BM25)
+- Semantic search (vector k-NN)
+- Hybrid ranking (RRF)
+- Local LLM reasoning (Ollama Qwen2.5:7B)
+
 
 🧱 Core Idea:
 Instead of choosing one retrieval method, Level 3 combines both:
@@ -50,20 +58,22 @@ flowchart TD
 ## 🔄 Retrieval Flow 
 
 ```mermaid
-flowchart TD
-    Q[User Query] --> E[Embedding Service]
+flowchart LR
 
-    Q --> B[BM25 Search]
-    E --> V[Vector Search]
+User --> Gateway[RAG Service API]
 
-    B --> R1[Top-K BM25 Results]
-    V --> R2[Top-K Vector Results]
+Gateway --> Expand[Query Expansion]
+Expand --> BM25[BM25 Engine]
+Expand --> Vector[Vector Search Engine]
 
-    R1 --> H[Hybrid Ranker]
-    R2 --> H
+BM25 --> Fusion[RRF Fusion Layer]
+Vector --> Fusion
 
-    H --> L[LLM Response Generator]
-    L --> A[Final Answer]
+Fusion --> Context[Context Builder]
+Context --> Ollama[Local LLM - Qwen2.5:7B]
+
+Ollama --> Response[Generated Answer]
+Response --> User
 ```
 
 

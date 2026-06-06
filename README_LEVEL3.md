@@ -144,7 +144,7 @@ curl -X POST http://localhost:8001/vector-search \
 -d '{"query":"deep learning"}'
 ```
 
-### Full RAG (Hybrid + LLM)
+#### Full RAG (Hybrid + LLM)
 
 ```bash
 curl -X POST http://localhost:8001/ask \
