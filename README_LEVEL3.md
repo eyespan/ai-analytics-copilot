@@ -176,8 +176,8 @@ curl -X POST http://localhost:8001/ask \
 - No evaluation metrics pipeline
 
 ## 🚀 Next Upgrade Path (Level 4 Preview)
-- Cross-encoder reranking (semantic precision boost)
-- Multi-query decomposition (agentic retrieval)
-- Streaming LLM responses
-- Tool-using LLM (function calling)
-- Observability layer (trace + spans)
+- Cross-encoder re-ranking
+- Retrieval evaluation metrics
+- Source citations
+- Streaming responses
+- Advanced RAG optimization
