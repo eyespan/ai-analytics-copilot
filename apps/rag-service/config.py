@@ -11,7 +11,7 @@ OPENSEARCH_HOST = os.getenv(
 
 INDEX_NAME = "github-repos"
 
-TOP_K = 10
+TOP_K = 20
 
 
 # =====================

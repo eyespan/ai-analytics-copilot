@@ -1,5 +1,9 @@
 from retrieval.bm25 import bm25_search
 from retrieval.vector import vector_search
+#====== Level 4 Addition =======
+from retrieval.reranker import rerank
+#====== Level 4 Addition =======
+
 
 
 # -----------------------
@@ -58,4 +62,16 @@ def hybrid_search(query: str):
     bm25 = bm25_search(expanded_query)
     vector = vector_search(expanded_query)
 
-    return rrf_fusion(bm25, vector)
+    from retrieval.reranker import rerank
+
+    results = rrf_fusion(bm25, vector)
+
+    # LEVEL 4 ADDITION
+    results = rerank(query, results, top_k=10)
+
+    print("\n[DEBUG RERANK]")
+    for r in results[:3]:
+        print(r["repo_name"], r.get("rerank_score"))
+    #====== Level 4 Addition =======
+
+    return results

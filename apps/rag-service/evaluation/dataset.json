@@ -1,0 +1,18 @@
+[
+    {
+      "query": "deep learning framework",
+      "expected_repo": "tensorflow/tensorflow"
+    },
+    {
+      "query": "python deep learning library",
+      "expected_repo": "pytorch/pytorch"
+    },
+    {
+      "query": "machine learning library",
+      "expected_repo": "pytorch/pytorch"
+    },
+    {
+      "query": "tensor operations framework",
+      "expected_repo": "tensorflow/tensorflow"
+    }
+  ]

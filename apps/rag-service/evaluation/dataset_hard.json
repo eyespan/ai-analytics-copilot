@@ -1,0 +1,14 @@
+[
+    {
+      "query": "ML library used for tensor computation and GPU acceleration",
+      "expected_repo": "pytorch/pytorch"
+    },
+    {
+      "query": "framework for large scale neural network training",
+      "expected_repo": "tensorflow/tensorflow"
+    },
+    {
+      "query": "Python deep learning research framework from Facebook",
+      "expected_repo": "pytorch/pytorch"
+    }
+  ]

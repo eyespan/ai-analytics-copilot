@@ -1,8 +1,12 @@
 from clients.opensearch_client import opensearch
-from config import INDEX_NAME
+from config import INDEX_NAME, TOP_K
 
 
-def bm25_search(query: str, k: int = 5):
+def bm25_search(query: str, k=TOP_K):
+    
+    size = k if k is not None else TOP_K
+    size = int(size)  # 🔥 force safe type
+
     resp = opensearch.search(
         index=INDEX_NAME,
         body={
