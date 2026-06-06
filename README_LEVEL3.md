@@ -1,4 +1,4 @@
-# 🚀 AI Analytics Copilot — Level 3 - Hybrid RAG + Local LLM (Ollama)
+# 🚀 AI Analytics Copilot - Level 3 Hybrid RAG + Local LLM (Ollama)
 
 Level 3 upgrades the AI Analytics Copilot into a full Retrieval-Augmented Generation (RAG) system with:
 
