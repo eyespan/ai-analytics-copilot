@@ -69,7 +69,44 @@ LLM-->>RAG API: answer
 RAG API-->>User: response
 ```
 
+## 📊 Retrieval Strategy (Runtime Behavior)
 
+The system executes retrieval in 3 steps:
+
+1. Query Expansion (light semantic enrichment)
+2. Dual Retrieval:
+   - BM25 (keyword-based)
+   - Vector search (semantic similarity)
+3. Fusion:
+   - Reciprocal Rank Fusion (RRF) - RRF ranks documents by combining BM25 and vector ranking positions using reciprocal rank scoring.
+
+## 🔤 Query Expansion
+
+Before retrieval, the input query is optionally expanded to improve recall.
+
+Example:
+- Input: "neural networks"
+- Expanded: "neural networks deep learning AI machine learning"
+
+This improves BM25 + vector recall coverage.
+
+## 🧠 LLM Layer (Ollama)
+
+- Model: qwen2.5:7b
+- Runtime: Docker container (local inference)
+- Endpoint: http://ollama:11434/api/generate
+- Mode: non-streaming completion API
+
+## 📦 API Response Contract (/ask)
+
+Response includes:
+
+- query: original user query
+- retrieval:
+  - method: hybrid
+  - documents_retrieved: number of docs used
+- answer: generated LLM response
+- sources: top retrieved documents used for grounding
 
 ## 🔧 What changes in each service
 
@@ -132,13 +169,18 @@ Outputs:
 
 ## 🧪 Level 3 API Flow
 
+Endpoints
+- POST /search → BM25 retrieval
+- POST /vector-search → kNN semantic retrieval
+- POST /ask → full hybrid RAG + LLM generation
+
 ### POST /search
 
 #### Request:
 
 ```json
 {
-  "query": "best deep learning frameworks"
+  "query":"what is pytorch"
 }
 ```
 
@@ -162,16 +204,23 @@ Final Response
 #### Response:
 
 ```json
+
 {
-  "query": "best deep learning frameworks",
-  "results": [
+  "query":"what is pytorch",
+  "sources":[
+      {
+        "repo_name":"pytorch/pytorch",
+        "description":"PyTorch deep learning library",
+        "language":"Python",
+        "score":0.03333333333333333
+      },
     {
-      "repo_name": "pytorch/pytorch",
-      "score": 0.92,
-      "reason": "Strong deep learning ecosystem with dynamic computation graph"
-    }
-  ],
-  "answer": "PyTorch and TensorFlow are the leading frameworks..."
+      "repo_name":"tensorflow/tensorflow",
+      "description":"Deep learning framework",
+      "language":"Python","
+      score":0.01639344262295082
+    }],
+  "answer":"PyTorch is a deep learning library implemented in Python.",
 }
 ```
 
