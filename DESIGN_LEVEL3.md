@@ -174,7 +174,7 @@ Endpoints
 - POST /vector-search → kNN semantic retrieval
 - POST /ask → full hybrid RAG + LLM generation
 
-### POST /search
+### POST /ask
 
 #### Request:
 
