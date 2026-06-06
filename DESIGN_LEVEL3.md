@@ -872,8 +872,11 @@ We are done when:
 - ✔ Vector retrieval works
 - ✔ Hybrid ranking (RRF) works
 - ✔ Retrieved repositories are used as context
-- ✔ Local LLM generates answers
-- ✔ Query Expansion works
+- ✔ Context-limited generation (top-K retrieved documents only)
+- ✔ Retrieval metadata returned (scores + fusion method + result count)
+- ✔ Deterministic retrieval pipeline (no LLM dependency in retrieval stage)
+- ✔ Local LLM (Qwen2.5:7B via Ollama) generates grounded answers from retrieved context (no external knowledge injection)
+- ✔ Rule-based Query Expansion (synonyms + lightweight heuristic expansion) works
 - ✔ No cloud-hosted AI services are required
 
 
@@ -898,8 +901,8 @@ So architecturally:
 
 - Level 1: Data ingestion (Analytics API)
 - Level 2: BM25 Retrieval + Embeddings Foundation
-- Level 3: Hybrid RAG + Local LLM + Query Expansion
-- Level 4: Advanced RAG
+- Level 3: Hybrid Retrieval RAG (BM25 + Vector + RRF) + Query Expansion + Local LLM
+- Level 4: Advanced Retrieval Quality & Ranking Optimization
 - Level 5: Enterprise / Agentic AI Platform
 
 
