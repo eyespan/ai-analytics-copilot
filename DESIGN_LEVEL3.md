@@ -843,7 +843,7 @@ flowchart TD
     RAG --> EMB[Embedding Service]
     EMB --> VEC[kNN Vector Search OpenSearch]
 
-    BM25 --> FUSION[Hybrid Ranker (RRF)]
+    BM25 --> FUSION["Hybrid Ranker (RRF)"]
     VEC --> FUSION
 
     FUSION --> OUT[Final Ranked Results]
