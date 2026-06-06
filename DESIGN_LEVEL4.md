@@ -30,7 +30,7 @@ flowchart TD
 
     U[User Query]
 
-    U --> QX[Query Expansion\n(Level 3)]
+    U --> QX[Query Expansion\n Level 3]
 
     QX --> BM25[BM25 Search\nOpenSearch]
     QX --> VEC[Vector Search\nOpenSearch kNN]
@@ -38,7 +38,7 @@ flowchart TD
     BM25 --> RRF[Hybrid Fusion\nRRF Ranker]
     VEC --> RRF
 
-    RRF --> RERANK[Cross-Encoder Reranker\n(Level 4)]
+    RRF --> RERANK[Cross-Encoder Reranker\n Level 4]
 
     RERANK --> TOPK[Top-K Selection]
 
