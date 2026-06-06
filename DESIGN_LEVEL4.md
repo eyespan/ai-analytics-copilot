@@ -28,32 +28,27 @@ Instead, it improves:
 ```mermaid
 flowchart TD
 
-    %% ========== USER LAYER ==========
     U[User Query]
 
-    %% ========== LEVEL 3 PIPELINE ==========
-    U --> QX[Query Expansion<br/>(Level 3)]
-    
-    QX --> BM25[BM25 Search<br/>OpenSearch]
-    QX --> VEC[Vector Search<br/>OpenSearch kNN]
+    U --> QX[Query Expansion\n(Level 3)]
 
-    BM25 --> RRF[Hybrid Fusion<br/>RRF Ranker]
+    QX --> BM25[BM25 Search\nOpenSearch]
+    QX --> VEC[Vector Search\nOpenSearch kNN]
+
+    BM25 --> RRF[Hybrid Fusion\nRRF Ranker]
     VEC --> RRF
 
-    %% ========== LEVEL 4 ADDITION ==========
-    RRF --> RERANK[Cross-Encoder Reranker<br/>(Level 4)]
+    RRF --> RERANK[Cross-Encoder Reranker\n(Level 4)]
 
     RERANK --> TOPK[Top-K Selection]
 
-    TOPK --> CTX[Context Builder<br/>Repository Metadata]
+    TOPK --> CTX[Context Builder\nRepository Metadata]
 
-    %% ========== LLM LAYER ==========
-    CTX --> LLM[Ollama LLM<br/>Qwen2.5:7B]
+    CTX --> LLM[Ollama LLM\nQwen2.5:7B]
 
     LLM --> OUT[Final Answer]
 
-    %% ========== OBSERVABILITY ==========
-    RERANK --> METRICS[Retrieval Metrics<br/>Recall@K, MRR]
+    RERANK --> METRICS[Retrieval Metrics\nRecall@K, MRR]
     RRF --> METRICS
 ```
 
