@@ -486,6 +486,9 @@ We will use Ollama for Level 3 because:
 - No API keys
 - Easy upgrade path later
 
+for out project we will have Ollama runing as a container service inside Docker Compose
+RAG service communicates via internal network (http://ollama:11434)
+
 Example:
 
 ```bash

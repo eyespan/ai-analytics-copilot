@@ -127,8 +127,18 @@ services:
       - "8002:8002"
     environment:
       - OPENSEARCH_HOST=opensearch
+  
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
 
 volumes:
   clickhouse_data:
   opensearch_data:
   dynamodb_data:
+  ollama:

@@ -1,8 +1,7 @@
 from clients.opensearch_client import opensearch
 from clients.embedding_client import get_embedding
 
-INDEX_NAME = "github-repos"
-TOP_K = 5
+from config import TOP_K, INDEX_NAME
 
 
 def vector_search(query: str):

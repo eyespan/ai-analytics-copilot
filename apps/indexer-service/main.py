@@ -51,6 +51,25 @@ opensearch = OpenSearch(
     ssl_show_warn=False,
 )
 
+# ------------------------
+# OPENSEARCH HEALTH CHECK
+# ------------------------
+
+def wait_for_opensearch(client, retries=20):
+    print("Waiting for OpenSearch...")
+
+    for _ in range(retries):
+        try:
+            if client.ping():
+                print("OpenSearch is ready")
+                return
+        except:
+            pass
+
+        time.sleep(3)
+
+    raise Exception("OpenSearch not ready")
+
 
 # ------------------------
 # EMBEDDING HEALTH CHECK
@@ -111,6 +130,7 @@ def main():
         return
 
     wait_for_embedding_service()
+    wait_for_opensearch(opensearch)
 
     query = """
     SELECT repo_name, description, language, stars, forks
@@ -121,33 +141,37 @@ def main():
 
     print(f"Found {len(rows)} rows")
 
-    for row in rows:
-        repo_name, description, language, stars, forks = row
+    try:
 
-        if not description:
-            continue
+        for row in rows:
+            repo_name, description, language, stars, forks = row
 
-        text = f"{repo_name} {description} {language}"
-        embedding = get_embedding(text)
+            if not description:
+                continue
 
-        doc = {
-            "repo_name": repo_name,
-            "description": description,
-            "language": language,
-            "stars": stars,
-            "forks": forks,
-            "embedding": embedding
-        }
+            text = f"{repo_name} {description} {language}"
+            embedding = get_embedding(text)
 
-        opensearch.index(
-            index=INDEX_NAME,
-            id=repo_name,
-            body=doc
-        )
+            doc = {
+                "repo_name": repo_name,
+                "description": description,
+                "language": language,
+                "stars": stars,
+                "forks": forks,
+                "embedding": embedding
+            }
 
-        print(f"Indexed: {repo_name}")
+            opensearch.index(
+                index=INDEX_NAME,
+                id=repo_name,
+                body=doc
+            )
 
-    print("Finished indexing")
+            print(f"Indexed: {repo_name}")
+
+        print("Finished indexing")
+    except Exception as e:
+        print(f"Failed indexing {repo_name}: {e}")
 
 
 if __name__ == "__main__":

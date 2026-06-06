@@ -1,18 +1,24 @@
 import requests
-
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3"
+from config import OLLAMA_URL, OLLAMA_MODEL
 
 
 def generate(prompt: str):
     response = requests.post(
         OLLAMA_URL,
         json={
-            "model": MODEL,
+            "model": OLLAMA_MODEL,
             "prompt": prompt,
-            "stream": False
-        }
+            "stream": False,
+            "options": {
+                "temperature": 0.2,
+                "num_ctx": 2048
+            }
+        },
+        timeout=120
     )
+
+    if response.status_code != 200:
+        print("OLLAMA ERROR:", response.text)
 
     response.raise_for_status()
     return response.json()["response"]

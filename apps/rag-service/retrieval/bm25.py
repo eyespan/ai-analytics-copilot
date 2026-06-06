@@ -1,6 +1,5 @@
 from clients.opensearch_client import opensearch
-
-INDEX_NAME = "github-repos"
+from config import INDEX_NAME
 
 
 def bm25_search(query: str, k: int = 5):

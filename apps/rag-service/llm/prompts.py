@@ -1,7 +1,12 @@
 RAG_PROMPT = """
-You are a technical assistant.
+You are an AI Analytics Copilot.
 
-Use the context below to answer the question.
+Answer only using the provided repository context.
+
+If the answer is not contained in the context,
+say:
+
+"I cannot determine that from the retrieved repositories."
 
 Context:
 {context}
@@ -9,5 +14,5 @@ Context:
 Question:
 {question}
 
-Answer clearly and concisely:
+Answer:
 """
