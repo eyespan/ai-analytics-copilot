@@ -50,9 +50,6 @@ flowchart TD
     RERANK --> METRICS[Retrieval Metrics\nRecall@K, MRR]
     RRF --> METRICS
 ```
-
-
-
 ---
 
 ## New Features
@@ -269,6 +266,214 @@ The following capabilities are intentionally deferred to Level 5:
 * Prompt management
 
 ---
+
+
+## 🚀 How to Run
+
+### 📦 Why We Expanded ClickHouse Data (Level 4)
+
+In Levels 1, 2 and 3 ClickHouse contained only a minimal dataset (2 repositories), which was sufficient for basic retrieval testing.
+
+In Level 4, we expanded the dataset in scripts/data-load/ingest_clickhouse.py to include diverse GitHub repositories across multiple categories:
+
+- Deep learning frameworks (TensorFlow, PyTorch, MXNet, Keras)
+- ML libraries (scikit-learn)
+- Data tools (Pandas, NumPy)
+- Distributed systems (Spark, Kubernetes)
+- DevOps platforms (Docker)
+- NLP models (Transformers)
+
+Why this matters
+
+Level 4 introduces:
+
+- Cross-encoder re-ranking
+- Ranking metrics (MRR, nDCG)
+- Retrieval evaluation (Recall@K)
+- Hybrid ranking comparisons
+
+These require a non-trivial dataset with ranking ambiguity.
+
+Without this expansion:
+
+- BM25 ≈ Vector results (no ranking challenge)
+- RRF has no meaningful fusion
+- Reranker has no discrimination signal
+- Metrics always return artificially perfect scores
+
+In short
+
+This dataset expansion enables:
+
+- Realistic ranking competition between repos
+- Meaningful reranker evaluation
+- Observable improvements in retrieval quality
+- Proper benchmarking of Level 4 algorithms
+
+**⚠️ Important**
+
+Make sure you re-run ingestion after pulling Level 4 changes:
+
+```bash
+docker-compose run --rm indexer-service
+```
+
+or
+
+```bash
+make reset
+make up
+```
+
+**👍 Why this is important for Level 4 success criteria**
+
+This directly enables:
+
+- ✔ Better ranking quality evaluation
+- ✔ Observable retrieval performance
+- ✔ Meaningful cross-encoder gains
+- ✔ Valid evaluation metrics (MRR / nDCG / Recall@K)
+
+
+### 1. Start the full stack
+
+```bash
+make up
+```
+```bash
+docker ps
+```
+
+This starts all required services:
+
+- API Gateway (RAG Service)
+- Embedding Service
+- OpenSearch
+- ClickHouse
+- Ollama (LLM runtime)
+- Indexer Service
+- RAG service
+---
+
+### 2. Pull the Qwen model (required once)
+
+```bash 
+docker exec -it ollama ollama pull qwen2.5:7b
+```
+
+### 3. Verify services
+```bash
+curl http://localhost:8001/health
+```
+```bash
+curl http://localhost:11434/api/tags
+```
+
+### 🧪 4. Core Retrieval Tests (Level 2 + Level 3)
+
+BM25 Search
+```bash
+curl -X POST http://localhost:8001/search \
+-H "Content-Type: application/json" \
+-d '{"query": "deep learning frameworks"}'
+```
+
+Vector Search
+```bash
+curl -X POST http://localhost:8001/vector-search \
+-H "Content-Type: application/json" \
+-d '{"query":"deep learning"}'
+```
+
+Full RAG (Hybrid + LLM)
+```bash
+curl -X POST http://localhost:8001/ask \
+-H "Content-Type: application/json" \
+-d '{"query":"what is pytorch"}'
+```
+
+### 🧠 5. Level 4 Advanced Tests
+
+#### Debug Retrieval Pipeline
+
+```bash
+curl -X POST http://localhost:8001/debug-retrieval \
+-H "Content-Type: application/json" \
+-d '{"query":"deep learning framework"}'
+```
+
+#### Debug Reranker
+```bash
+curl -X POST http://localhost:8001/debug-rerank \
+-H "Content-Type: application/json" \
+-d '{"query":"deep learning framework"}'
+```
+
+#### Single Query Evaluation
+```bash
+curl -X POST http://localhost:8001/eval-retrieval \
+-H "Content-Type: application/json" \
+-d '{
+  "query":"deep learning framework",
+  "expected_repo":"tensorflow/tensorflow"
+}'
+```
+
+#### Batch Evaluation
+```bash
+curl -X POST http://localhost:8001/eval-batch-retrieval
+```
+
+#### Reranker A/B Test
+```bash
+curl -X POST http://localhost:8001/eval-reranker-ab \
+-H "Content-Type: application/json" \
+-d '{
+  "query":"deep learning framework",
+  "expected_repo":"tensorflow/tensorflow"
+}'
+```
+
+#### Ranking Metrics
+```bash
+curl -X POST http://localhost:8001/eval-ranking-metrics \
+-H "Content-Type: application/json" \
+-d '{
+  "query":"deep learning framework",
+  "expected_repos":[
+    "tensorflow/tensorflow",
+    "pytorch/pytorch",
+    "keras-team/keras",
+    "apache/mxnet"
+  ],
+  "k":10
+}'
+```
+
+### 📌 Expected Behavior
+- BM25 retrieves keyword matches
+- Vector search retrieves semantic matches
+- RRF merges retrieval signals
+- Cross-encoder reranks results
+- Metrics compare baseline vs reranked performance
+- LLM generates grounded responses from retrieved context
+
+### ⚠️ Troubleshooting
+
+#### Embedding service not responding
+```bash
+docker logs embedding-service
+```
+
+#### Ollama model missing
+```bash
+docker exec -it ollama ollama pull qwen2.5:7b
+```
+
+#### OpenSearch issues
+```bash
+docker logs opensearch
+```
 
 ## Next Step: Level 5
 
