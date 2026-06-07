@@ -24,7 +24,7 @@ The system remains fully local and does not require any cloud-hosted AI services
 
 Level 4 extends the Level 3 retrieval pipeline:
 
-``````mermaid
+```mermaid
 flowchart TD
 
     U[User Query]
