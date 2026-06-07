@@ -22,8 +22,13 @@ Level 3 already provides:
 Level 4 builds on top of this retrieval layer by introducing:
 
 - Cross-Encoder Re-Ranking
-- Retrieval Evaluation Metrics - BM25 retrieval (OpenSearch), Vector retrieval (OpenSearch kNN + embeddings service), Hybrid fusion using RRF
-- Source Attribution
+- Retrieval Evaluation Metrics
+- Retrieval Explainability
+- Advanced Retrieval Optimization
+
+Deferred to Level 5:
+
+- Inline Source Attribution
 - Streaming Responses
 
 
@@ -114,8 +119,18 @@ cross-encoder/ms-marco-MiniLM-L-6-v2
 This is the biggest Level 4 upgrade.
 
 ## Retrieval Metrics 
+
+Adds observability for retrieval quality.
+
+#### Metrics supported:
 - Recall@K
-- Mean Reciprocal Rank (MRR)
+- MRR (Mean Reciprocal Rank)
+- Hit Rate@K
+
+#### Purpose:
+- Evaluate retrieval effectiveness
+- Debug query failures
+- Compare BM25 vs Vector vs Hybrid
 
 ## Ranking Metrics
 - nDCG@K (baseline vs reranked comparison)
@@ -196,15 +211,21 @@ Level 4 DOES NOT include:
 
 ## 🏁 Level 4 Completion Criteria (Final)
 
-You can tag level4_stable when:
+We are done when:
 
-- ✔ BM25 + vector + RRF working
-- ✔ query expansion working
-- ✔ cross-encoder reranker integrated
-- ✔ eval endpoints operational
-- ✔ ranking metrics (MRR, nDCG) working
-- ✔ explainability fully exposed
-- ✔ LLM grounded responses verified
+- ✔ BM25 retrieval works
+- ✔ Vector retrieval works
+- ✔ Hybrid fusion (RRF) works
+- ✔ Query expansion works
+- ✔ Cross-encoder reranking works
+- ✔ Cross-encoder reranking improves ranking observability
+- ✔ Retrieval evaluation metrics work (Recall@K, MRR)
+- ✔ Ranking evaluation metrics work (nDCG)
+- ✔ A/B reranker evaluation works
+- ✔ Retrieval observability endpoints exist
+- ✔ Explainable retrieval outputs exist
+- ✔ Context-limited generation works
+- ✔ Local LLM generates grounded answers
 
 
 ---
@@ -248,37 +269,33 @@ Adds observability for retrieval quality.
 
 ---
 
-### 3. Source Citations (Explainability Layer)
+### 3. Retrieval Explainability
 
-Each LLM response includes:
+Level 4 introduces full retrieval transparency and ranking observability.
 
-- Re-ranked documents used
-- Repository metadata
-- Scores (BM25, vector, RRF, reranker)
+Each stage of the retrieval pipeline can be inspected:
 
-**Output format example:**
-```json
-{
-  "answer": "...",
-  "sources": [
-    {
-      "repo_name": "...",
-      "description": "...",
-      "score": 0.82
-    }
-  ]
-}
-```
-### 4. Optional Streaming Response Support
+- expanded query
+- BM25 retrieval results
+- vector retrieval results
+- hybrid fusion results (RRF)
+- reranked results
+- retrieval and ranking metrics
 
-Improve UX by streaming LLM output from Ollama.
+Supported endpoints:
 
-Two modes:
-- Non-streaming (default, Level 3 behavior)
-- Streaming tokens (Level 4 enhancement)
+- /debug-retrieval
+- /debug-rerank
+- /eval-retrieval
+- /eval-batch-retrieval
+- /eval-reranker-ab
+- /eval-ranking-metrics
+
+This enables complete traceability of retrieval decisions and ranking behavior.
 
 
-### 5. Advanced Retrieval Optimization
+
+### 4. Advanced Retrieval Optimization
 
 Lightweight improvements applied to existing pipeline:
 
@@ -311,8 +328,6 @@ Responsible for:
    - answer 
    - source documents (metadata)
 
-`clients/ollama_client.py`
-- Optional streaming support enabled
 
 ## 🔄 Data Flow (Final)
 
