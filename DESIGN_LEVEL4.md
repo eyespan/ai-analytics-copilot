@@ -109,98 +109,102 @@ cross-encoder/ms-marco-MiniLM-L-6-v2
 - answers generated ONLY from retrieved context
 - no external knowledge injection
 
-📊 2. Evaluation & Observability Layer (MAJOR LEVEL 4 FEATURE)
+## 📊 2. Evaluation & Observability Layer (MAJOR LEVEL 4 FEATURE)
 
 This is the biggest Level 4 upgrade.
 
-Retrieval Metrics
-Recall@K
-Mean Reciprocal Rank (MRR)
-Ranking Metrics
-nDCG@K (baseline vs reranked comparison)
-rank shift analysis
-A/B Evaluation
-Endpoints:
-/eval-retrieval
-/eval-batch-retrieval
-/eval-reranker-ab
-/eval-ranking-metrics
-Outputs include:
-baseline ranking
-reranked ranking
-metric deltas
-Explainability Layer
+## Retrieval Metrics 
+- Recall@K
+- Mean Reciprocal Rank (MRR)
 
+## Ranking Metrics
+- nDCG@K (baseline vs reranked comparison)
+- rank shift analysis
+
+##  A/B Evaluation
+### Endpoints:
+- /eval-retrieval
+- /eval-batch-retrieval
+- /eval-reranker-ab
+- /eval-ranking-metrics
+
+### Outputs include:
+- baseline ranking
+- reranked ranking
+- metric deltas
+
+### Explainability Layer
 Every query returns:
-
-expanded query
-BM25 results
-vector results
-fused results (RRF)
-reranked results
-scoring breakdown per stage
+- expanded query
+- BM25 results
+- vector results
+- fused results (RRF)
+- reranked results
+- scoring breakdown per stage
 
 👉 Enables full traceability:
 
-“why did this repo rank #1?”
+`“why did this repo rank #1?”`
 
-📈 3. Key Level 4 Capabilities (Final Consolidated List)
-✔ Retrieval Quality Improvements
-hybrid BM25 + vector retrieval
-query expansion improves recall
-✔ Ranking Quality Improvements
-cross-encoder reranking improves precision ordering
-reduces semantic noise from fusion
-✔ Explainability (Critical)
-full pipeline transparency per query
-score visibility across all stages
-✔ Observability
-evaluation endpoints
-retrieval metrics
-ranking metrics (MRR, nDCG)
-✔ Grounded LLM Outputs
-answers strictly constrained to retrieved context
-eliminates hallucinated repositories
-🧠 4. Design Principles (Level 4 Reality)
-1. Retrieval is deterministic
-no LLM dependency in retrieval stage
-2. Ranking is multi-stage
-BM25 + vector → RRF → reranker
-3. Evaluation is first-class
-metrics are not post-processing
-they are part of system design
-4. Explainability is built-in
-every ranking decision is traceable
+## 📈 3. Key Level 4 Capabilities (Final Consolidated List)
+### ✔ Retrieval Quality Improvements
+- hybrid BM25 + vector retrieval
+- query expansion improves recall
+### ✔ Ranking Quality Improvements
+- cross-encoder reranking improves precision ordering
+- reduces semantic noise from fusion
+### ✔ Explainability (Critical)
+- full pipeline transparency per query
+- score visibility across all stages
+### ✔ Observability
+- evaluation endpoints
+- retrieval metrics
+- ranking metrics (MRR, nDCG)
+### ✔ Grounded LLM Outputs
+- answers strictly constrained to retrieved context
+- eliminates hallucinated repositories
+
+## 🧠 4. Design Principles (Level 4 Reality)
+### 1. Retrieval is deterministic
+- no LLM dependency in retrieval stage
+### 2. Ranking is multi-stage
+- BM25 + vector → RRF → reranker
+### 3. Evaluation is first-class
+- metrics are not post-processing
+- they are part of system design
+### 4. Explainability is built-in
+- every ranking decision is traceable
 5. LLM is downstream only
-LLM never influences retrieval decisions
-🚫 Explicit Non-Goals (Important for clarity)
+- LLM never influences retrieval decisions
+
+## 🚫 Explicit Non-Goals (Important for clarity)
 
 Level 4 DOES NOT include:
-
-❌ multi-LLM routing
-❌ memory systems
-❌ agent workflows
-❌ tool calling orchestration
-❌ prompt management systems
+- ❌ multi-LLM routing
+- ❌ memory systems
+- ❌ agent workflows
+- ❌ tool calling orchestration
+- ❌ prompt management systems
 
 (those belong to Level 5)
 
-📌 Final Level 4 Definition
+### 📌 Final Level 4 Definition
+
 ✔ Level 4 =
 
-Hybrid Retrieval + Cross-Encoder Ranking + Evaluation + Observability + Grounded Generation
+`Hybrid Retrieval + Cross-Encoder Ranking + Evaluation + Observability + Grounded Generation`
 
-🏁 Level 4 Completion Criteria (Final)
+## 🏁 Level 4 Completion Criteria (Final)
 
 You can tag level4_stable when:
 
-✔ BM25 + vector + RRF working
-✔ query expansion working
-✔ cross-encoder reranker integrated
-✔ eval endpoints operational
-✔ ranking metrics (MRR, nDCG) working
-✔ explainability fully exposed
-✔ LLM grounded responses verified
+- ✔ BM25 + vector + RRF working
+- ✔ query expansion working
+- ✔ cross-encoder reranker integrated
+- ✔ eval endpoints operational
+- ✔ ranking metrics (MRR, nDCG) working
+- ✔ explainability fully exposed
+- ✔ LLM grounded responses verified
 
 
 ---
