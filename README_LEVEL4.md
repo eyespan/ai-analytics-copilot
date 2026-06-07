@@ -475,24 +475,41 @@ docker exec -it ollama ollama pull qwen2.5:7b
 docker logs opensearch
 ```
 
-## Next Step: Level 5
+## ## 🚀 Next Step: Level 5
 
-Level 5 transforms the system from an advanced RAG platform into an enterprise AI platform.
+Level 5 transforms the system from an advanced retrieval-augmented generation (RAG) platform into an enterprise-grade AI orchestration platform.
 
-Planned features:
+At this stage, Level 4 is considered stable and complete, focusing on:
+- Retrieval quality
+- Ranking evaluation
+- Explainability
+- Observability
 
-* OpenAI integration
-* Claude integration
-* Amazon Bedrock integration
-* Model abstraction layer
-* Prompt management
-* Conversation memory
-* Agentic workflows
-* LLM routing
-* Streaming responses
-* Citation-aware answer generation
+Level 5 will build on this foundation by introducing multi-model intelligence and production-grade LLM orchestration.
 
-```
-```
+### Planned Features (Level 5)
+
+- Amazon Bedrock integration (primary LLM provider)
+- OpenAI integration (optional external provider)
+- Claude / Anthropic integration via Bedrock or API
+- Model abstraction layer (unified LLM interface)
+- LLM routing engine (model selection based on task type, cost, latency)
+- Prompt management system (versioned and modular prompts)
+- Conversation memory (short-term and long-term memory)
+- Agentic workflows (tool-using reasoning pipelines)
+- Streaming responses (token-level streaming from LLMs)
+- Citation-aware answer generation (linking responses to retrieved sources)
+
+### Key Architectural Shift
+
+Level 5 introduces a new abstraction layer:
+
+- Level 3–4: Retrieval-centric system (BM25 + Vector + RRF + Reranking)
+- Level 5: LLM orchestration layer on top of retrieval
+
+In Level 5, the system becomes:
+
+User → Retrieval Layer → Memory Layer → LLM Router → Model Providers → Streaming Answer
+
 
 
