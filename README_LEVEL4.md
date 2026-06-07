@@ -475,7 +475,7 @@ docker exec -it ollama ollama pull qwen2.5:7b
 docker logs opensearch
 ```
 
-## ## 🚀 Next Step: Level 5
+## 🚀 Next Step: Level 5
 
 Level 5 transforms the system from an advanced retrieval-augmented generation (RAG) platform into an enterprise-grade AI orchestration platform.
 
