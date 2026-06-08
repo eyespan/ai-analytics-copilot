@@ -5,6 +5,7 @@ from clients.ollama_client import OllamaClient
 #from streaming.sse import sse_response
 from streaming.sse import StreamEmitter
 from fastapi.responses import StreamingResponse
+import os
 
 
 app = FastAPI(title="Orchestrator Service")
@@ -18,7 +19,10 @@ def setup_router():
     router = pipeline.router
 
     # 👇 THIS IS THE MISSING PIECE
-    router.ollama_client = OllamaClient("http://ollama:11434")
+    router.ollama_client = OllamaClient(
+        base_url="http://ollama:11434",
+        model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+    )
 
 
 @app.get("/health")

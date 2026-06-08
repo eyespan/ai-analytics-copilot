@@ -76,23 +76,14 @@ class OllamaModel(BaseModel):
         self.model = model
 
     def generate(self, prompt: str) -> str:
-        response = self.client.generate(
-            model=self.model,
-            prompt=prompt
-        )
+        response = self.client.generate(prompt=prompt)
         if isinstance(response, dict):
             return response.get("response", "")
-
         return response
 
-
     def stream(self, prompt: str):
-
-        for chunk in self.client.stream_generate(
-            model=self.model,
-            prompt=prompt
-        ):
-            yield chunk   # already a token string
+        for chunk in self.client.stream_generate(prompt=prompt):
+            yield chunk
 
 # =========================
 # ROUTER (CORE LOGIC)
@@ -115,7 +106,8 @@ class ModelRouter:
         self.bedrock_client = None
         self.openai_client = None
         self.ollama_client = OllamaClient(
-            os.getenv("OLLAMA_HOST", "http://ollama:11434")
+            base_url=os.getenv("OLLAMA_HOST", "http://ollama:11434"),
+            model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
         )
 
     # -------------------------
