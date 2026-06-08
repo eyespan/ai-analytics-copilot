@@ -402,4 +402,32 @@ def eval_ranking_metrics(payload: dict):
         }
     }
     
-#========== Level 3 Addition ===========
+#========== Level 4 Addition ===========
+
+
+#========== Level 5 Addition ===========
+
+@app.post("/rerank")
+def rerank_endpoint(payload: dict):
+
+    try:
+
+        query = payload["query"]
+        docs = payload["documents"]
+
+        results = rerank(
+            query=query,
+            docs=docs
+        )
+
+        return {
+            "results": results
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
+
+
+#========== Level 5 Addition ===========
