@@ -21,6 +21,59 @@ This release introduces:
 
 # Architecture
 
+## 🏗️ Architecture
+
+```mermaid
+flowchart TD
+
+    A[User Request]
+
+    A --> B["FastAPI Orchestrator Service"]
+
+    B --> C["Conversation Memory<br/>ClickHouse"]
+    B --> D["Prompt Manager"]
+    B --> E["Prompt Router"]
+
+    E --> F["RAG Mode"]
+    E --> G["Code Mode"]
+    E --> H["Summary Mode"]
+    E --> I["Agent Mode"]
+
+    F --> J["Level 4 Retrieval Engine"]
+    I --> J
+
+    J --> K["RAG Service"]
+    K --> L["BM25 Search"]
+    K --> M["Vector Search"]
+    K --> N["RRF Fusion"]
+    K --> O["Cross Encoder Reranker"]
+
+    D --> P["Model Router"]
+
+    P --> Q["Ollama"]
+    P --> R["AWS Bedrock"]
+    P --> S["OpenAI (Future)"]
+
+    I --> T["Agent Executor"]
+
+    T --> U["get_time Tool"]
+    T --> V["search_docs Tool"]
+    T --> W["echo Tool"]
+
+    V --> J
+
+    Q --> X["Response Generation"]
+    R --> X
+    S --> X
+
+    X --> Y["Memory Persistence"]
+
+    Y --> Z["/ask Response"]
+
+    X --> AA["Streaming SSE"]
+    AA --> BB["/ask-stream"]
+```
+
 User Request
 
 ↓
