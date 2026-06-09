@@ -13,22 +13,21 @@ def search_docs_tool(args: dict) -> str:
     from rag_client import RagClient
 
     query = args.get("query", "").strip()
-
-    # expand short queries
-    if len(query.split()) <= 2:
-        query = f"{query} deep learning framework documentation"
-        rag = RagClient()
+    rag = RagClient()
 
     results = rag.debug_retrieval(query)
 
-    print("[RAG DEBUG]", results)
+    if "error" in results:
+        return "[DOC_ERROR] retrieval system unavailable"
 
     docs = results.get("hybrid_results", [])[:3]
 
     if not docs:
-        return "[DOC] No relevant documents found for query"
+        return "[DOC_EMPTY] no documents found"
 
-    return "\n".join([
-        f"[DOC] repo={d.get('repo_name')} | desc={d.get('description')}"
+    return "[DOC_RESULTS]\n" + "\n".join([
+        f"{d.get('repo_name')} - {d.get('description')}"
         for d in docs
-    ]) or "[DOC] no results found"
+    ])
+
+

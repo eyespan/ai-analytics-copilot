@@ -1,8 +1,18 @@
 import json
 import re
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from dataclasses import dataclass, field
 
 from agents.state import AgentState
+
+
+@dataclass
+class ToolResult:
+    """Structured tool output — never a raw formatted string."""
+    tool: str
+    args: Dict[str, Any]
+    output: str
+    success: bool
 
 
 class AgentExecutor:
@@ -12,45 +22,61 @@ class AgentExecutor:
         self.tools = tool_registry
         self.max_steps = max_steps
 
-    # =========================
-    # ENTRYPOINT
-    # =========================
     def run(self, query: str, context: str = "") -> str:
 
         state = AgentState(query=query)
+        tool_results: Dict[str, ToolResult] = {}  # keyed by tool name
+
+        # In run() — track failed tools and skip them
+        failed_tools: set = set()
+
+        # after storing tool result:
+        tool_results[tool_name] = ToolResult(
+            tool=tool_name,
+            args=args,
+            output=str(output),
+            success=not str(output).startswith(("[DOC_ERROR]", "Tool execution error", "Tool not found"))
+        )
+        if not tool_results[tool_name].success:
+            failed_tools.add(tool_name)
 
         for step_idx in range(self.max_steps):
-
             print(f"[AGENT] Step {step_idx + 1}")
 
-            action = self._think(state, context)
-
+            action = self._think(state, tool_results, context, failed_tools)
             print(f"[AGENT] Action: {action}")
 
             # -------------------------
-            # FINAL ANSWER
+            # FINAL ANSWER — exit immediately, never touch tool_name
             # -------------------------
             if action.get("final"):
                 print("[AGENT] Final answer generated")
                 return action.get("answer", "No answer generated")
 
+            # -------------------------
+            # Only assign tool_name AFTER confirming it's a tool action
+            # -------------------------
             tool_name = action.get("tool")
-            args = action.get("args", {}) or {}
+            args = action.get("args") or {}
 
-            # -------------------------
-            # TOOL VALIDATION FIRST (IMPORTANT FIX)
-            # -------------------------
             if not tool_name:
                 state.observations.append("No tool selected by model.")
                 continue
 
             if tool_name not in self.tools.list_tools():
-                obs = f"Invalid tool: {tool_name}"
-                state.observations.append(obs)
+                state.observations.append(f"Invalid tool: {tool_name}")
                 continue
 
             # -------------------------
-            # LOOP GUARD (FIXED ORDER)
+            # Skip already-failed tools
+            # -------------------------
+            if tool_name in failed_tools:
+                state.observations.append(f"{tool_name} already failed — skipping")
+                state.observations.append("Please proceed to next task or finalize.")
+                continue
+
+            # -------------------------
+            # Loop guard
             # -------------------------
             if (
                 state.last_tool is not None
@@ -58,144 +84,139 @@ class AgentExecutor:
                 and args == state.last_args
             ):
                 print("[AGENT] Repeated tool call detected → stopping early")
-                return self._final_answer(state)
+                return self._final_answer(state, tool_results)
 
             # -------------------------
-            # EXECUTE TOOL
+            # Execute
             # -------------------------
-            observation = self._execute(tool_name, args)
-            print(f"[AGENT] Observation stored: {observation}")
+            output = self._execute(tool_name, args)
+            print(f"[AGENT] Tool output: {output}")
 
-            state.observations.append(
-                f"[{tool_name}] {observation}"
+            success = not any(
+                str(output).startswith(prefix)
+                for prefix in ("[DOC_ERROR]", "Tool execution error", "Tool not found")
             )
 
-            # -------------------------
-            # UPDATE STATE AFTER EXECUTION (CRITICAL FIX)
-            # -------------------------
+            tool_results[tool_name] = ToolResult(
+                tool=tool_name,
+                args=args,
+                output=str(output),
+                success=success
+            )
+
+            if not success:
+                failed_tools.add(tool_name)
+
+            state.observations.append(f"[{tool_name}] completed")
             state.last_tool = tool_name
             state.last_args = args
 
-            # -------------------------
-            # SAFETY LIMIT
-            # -------------------------
             if len(state.observations) > 20:
                 print("[AGENT] Observation limit reached")
                 break
 
         print("[AGENT] Max steps reached → synthesizing answer")
-        return self._final_answer(state)
-    
-# =========================
-# THINK STEP
-# =========================
-    def _think(self, state: AgentState, context: str) -> Dict[str, Any]:
+        return self._final_answer(state, tool_results)
 
-        step_number = len(state.observations) + 1
+    # =========================
+    # THINK STEP
+    # =========================
+    def _think(
+        self,
+        state: AgentState,
+        tool_results: Dict[str, ToolResult],
+        context: str
+    ) -> Dict[str, Any]:
 
-        # -------------------------
-        # TASK STATE DERIVATION (FIX #3 CORE IDEA)
-        # -------------------------
-        obs_text = " ".join(state.observations).lower()
+        # task status derived from structured results, not string matching
+        has_time = "get_time" in tool_results
+        has_search = "search_docs" in tool_results
 
-        task_status = {
-            "get_time": any("[get_time]" in o for o in state.observations),
-            "search_docs": any(
-                "[search_docs]" in o or "[search]" in o
-                for o in state.observations
-             ),
-            "summarize": "summary" in obs_text or "final" in obs_text
-        }
+        resolved = self._resolve_tool_results(tool_results)
 
-        has_time = task_status["get_time"]
-        has_search = task_status["search_docs"]
+        # build failed tools summary for planner
+        failed_summary = (
+            "\n".join(f"- {t}: FAILED — do not retry" for t in failed_tools)
+            if failed_tools else "None"
+        )
 
-        if has_time and has_search and not task_status["summarize"]:
-            # force final summarization step
-            pass
+
+        # build a clean resolved summary for the planner
+        resolved = self._resolve_tool_results(tool_results)
 
         prompt = f"""
-    You are an AI planning agent.
+You are an AI planning agent.
 
-    Your job is to decide EXACTLY ONE next action.
+Your job is to decide EXACTLY ONE next action.
 
-    ==================================================
-    IMPORTANT RULES
-    ==================================================
+==================================================
+IMPORTANT RULES
+==================================================
 
-    1. Do NOT repeat completed tasks.
-    2. Use TASK STATUS below to decide what is done.
-    3. Execute ONLY ONE tool per step.
-    4. If everything is done → return final=true.
-    5. Output ONLY valid JSON.
+1. Do NOT repeat completed tasks.
+2. Do NOT retry FAILED tools — accept the failure and move on.
+3. Execute tasks IN ORDER as requested by the user.
+4. Execute ONLY ONE tool per step.
+5. If everything is done or failed → return final=true.
+6. Output ONLY valid JSON.
 
-    ==================================================
-    TASK STATUS (AUTO-DETECTED)
-    ==================================================
+==================================================
+TASK STATUS
+==================================================
 
-    - get_time: {task_status["get_time"]}
-    - search_docs: {task_status["search_docs"]}
-    - summarize: {task_status["summarize"]}
+- get_time completed: {has_time}
+- search_docs completed: {has_search}
 
-    ==================================================
-    AVAILABLE TOOLS
-    ==================================================
+==================================================
+FAILED TOOLS (DO NOT RETRY)
+==================================================
 
-    1. get_time
-    2. search_docs
-    3. echo
+{failed_summary}
 
-    ==================================================
-    USER REQUEST
-    ==================================================
+==================================================
+RESOLVED TOOL OUTPUTS
+==================================================
 
-    {state.query}
+{resolved}
 
-    ==================================================
-    CONTEXT
-    ==================================================
+==================================================
+AVAILABLE TOOLS
+==================================================
 
-    {context}
+1. get_time
+2. search_docs
+3. echo
 
-    ==================================================
-    OBSERVATIONS
-    ==================================================
+==================================================
+USER REQUEST
+==================================================
 
-    {state.observations}
+{state.query}
 
-    ==================================================
-    STOP CONDITION
-    ==================================================
+==================================================
+CONTEXT
+==================================================
 
-    If all required tasks are complete:
-    return:
-    {{
-    "final": true,
-    "answer": "..."
-    }}
+{context}
 
-    ==================================================
-    OUTPUT FORMAT
-    ==================================================
+==================================================
+STOP CONDITION
+==================================================
 
-    If calling tool:
-    {{
-    "tool": "tool_name",
-    "args": {{}}
-    }}
+If all required tasks are complete, return:
+{{
+  "final": true,
+  "answer": "..."
+}}
 
-    If finished:
-    {{
-    "final": true,
-    "answer": "..."
-    }}
-    """
+Otherwise return:
+{{
+  "tool": "tool_name",
+  "args": {{}}
+}}
+"""
 
         raw = self.model.generate(prompt)
-
-        print("========== AGENT PROMPT ==========")
-        print(prompt)
-        print("==================================")
         print(f"[AGENT] Raw model output: {raw}")
 
         cleaned = self._clean_json(raw)
@@ -203,72 +224,106 @@ class AgentExecutor:
         try:
             return json.loads(cleaned)
         except Exception:
-            return {
-                "final": True,
-                "answer": cleaned
-            }
+            return {"final": True, "answer": cleaned}
+
+    # =========================
+    # RESOLVE TOOL RESULTS
+    # — converts structured results to clean named values for prompts
+    # — this is what prevents [get_time] leaking into LLM output
+    # =========================
+    def _resolve_tool_results(self, tool_results: Dict[str, ToolResult]) -> str:
+        if not tool_results:
+            return "No tools have been executed yet."
+
+        lines = []
+        for tool_name, result in tool_results.items():
+            if result.success:
+                lines.append(f"{tool_name}: {result.output}")
+            else:
+                lines.append(f"{tool_name}: FAILED — {result.output}")
+        return "\n".join(lines)
+
     # =========================
     # TOOL EXECUTION
     # =========================
-    def _execute(self, tool_name: str, args: Dict[str, Any]):
-
-        print(f"[AGENT] Executing tool: {tool_name}")
-        print(f"[AGENT] Tool args: {args}")
+    def _execute(self, tool_name: str, args: Dict[str, Any]) -> str:
+        print(f"[AGENT] Executing tool: {tool_name} with args: {args}")
 
         tool = self.tools.get(tool_name)
-
         if not tool:
-            print(f"[AGENT] Tool not found: {tool_name}")
             return f"Tool not found: {tool_name}"
 
         try:
             result = tool(args)
             print(f"[AGENT] Tool result: {result}")
-            return result
+            return str(result)
         except Exception as e:
-            print(f"[AGENT] Tool execution error: {str(e)}")
+            print(f"[AGENT] Tool execution error: {e}")
             return f"Tool execution error: {str(e)}"
 
     # =========================
     # FINAL SYNTHESIS
+    # — receives resolved values, never raw observation strings
     # =========================
-    def _final_answer(self, state: AgentState):
+    def _final_answer(self, state: AgentState, tool_results: Dict[str, ToolResult]) -> str:
+
+        resolved = self._resolve_tool_results(tool_results)
+
+        # extract specific values cleanly so the LLM doesn't have to parse
+        time_value = tool_results["get_time"].output if "get_time" in tool_results else None
+        search_result = tool_results["search_docs"].output if "search_docs" in tool_results else None
+        search_failed = (
+            "search_docs" in tool_results and not tool_results["search_docs"].success
+        )
 
         prompt = f"""
-You are a reasoning assistant.
+You are a strict reasoning assistant.
 
-Create a final answer based ONLY on observations.
+You MUST only use the resolved values below.
+Do NOT use external knowledge or invent facts.
 
-USER QUERY:
+==================================================
+USER QUERY
+==================================================
 {state.query}
 
-OBSERVATIONS:
-{state.observations}
+==================================================
+RESOLVED VALUES
+==================================================
+{resolved}
 
-RULE:
-- Do not hallucinate new tools or data
-- Use only observations above
+==================================================
+RULES
+==================================================
+
+{"- Current time is: " + time_value if time_value else "- No time data available."}
+{"- Retrieved documents: " + search_result if search_result and not search_failed else ""}
+{"- Document retrieval FAILED. Do not invent document content." if search_failed else ""}
+{"- No documents were retrieved." if not search_result and not search_failed else ""}
+
+- Summarise only what is in RESOLVED VALUES.
+- Do NOT say 'I don't know' if time data exists.
+- Do NOT invent PyTorch or any other external facts.
+
+==================================================
+OUTPUT
+==================================================
+Provide a final coherent answer based only on the resolved values above.
 """
 
         return self.model.generate(prompt)
 
     # =========================
-    # JSON CLEANER (IMPORTANT FIX)
+    # JSON CLEANER
     # =========================
     def _clean_json(self, text: str) -> str:
-        """
-        Removes markdown and extracts JSON safely.
-        """
-
         if not text:
             return "{}"
 
-        # remove code block wrappers
         text = text.strip()
         text = re.sub(r"```json", "", text)
         text = re.sub(r"```", "", text)
 
-        # extract first JSON object if model adds noise
         match = re.search(r"\{.*\}", text, re.DOTALL)
         if match:
             return match.group(0)
