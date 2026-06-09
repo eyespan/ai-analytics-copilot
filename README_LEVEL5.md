@@ -19,9 +19,7 @@ This release introduces:
 
 ---
 
-# Architecture
-
-## 🏗️ Architecture
+# 🏗️ Architecture
 
 ```mermaid
 flowchart TD
@@ -73,45 +71,6 @@ flowchart TD
     X --> AA["Streaming SSE"]
     AA --> BB["/ask-stream"]
 ```
-
-User Request
-
-↓
-
-Prompt Router
-
-↓
-
-Model Router
-
-↓
-
-Selected LLM
-(Bedrock / Ollama)
-
-↓
-
-Prompt Manager
-
-↓
-
-Retrieval Context (Level 4)
-
-↓
-
-Memory
-
-↓
-
-Agent Orchestrator
-
-↓
-
-Tools
-
-↓
-
-Response / Streaming
 
 ---
 
@@ -367,7 +326,7 @@ Request:
 ## Start Services
 
 ```bash
-docker compose up --build
+make up
 ```
 
 Verify containers:
@@ -379,6 +338,8 @@ docker ps
 Expected:
 
 ```text
+api-gateway
+embedding-service
 rag-service
 orchestrator-service
 clickhouse
