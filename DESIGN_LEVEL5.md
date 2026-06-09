@@ -1,251 +1,464 @@
 # AI Analytics Copilot – Level 5 - Enterprise AI Orchestration Layer
 
-## 🎯 1. Level 5 Vision
+# AI Analytics Copilot – Level 5
+# Enterprise AI Orchestration Layer
 
-Level 5 transforms the system from:
+---
 
-`Advanced Retrieval-Augmented Generation (RAG) system`
+# 1. Vision
+
+Level 5 transforms the platform from:
+
+```text
+Advanced RAG System
+```
 
 into:
 
-`Enterprise AI Orchestration Platform`
+```text
+Enterprise AI Orchestration Platform
+```
 
-At this stage:
+Retrieval is already solved in Levels 3–4.
 
-- Retrieval is already solved (Level 3–4)
-- Ranking + evaluation is already solved (Level 4)
-- Now we focus on:
-    - LLM intelligence
-    - model routing
-    - memory
-    - agents
-    - streaming
-    - multi-provider abstraction
+Level 5 focuses on:
 
-We are no longer building “a chatbot”.
+- LLM orchestration
+- model routing
+- memory
+- prompt management
+- tool execution
+- agent workflows
+- streaming
 
-We are building:
+The platform becomes:
 
-`AI Platform = Retrieval Layer + LLM Router + Memory + Tools + Agents`
+```text
+AI Platform
+=
+Retrieval
++
+Models
++
+Memory
++
+Tools
++
+Agents
+```
 
-## 🏗️ 3. High-Level Architecture
+---
+
+# 2. High-Level Architecture
 
 ```mermaid
 flowchart TD
-    A[User Query] --> B[API Gateway]
-    B --> C["LLM Router (model selection layer)"]
-    C --> D["Bedrock (Claude)"]
-    C --> E["Ollama (Local)"]
-    D --> F[Prompt Management Layer]
-    E --> F
-    F --> G["Retrieval Context (Level 4 Engine)\nBM25 + Vector + RRF + Reranker"]
-    G --> H["Memory & Context Store\n(short + long term)"]
-    H --> I["Agent Orchestrator\n(tool execution layer)"]
-    I --> J[Streaming Response]
+
+A[User Query]
+    --> B[Orchestrator API]
+
+B --> C[Prompt Router]
+
+C --> D[Prompt Manager]
+
+D --> E[Model Router]
+
+E --> F[Ollama]
+E --> G[AWS Bedrock]
+E --> H[OpenAI]
+
+D --> I[Retrieval Layer]
+
+I --> J[BM25]
+I --> K[Vector Search]
+I --> L[RRF]
+I --> M[Reranker]
+
+D --> N[Memory Layer]
+
+N --> O[ClickHouse]
+
+D --> P[Agent Executor]
+
+P --> Q[get_time]
+P --> R[search_docs]
+P --> S[echo]
+
+P --> T[Answer Synthesis]
+
+T --> U[Streaming Response]
 ```
 
-## 🔌 4. Model Abstraction Layer (Core of Level 5)
+---
 
-Instead of calling models directly:
+# 3. Architectural Principles
 
-**❌ Level 4**
+## Reuse Existing Retrieval
 
-```bash
-ollama.generate()
+Level 5 does not replace retrieval.
+
+It reuses:
+
+- BM25
+- Vector Search
+- Reciprocal Rank Fusion
+- Cross Encoder Reranking
+
+through:
+
+```python
+RagClient()
 ```
 
-**✅ Level 5**
+---
 
-```bash
-llm_router.generate()
+## Separation of Concerns
+
+Each layer owns a single responsibility.
+
+| Layer | Responsibility |
+|---------|---------|
+| Prompt Router | Intent Classification |
+| Prompt Manager | Prompt Construction |
+| Model Router | Model Selection |
+| Retrieval | Knowledge Retrieval |
+| Memory | Session Persistence |
+| Agent Executor | Tool Orchestration |
+| Streaming | Response Delivery |
+
+---
+
+# 4. Prompt Management System
+
+Implemented:
+
+```text
+prompts/
+├── system_prompt.py
+├── rag_prompt.py
+├── code_prompt.py
+├── summary_prompt.py
+├── agent_prompt.py
+└── prompt_router.py
 ```
 
-**Interface**
-```bash
-class LLMProvider:
-    def generate(self, prompt: str, **kwargs) -> str:
-        pass
+Prompt types:
+
+```text
+RAG
+CODE
+SUMMARY
+AGENT
 ```
 
-## Implementations
+Benefits:
 
-- BedrockProvider
-- OpenAIProvider (optional)
-- ClaudeProvider (via Bedrock)
-- OllamaProvider (fallback)
+- centralized prompts
+- reusable templates
+- consistent behavior
+- future versioning support
 
-## Routing Logic
-```bash
-if query == "simple":
-    use Bedrock Haiku
-elif query == "reasoning":
+---
+
+# 5. Model Routing Layer
+
+Implemented:
+
+```python
+ModelRouter
+```
+
+Supported providers:
+
+```text
+Ollama
+AWS Bedrock
+OpenAI
+```
+
+Current routing strategy:
+
+```python
+if complexity == "high":
     use Claude Sonnet
-elif offline:
+
+elif complexity == "medium":
+    use Claude Haiku
+
+else:
     use Ollama
 ```
 
-## 🧭 5. LLM Router (Intelligence Layer)
+Benefits:
 
-The router decides:
+- cost optimization
+- latency optimization
+- provider abstraction
 
-- model selection
-- token budget
-- latency vs quality tradeoff
+---
 
-Example:
+# 6. Memory Architecture
 
-```bash
-route(query):
-    if complexity_score < 0.3:
-        return "bedrock-haiku"
+Implemented:
 
-    if requires_reasoning:
-        return "claude-sonnet"
-
-    return "ollama-qwen"
+```python
+ConversationMemory
 ```
 
-## 🧾 6. Prompt Management System
+Backed by:
 
-Centralized prompt registry:
-
-```bash
-prompts/
-  rag_answer.j2
-  agent_planner.j2
-  citation_generator.j2
-  summarizer.j2
-```
-Features:
-- versioned prompts
-- environment switching
-- A/B testing
-- reusable templates
-
-
-## 🧠 7. Memory System
-
-**Types of memory**
-
-### Short-term memory
-- conversation context window
-
-### Long-term memory
-
-Stored in:
-- OpenSearch OR
-- DynamoDB OR
-- ClickHouse (optional analytics layer)
-
-Stores:
-
-- user preferences
-- previous queries
-- semantic embeddings of interactions
-
-
-## 🤖 8. Agentic Workflow Layer
-
-Level 5 introduces controlled agents (NOT full autonomy chaos).
-
-Example flow:
-```bash
-User Query
-   ↓
-Planner LLM
-   ↓
-Retrieve context (Level 4)
-   ↓
-Call tools (reranker / search / memory)
-   ↓
-Reasoning LLM
-   ↓
-Answer Composer
+```text
+ClickHouse
 ```
 
-## 🌊 9. Streaming Responses
+Stored:
 
-Upgrade API endpoints:
-- /chat_stream
-- /agent_stream
-
-Behavior:
-- token-by-token output
-- Bedrock streaming support
-- fallback to chunked responses if needed
-
-
-## 📚 10. Citation-Aware Generation
-
-This is where Level 4 + Level 5 connect.
-
-Every answer must:
-- use retrieved context only
-- attach sources
-- avoid hallucination
-
-Example output:
-```json
-{
-  "answer": "PyTorch is a deep learning framework...",
-  "citations": [
-    "pytorch/pytorch",
-    "tensorflow/tensorflow"
-  ]
-}
+```text
+session_id
+query
+response
+timestamp
+metadata
 ```
 
-## 🔁 11. API Layer (Level 5)
+Purpose:
 
-New endpoints:
+- conversational continuity
+- future personalization
+- analytics foundation
 
-```bash
-POST /chat
-POST /chat/stream
-POST /agent
-POST /memory/query
-POST /llm/route
-POST /evaluate/llm
+---
+
+# 7. Agent Orchestration Layer
+
+Implemented:
+
+```python
+AgentExecutor
 ```
 
-## ☁️ 12. AWS Bedrock Integration (Core Provider)
+Capabilities:
 
-Primary production provider:
-- Claude 3 (Sonnet / Haiku)
-- Titan embeddings (optional upgrade path)
-- IAM-based auth (no API keys mess)
+- tool planning
+- tool execution
+- observation tracking
+- final answer synthesis
 
-## 🧩 13. Key Architectural Shift
+Safety controls:
 
-| Level   | Focus                                  |
-| ------- | -------------------------------------- |
-| Level 3 | Hybrid retrieval (BM25 + Vector + RRF) |
-| Level 4 | Ranking + evaluation + explainability  |
-| Level 5 | LLM orchestration + agents + memory    |
+- max steps
+- loop detection
+- failed tool tracking
+- duplicate execution prevention
 
+---
 
-## 🎯 14. Level 5 Success Criteria
+# 8. Tool Framework
 
-Level 5 is complete when:
+Implemented tools:
 
-- Multi-model routing works
-- Bedrock integrated successfully
-- Prompt system is modular
-- Memory persists across sessions
-- Streaming responses work
-- Agent workflow executes tool chains
-- Retrieval (Level 4) is fully reused
+```text
+get_time
+search_docs
+echo
+```
 
+Registry:
 
-## 🚀 15. Non-Goals (Important)
+```python
+ToolRegistry
+```
 
-Level 5 does NOT:
-- replace retrieval system (Level 4 stays core)
-- rebuild indexing or OpenSearch logic
-- introduce uncontrolled autonomous agents
+Benefits:
 
-## 🔥 Final Summary
+- extensible architecture
+- controlled execution
+- simple tool onboarding
 
-Level 5 =
+---
 
-`“Turn your RAG system into a production AI platform with multiple brains (models), memory, and orchestration."`
+# 9. Streaming Architecture
+
+Implemented endpoint:
+
+```http
+POST /ask-stream
+```
+
+Technology:
+
+```text
+Server Sent Events (SSE)
+```
+
+Flow:
+
+```text
+Model Stream
+      ↓
+Token Generator
+      ↓
+SSE Formatter
+      ↓
+Client
+```
+
+Benefits:
+
+- lower perceived latency
+- improved UX
+- provider-independent streaming
+
+---
+
+# 10. AWS Bedrock Integration
+
+Implemented:
+
+```python
+BedrockModel
+```
+
+Supported:
+
+- Claude Sonnet
+- Claude Haiku
+
+Capabilities:
+
+- IAM authentication
+- streaming support
+- provider abstraction
+
+Current state:
+
+```text
+Framework Complete
+Production Activation Pending
+```
+
+---
+
+# 11. Success Criteria Review
+
+| Requirement | Status |
+|------------|---------|
+| Multi-model routing | ✅ Complete |
+| Bedrock integration | ✅ Framework Complete |
+| Prompt system modular | ✅ Complete |
+| Memory persistence | ✅ Complete |
+| Streaming responses | ✅ Complete |
+| Agent tool chains | ✅ Complete |
+| Retrieval reused | ✅ Complete |
+
+---
+
+# 12. Additional Deliverables Achieved
+
+Beyond original scope:
+
+## Prompt Router
+
+Automatic intent classification:
+
+```text
+RAG
+CODE
+SUMMARY
+AGENT
+```
+
+---
+
+## Tool Registry
+
+Dynamic tool registration.
+
+---
+
+## Agent Safety Controls
+
+Implemented:
+
+- loop detection
+- failure handling
+- task completion checks
+- max execution limits
+
+---
+
+## Memory Persistence
+
+Conversation state survives requests.
+
+---
+
+## Streaming Framework
+
+Provider-independent streaming abstraction.
+
+---
+
+## Model Abstraction Layer
+
+Unified interface:
+
+```python
+model.generate()
+model.stream()
+```
+
+regardless of provider.
+
+---
+
+# 13. Key Architectural Shift
+
+| Level | Focus |
+|---------|---------|
+| Level 3 | Retrieval |
+| Level 4 | Ranking & Evaluation |
+| Level 5 | Orchestration |
+
+Level 5 introduces the orchestration layer that coordinates:
+
+```text
+Models
++
+Memory
++
+Tools
++
+Agents
++
+Retrieval
+```
+
+into a single platform.
+
+---
+
+# 14. Final Outcome
+
+Level 5 successfully transforms the platform from:
+
+```text
+RAG Application
+```
+
+into:
+
+```text
+Enterprise AI Orchestration Platform
+```
+
+with:
+
+- intelligent routing
+- modular prompts
+- persistent memory
+- streaming responses
+- controlled agents
+- tool execution
+- reusable retrieval
+- production-ready architecture
