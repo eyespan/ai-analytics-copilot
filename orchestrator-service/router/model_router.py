@@ -1,12 +1,7 @@
-from typing import Dict, Any, Optional
+from typing import Generator, Optional
 import os
-import json
 from clients.ollama_client import OllamaClient
 
-
-# =========================
-# LLM PROVIDERS (ABSTRACTIONS)
-# =========================
 
 class BaseModel:
     def __init__(self, name: str):
@@ -15,13 +10,11 @@ class BaseModel:
     def generate(self, prompt: str) -> str:
         raise NotImplementedError
 
-    def stream(self, prompt: str):
+    def stream(self, prompt: str) -> Generator[str, None, None]:
+        """Must yield plain strings — no SDK objects, no raw bytes."""
         raise NotImplementedError
 
 
-# -------------------------
-# BEDROCK (Claude / Titan)
-# -------------------------
 class BedrockModel(BaseModel):
     def __init__(self, client, model_id: str):
         super().__init__(f"bedrock:{model_id}")
@@ -35,16 +28,19 @@ class BedrockModel(BaseModel):
         )
         return response["body"]
 
-    def stream(self, prompt: str):
-        return self.client.invoke_model_with_stream(
+    def stream(self, prompt: str) -> Generator[str, None, None]:
+        # Bedrock returns an EventStream — extract text chunks here,
+        # never expose SDK objects to the pipeline layer
+        event_stream = self.client.invoke_model_with_response_stream(
             modelId=self.model_id,
             body={"prompt": prompt}
         )
+        for event in event_stream.get("body", []):
+            chunk = event.get("chunk", {})
+            if text := chunk.get("bytes", b"").decode("utf-8", errors="ignore"):
+                yield text
 
 
-# -------------------------
-# OPENAI (optional)
-# -------------------------
 class OpenAIModel(BaseModel):
     def __init__(self, client, model: str = "gpt-4o-mini"):
         super().__init__(f"openai:{model}")
@@ -58,17 +54,18 @@ class OpenAIModel(BaseModel):
         )
         return resp.choices[0].message.content
 
-    def stream(self, prompt: str):
-        return self.client.chat.completions.create(
+    def stream(self, prompt: str) -> Generator[str, None, None]:
+        # OpenAI SDK stream returns delta objects — unwrap to strings here
+        resp = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             stream=True
         )
+        for chunk in resp:
+            if text := chunk.choices[0].delta.content or "":
+                yield text
 
 
-# -------------------------
-# OLLAMA (local fallback)
-# -------------------------
 class OllamaModel(BaseModel):
     def __init__(self, client, model: str = "qwen2.5:7b"):
         super().__init__(f"ollama:{model}")
@@ -81,28 +78,13 @@ class OllamaModel(BaseModel):
             return response.get("response", "")
         return response
 
-    def stream(self, prompt: str):
+    def stream(self, prompt: str) -> Generator[str, None, None]:
         for chunk in self.client.stream_generate(prompt=prompt):
             yield chunk
 
-# =========================
-# ROUTER (CORE LOGIC)
-# =========================
 
 class ModelRouter:
-    """
-    Decides which LLM to use based on:
-    - query complexity
-    - cost sensitivity
-    - latency needs
-    - environment config
-    """
-
     def __init__(self):
-        self.primary_provider = os.getenv("PRIMARY_LLM", "bedrock")
-        self.fallback_provider = os.getenv("FALLBACK_LLM", "ollama")
-
-        # injected clients (set in main app startup)
         self.bedrock_client = None
         self.openai_client = None
         self.ollama_client = OllamaClient(
@@ -110,62 +92,36 @@ class ModelRouter:
             model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
         )
 
-    # -------------------------
-    # MODEL SELECTION
-    # -------------------------
     def select_model(self, query: str, context: str = "") -> BaseModel:
-
         complexity = self._estimate_complexity(query, context)
 
-        # -----------------------------------
-        # HIGH COMPLEXITY → BEDROCK (Claude)
-        # -----------------------------------
-        if complexity == "high":
-            if self.bedrock_client:
-                return BedrockModel(self.bedrock_client, "anthropic.claude-3-sonnet-20240229-v1:0")
+        if complexity == "high" and self.bedrock_client:
+            return BedrockModel(self.bedrock_client, "anthropic.claude-3-sonnet-20240229-v1:0")
 
-        # -----------------------------------
-        # MEDIUM → OpenAI or Bedrock fallback
-        # -----------------------------------
         if complexity == "medium":
             if self.openai_client:
                 return OpenAIModel(self.openai_client)
             if self.bedrock_client:
                 return BedrockModel(self.bedrock_client, "anthropic.claude-3-haiku-20240307-v1:0")
 
-        # -----------------------------------
-        # LOW COST → OLLAMA
-        # -----------------------------------
         if self.ollama_client:
             return OllamaModel(self.ollama_client)
 
-        # -----------------------------------
-        # FINAL FALLBACK
-        # -----------------------------------
         if self.bedrock_client:
             return BedrockModel(self.bedrock_client, "anthropic.claude-3-haiku-20240307-v1:0")
 
-        raise Exception("No LLM provider available")
+        raise RuntimeError("No LLM provider available")
 
-    # -------------------------
-    # SIMPLE QUERY CLASSIFIER
-    # -------------------------
     def _estimate_complexity(self, query: str, context: str) -> str:
-
         q = query.lower()
-
-        # heuristics (we can upgrade later with ML classifier)
         long_query = len(q.split()) > 12
-        has_reasoning_words = any(word in q for word in [
+        has_reasoning_words = any(w in q for w in [
             "explain", "compare", "why", "how", "architecture", "design"
         ])
-
         has_multiple_intents = " and " in q or " vs " in q
 
         if long_query or has_multiple_intents or has_reasoning_words:
             return "high"
-
         if len(q.split()) > 6:
             return "medium"
-
         return "low"

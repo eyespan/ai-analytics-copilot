@@ -1,28 +1,25 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from orchestrator.pipeline import OrchestrationPipeline
-from router.model_router import ModelRouter
-from clients.ollama_client import OllamaClient
-#from streaming.sse import sse_response
-from streaming.sse import StreamEmitter
 from fastapi.responses import StreamingResponse
 import os
 
-
-app = FastAPI(title="Orchestrator Service")
-
+from orchestrator.pipeline import OrchestrationPipeline
 
 pipeline = OrchestrationPipeline()
 
 
-@app.on_event("startup")
-def setup_router():
-    router = pipeline.router
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Ollama client is already initialised in ModelRouter.__init__()
+    # via env vars — nothing extra needed here unless injecting
+    # Bedrock or OpenAI clients at startup:
+    #
+    # import boto3
+    # pipeline.router.bedrock_client = boto3.client("bedrock-runtime", region_name="us-east-1")
+    yield
 
-    # 👇 THIS IS THE MISSING PIECE
-    router.ollama_client = OllamaClient(
-        base_url="http://ollama:11434",
-        model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
-    )
+
+app = FastAPI(title="Orchestrator Service", lifespan=lifespan)
 
 
 @app.get("/health")
@@ -32,30 +29,22 @@ def health():
 
 @app.post("/ask")
 def ask(payload: dict):
-
-    query = payload["query"]
-    session_id = payload.get("session_id", "default")
-
     result = pipeline.run(
-        query=query,
-        session_id=session_id,
+        query=payload["query"],
+        session_id=payload.get("session_id", "default"),
         stream=False
     )
-
+    print("PIPELINE OUTPUT:", result)
     return result
-
 
 
 @app.post("/ask-stream")
 def ask_stream(payload: dict):
-
-    stream_gen = pipeline.run(
-        query=payload["query"],
-        session_id=payload.get("session_id", "default"),
-        stream=True   # 🔥 THIS IS REQUIRED
-    )
-
     return StreamingResponse(
-        stream_gen,
+        pipeline.run(
+            query=payload["query"],
+            session_id=payload.get("session_id", "default"),
+            stream=True
+        ),
         media_type="text/event-stream"
     )
