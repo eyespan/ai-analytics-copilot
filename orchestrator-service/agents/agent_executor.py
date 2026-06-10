@@ -4,6 +4,8 @@ from typing import Dict, Any, Set
 from dataclasses import dataclass
 
 from agents.state import AgentState
+from core.structured_output import StructuredOutputValidator, StructuredOutputError
+from schemas.llm_schemas import ToolAction, FinalAnswer
 
 
 @dataclass
@@ -221,107 +223,145 @@ class AgentExecutor:
         prompt = f"""
 You are an AI planning agent.
 
-You are an AI planning agent.
-
 Your job is to decide EXACTLY ONE next action.
 
 ==================================================
 CRITICAL OUTPUT RULES
 ==================================================
 
-Return EXACTLY ONE JSON object.
+You MUST return EXACTLY ONE valid JSON object.
 
-VALID:
+You MUST NOT return:
+- multiple JSON objects
+- explanations
+- markdown
+- code fences
+- text outside JSON
+
+ONLY ONE JSON OBJECT IS ALLOWED.
+
+==================================================
+VALID OUTPUT FORMAT
+==================================================
+
+Tool call:
+
 {{"tool":"get_time","args":{{}}}}
 
-VALID:
 {{"tool":"search_docs","args":{{"query":"pytorch"}}}}
 
-VALID:
+Final answer:
+
 {{"final":true,"answer":"..."}}
 
-INVALID:
+==================================================
+INVALID OUTPUTS
+==================================================
+
+❌ Multiple JSON objects:
+
 {{"tool":"get_time","args":{{}}}}
 {{"tool":"search_docs","args":{{}}}}
 
-INVALID:
+❌ Text + JSON:
+
 Tool: get_time
 
-INVALID:
-Explanation followed by JSON
+{{"tool":"get_time","args":{{}}}}
 
-Return ONLY ONE JSON object and NOTHING else.
+❌ Explanations before JSON:
 
+I will now call a tool:
+
+{{"tool":"get_time","args":{{}}}}
 
 ==================================================
-IMPORTANT RULES
+HARD RULES
 ==================================================
 
-- NEVER retry failed tools.
-- NEVER repeat the previous tool.
-- If all tasks are completed or failed:
-  return final=true.
+- Return ONLY ONE JSON object
+- No multiple actions in one response
+- No commentary or reasoning
+- NEVER retry a failed tool
+- NEVER repeat the previous tool
+- NEVER assume a tool succeeded without observing output
+- When calling search_docs, use search terms from the USER REQUEST.
+- Do NOT invent search queries.
+- Do NOT replace tensorflow with pytorch.
+- Extract arguments directly from the request.
 
-FAILED TOOLS:
+If unsure:
+→ choose the most appropriate next tool
+
+If all tasks are complete or failed:
+→ return final=true
+
+==================================================
+FAILED TOOLS
+==================================================
+
 {failed_summary}
 
-TOOL RESULTS:
+==================================================
+TOOL RESULTS
+==================================================
+
 {resolved}
 
-AVAILABLE TOOLS:
+==================================================
+AVAILABLE TOOLS
+==================================================
+
 1. get_time
 2. search_docs
 3. echo
 
-USER REQUEST:
+==================================================
+USER REQUEST
+==================================================
+
 {state.query}
 
-CONTEXT:
+==================================================
+CONTEXT
+==================================================
+
 {context}
 
-OUTPUT JSON ONLY
+==================================================
+OUTPUT RULE
+==================================================
 
-Tool:
-{{
-  "tool":"tool_name",
-  "args":{{}}
-}}
-
-Final:
-{{
-  "final":true,
-  "answer":"..."
-}}
+Return ONLY a JSON object.
 """
+        validator = StructuredOutputValidator()
+        MAX_JSON_RETRIES = 2
+        for attempt in range(MAX_JSON_RETRIES):
+            raw = self.model.generate(prompt)
 
-        raw = self.model.generate(prompt)
+            # Fixed — observability logging moved inside except block
+            try:
+                data = validator.safe_parse(raw)
 
-        json_objects = re.findall(
-            r"\{[\s\S]*?\}",
-            raw
-        )
+                if "tool" in data:
+                    return ToolAction(**data).dict()
 
-        if len(json_objects) > 1:
-            print(
-                f"[AGENT WARNING] Model returned "
-                f"{len(json_objects)} JSON objects. "
-                f"Using first object only."
-            )
+                if "final" in data:
+                    return FinalAnswer(**data).dict()
 
-        cleaned = self._extract_first_json(raw)
+                raise StructuredOutputError("Unknown output format")
 
-        try:
-            return json.loads(cleaned)
-        except Exception as e:
-            print("[AGENT] JSON parse failed:", e)
-            return {
-            "final": True,
-            "answer": "Planner produced invalid JSON."
-        }
+            except StructuredOutputError as e:
+                print("[AGENT] Structured output failure:", str(e))
+                print("[OBSERVABILITY] structured_output_failure", {
+                    "raw": raw,
+                    "error": str(e)
+                })
+                return {
+                    "final": True,
+                    "answer": "System failed to produce valid structured output."
+                }
 
-    #
-    # ------------------------------------------------------------------
-    #
 
     def _resolve_tool_results(
         self,

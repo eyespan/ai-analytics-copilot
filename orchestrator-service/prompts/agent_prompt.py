@@ -24,4 +24,28 @@ Rules:
 - Break problem into steps
 - Suggest tools/services if needed
 - Think in workflows, not answers
+
+IMPORTANT OUTPUT FORMAT RULE:
+
+You MUST return ONLY valid JSON.
+
+Either:
+
+1. Tool call:
+{{{{
+  "tool": "tool_name",
+  "args": {{}}
+}}}}
+
+OR
+
+2. Final answer:
+{{{{
+  "final": true,
+  "answer": "string"
+}}}}
+
+NO OTHER FORMAT IS ALLOWED.
+NO EXPLANATION TEXT.
+NO MARKDOWN.
 """
