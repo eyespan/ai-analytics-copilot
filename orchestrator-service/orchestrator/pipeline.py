@@ -58,18 +58,32 @@ class OrchestrationPipeline:
                 tool_registry=self.tool_registry
             )
 
-            answer = executor.run(
+            
+            agent_result = executor.run(
                 query=query,
                 context=context
             )
 
-            self.memory.append(session_id, query, answer)
+            answer = agent_result["answer"]
+            trace = agent_result["trace"]
+
+            self.memory.append(
+                session_id,
+                query,
+                answer,
+                metadata={
+                    "trace": trace,
+                    "model": model.name,
+                    "mode": "agent"
+            }
+)
 
             if stream:
                 return self._stream_response(model, query, context, session_id)
 
             return {
                 "answer": answer,
+                "trace": trace,
                 "session_id": session_id,
                 "model_used": model.name,
                 "mode": "agent",
@@ -84,20 +98,49 @@ class OrchestrationPipeline:
         if not answer or answer.strip() == "":
             answer = "I couldn't generate a response from the model."
 
-        self.memory.append(session_id, query, answer)
+        self.memory.append(
+            session_id,
+            query,
+            answer,
+            metadata={
+                "trace": trace,
+                "model": model.name,
+                "mode": "agent"
+            }
+        )
+
+        trace = {
+            "type": "rag",
+            "retrieval": {
+                 "bm25": len(retrieval["bm25_results"]),
+                 "vector": len(retrieval["vector_results"]),
+                "hybrid": len(retrieval["hybrid_results"])
+            },
+            "rerank_top": reranked[:3]
+        }
 
         return {
             "answer": answer,
+            "trace": trace,
             "session_id": session_id,
             "model_used": model.name,
-            "latency_ms": int((time.time() - start_time) * 1000),
-            "retrieval": {
-                "bm25": len(retrieval["bm25_results"]),
-                "vector": len(retrieval["vector_results"]),
-                "hybrid": len(retrieval["hybrid_results"])
-            },
-            "reranked_top": reranked[:3]
+            "latency_ms": int((time.time() - start_time) * 1000)
         }
+
+        #return {
+        #    "answer": answer,
+        #    "session_id": session_id,
+        #    "model_used": model.name,
+        #    "latency_ms": int((time.time() - start_time) * 1000),
+        #    "retrieval": {
+        #        "bm25": len(retrieval["bm25_results"]),
+        #        "vector": len(retrieval["vector_results"]),
+        #        "hybrid": len(retrieval["hybrid_results"])
+        #    },
+        #    "reranked_top": reranked[:3],
+        #    # placeholder for Level 6 parity
+        #     "trace": None
+        #}
 
     def _retrieve(self, query: str) -> Dict[str, Any]:
         return self.rag.debug_retrieval(query)

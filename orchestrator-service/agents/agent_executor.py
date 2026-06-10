@@ -1,11 +1,14 @@
 import json
 import re
+import time
 from typing import Dict, Any, Set
 from dataclasses import dataclass
 
 from agents.state import AgentState
+from agents.trace import AgentTrace, StepTrace, TraceEventType
 from core.structured_output import StructuredOutputValidator, StructuredOutputError
 from schemas.llm_schemas import ToolAction, FinalAnswer
+
 
 
 @dataclass
@@ -22,17 +25,24 @@ class AgentExecutor:
         self.model = model
         self.tools = tool_registry
         self.max_steps = max_steps
+        
 
     def run(self, query: str, context: str = "") -> str:
 
         state = AgentState(query=query)
+        self.trace = AgentTrace(query=query)
+        #state.trace.query = query
 
         tool_results: Dict[str, ToolResult] = {}
 
         # failed tool names only
         failed_tools: Set[str] = set()
 
+        
+
         for step_idx in range(self.max_steps):
+
+            step_id = len(self.trace.steps) + 1
 
             print(f"[AGENT] Step {step_idx + 1}")
 
@@ -42,13 +52,28 @@ class AgentExecutor:
             #
             if self._all_tasks_finished(query, tool_results, failed_tools):
                 print("[AGENT] All tasks completed/failed")
-                return self._final_answer(state, tool_results)
+                final_answer = self._final_answer(state, tool_results)
+                return self._build_response(state, final_answer)
 
             action = self._think(
                 state=state,
                 tool_results=tool_results,
                 context=context,
                 failed_tools=failed_tools
+            )
+
+            planned_tool = action.get("tool", "final_answer")
+
+            self.trace.add_step(
+                StepTrace(
+                    step=len(self.trace.steps) + 1,
+                    tool=planned_tool,
+                    event_type=TraceEventType.PLAN,
+                     args=action.get("args", {}),
+                    output=json.dumps(action),
+                    success=True,
+                    latency_ms=0
+                )
             )
 
             print(f"[AGENT] Action: {action}")
@@ -58,7 +83,9 @@ class AgentExecutor:
             #
             if action.get("final"):
                 print("[AGENT] Final answer generated")
-                return action.get("answer", "No answer generated")
+                final_answer = action.get("answer", "No answer generated")
+                return self._build_response(state, final_answer)
+            
 
             tool_name = action.get("tool")
             args = action.get("args") or {}
@@ -102,14 +129,16 @@ class AgentExecutor:
                     state,
                     tool_results
                 )
+                
 
             #
             # EXECUTE
             #
-            output = self._execute(
-                tool_name,
-                args
-            )
+            
+            start = time.time()
+            output = self._execute(tool_name, args)
+            latency_ms = int((time.time() - start) * 1000)
+
 
             print(f"[AGENT] Tool output: {output}")
 
@@ -146,13 +175,24 @@ class AgentExecutor:
                 print("[AGENT] Observation limit reached")
                 break
 
+            self.trace.add_step(
+                StepTrace(
+                    step=step_id,
+                    tool=tool_name,
+                    event_type=TraceEventType.TOOL_EXECUTION,
+                    args=args,
+                    output=str(output),
+                    success=success,
+                    latency_ms=latency_ms
+                )
+            )
+
+
         print("[AGENT] Max steps reached → synthesizing answer")
 
-        return self._final_answer(
-            state,
-            tool_results
-        )
-
+        final_answer = self._final_answer(state, tool_results)
+        
+        return self._build_response(state, final_answer)
     #
     # ------------------------------------------------------------------
     #
@@ -465,7 +505,25 @@ RULES:
 Generate a concise final answer.
 """
 
-        return self.model.generate(prompt)
+        start = time.time()
+
+        answer = self.model.generate(prompt)
+
+        latency_ms = int((time.time() - start) * 1000)
+
+        self.trace.add_step(
+            StepTrace(
+                step=len(self.trace.steps) + 1,
+                tool="final_answer",
+                event_type=TraceEventType.FINAL_ANSWER,
+                args={},
+                output=answer,
+                success=True,
+                latency_ms=latency_ms
+            )
+        )
+
+        return answer
 
     #
     # ------------------------------------------------------------------
@@ -493,3 +551,9 @@ Generate a concise final answer.
                     return text[start:i + 1]
 
         return "{}"
+    
+    def _build_response(self, state, answer):
+        return {
+            "answer": answer,
+            "trace": self.trace.to_dict()
+        }
