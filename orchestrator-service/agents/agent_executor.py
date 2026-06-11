@@ -8,6 +8,7 @@ from agents.state import AgentState
 from agents.trace import AgentTrace, StepTrace, TraceEventType
 from core.structured_output import StructuredOutputValidator, StructuredOutputError
 from schemas.llm_schemas import ToolAction, FinalAnswer
+from agents.planner import Planner  # Ensure Planner is defined in agents.planner module
 
 
 
@@ -27,120 +28,107 @@ class AgentExecutor:
         self.max_steps = max_steps
         
 
-    def run(self, query: str, context: str = "") -> str:
+    def run(self, query: str, context: str = ""):
 
         state = AgentState(query=query)
         self.trace = AgentTrace(query=query)
-        #state.trace.query = query
 
         tool_results: Dict[str, ToolResult] = {}
-
-        # failed tool names only
         failed_tools: Set[str] = set()
 
-        
+        step_id = 0  # ✅ FIX 1: stable step counter
 
-        for step_idx in range(self.max_steps):
+        #
+        # CREATE EXECUTION PLAN
+        #
+        planner = Planner(self.model)
 
-            step_id = len(self.trace.steps) + 1
+        try:
+            plan = planner.create_plan(query)
+        except Exception as e:
+            return self._fallback_answer(f"Planner error: {str(e)}")
 
-            print(f"[AGENT] Step {step_idx + 1}")
+        # ----------------------------
+        # FIX 2: PLAN VALIDATION
+        # ----------------------------
+        if not plan or not plan.steps:
+            return self._fallback_answer("Empty plan")
 
-            #
-            # HARD STOP:
-            # if all required tasks are already complete or failed
-            #
-            if self._all_tasks_finished(query, tool_results, failed_tools):
-                print("[AGENT] All tasks completed/failed")
-                final_answer = self._final_answer(state, tool_results)
-                return self._build_response(state, final_answer)
+        self._validate_plan(plan)   # ✅ NEW (important for Phase 4)
 
-            action = self._think(
-                state=state,
-                tool_results=tool_results,
-                context=context,
-                failed_tools=failed_tools
+        #
+        # TRACE PLAN ONCE
+        #
+        step_id += 1
+        self.trace.add_step(
+            StepTrace(
+                step=step_id,
+                tool="planner",
+                event_type=TraceEventType.PLAN,
+                args={},
+                output=plan.model_dump(),
+                success=True,
+                latency_ms=0
             )
+        )
 
-            planned_tool = action.get("tool", "final_answer")
+        #
+        # EXECUTE PLAN STEPS
+        #
+        for planned_step in plan.steps:
 
-            self.trace.add_step(
-                StepTrace(
-                    step=len(self.trace.steps) + 1,
-                    tool=planned_tool,
-                    event_type=TraceEventType.PLAN,
-                     args=action.get("args", {}),
-                    output=json.dumps(action),
-                    success=True,
-                    latency_ms=0
-                )
-            )
+            print(f"[AGENT] Executing: {planned_step.tool}")
 
-            print(f"[AGENT] Action: {action}")
+            tool_name = planned_step.tool
+            args = planned_step.args or {}
 
-            #
-            # model explicitly finalized
-            #
-            if action.get("final"):
-                print("[AGENT] Final answer generated")
-                final_answer = action.get("answer", "No answer generated")
-                return self._build_response(state, final_answer)
-            
-
-            tool_name = action.get("tool")
-            args = action.get("args") or {}
-
-            if not tool_name:
-                state.observations.append("No tool selected.")
+            # ----------------------------
+            # FIX 4: INPUT GUARDRAIL (stub)
+            # ----------------------------
+            if not self.guardrails.validate_tool_input(tool_name, args):
+                self._trace_failed(tool_name, args, "Blocked by guardrail")
+                failed_tools.add(tool_name)
                 continue
 
             #
             # invalid tool
             #
             if tool_name not in self.tools.list_tools():
-                state.observations.append(f"Invalid tool: {tool_name}")
+                self._trace_failed(tool_name, args, "Invalid tool")
                 continue
 
             #
-            # HARD FAIL GUARD
+            # already failed
             #
             if tool_name in failed_tools:
 
-                print(
-                    f"[AGENT] Tool {tool_name} already failed -> skipping"
+                step_id += 1
+                self.trace.add_step(
+                    StepTrace(
+                        step=step_id,
+                        tool=tool_name,
+                        event_type=TraceEventType.TOOL_SKIPPED,
+                        args=args,
+                        output="Previously failed",
+                        success=False,
+                        latency_ms=0
+                    )
                 )
-
-                state.observations.append(
-                    f"{tool_name} already failed"
-                )
-
                 continue
 
             #
-            # HARD LOOP GUARD
+            # EXECUTE TOOL
             #
-            if tool_name == state.last_tool:
-
-                print(
-                    f"[AGENT] Repeated tool call detected ({tool_name})"
-                )
-
-                return self._final_answer(
-                    state,
-                    tool_results
-                )
-                
-
-            #
-            # EXECUTE
-            #
-            
             start = time.time()
+
             output = self._execute(tool_name, args)
+
             latency_ms = int((time.time() - start) * 1000)
 
-
-            print(f"[AGENT] Tool output: {output}")
+            # ----------------------------
+            # FIX 4: OUTPUT GUARDRAIL (stub)
+            # ----------------------------
+            output = self.guardrails.validate_tool_output(tool_name, output)
 
             success = not any(
                 str(output).startswith(prefix)
@@ -158,22 +146,9 @@ class AgentExecutor:
                 success=success
             )
 
-            if not success:
-                failed_tools.add(tool_name)
+            state.observations.append(f"[{tool_name}] {output}")
 
-            #
-            # store observation
-            #
-            state.observations.append(
-                f"[{tool_name}] {output}"
-            )
-
-            state.last_tool = tool_name
-            state.last_args = args
-
-            if len(state.observations) > 20:
-                print("[AGENT] Observation limit reached")
-                break
+            step_id += 1
 
             self.trace.add_step(
                 StepTrace(
@@ -191,54 +166,31 @@ class AgentExecutor:
                 )
             )
 
+            if not success:
+                failed_tools.add(tool_name)
 
-        print("[AGENT] Max steps reached → synthesizing answer")
-
+        #
+        # FINAL ANSWER
+        #
         final_answer = self._final_answer(state, tool_results)
-        
+
+        # ----------------------------
+        # FIX 3: TRACE FINAL ANSWER
+        # ----------------------------
+        step_id += 1
+        self.trace.add_step(
+            StepTrace(
+                step=step_id,
+                tool="final_answer",
+                event_type=TraceEventType.FINAL_ANSWER,
+                args={},
+                output=final_answer,
+                success=True,
+                latency_ms=0
+            )
+        )
+
         return self._build_response(state, final_answer)
-    #
-    # ------------------------------------------------------------------
-    #
-
-    def _all_tasks_finished(
-        self,
-        query: str,
-        tool_results: Dict[str, ToolResult],
-        failed_tools: Set[str]
-    ) -> bool:
-
-        q = query.lower()
-
-        needs_time = (
-            "time" in q
-        )
-
-        needs_search = (
-            "search" in q
-            or "document" in q
-            or "docs" in q
-            or "pytorch" in q
-        )
-
-        time_done = (
-            "get_time" in tool_results
-            or "get_time" in failed_tools
-        )
-
-        search_done = (
-            "search_docs" in tool_results
-            or "search_docs" in failed_tools
-        )
-
-        if needs_time and not time_done:
-            return False
-
-        if needs_search and not search_done:
-            return False
-
-        return True
-
     #
     # ------------------------------------------------------------------
     #
