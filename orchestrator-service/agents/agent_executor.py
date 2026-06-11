@@ -9,6 +9,8 @@ from agents.trace import AgentTrace, StepTrace, TraceEventType
 from core.structured_output import StructuredOutputValidator, StructuredOutputError
 from schemas.llm_schemas import ToolAction, FinalAnswer
 from agents.planner import Planner  # Ensure Planner is defined in agents.planner module
+from agents.guardrails import Guardrails  # Ensure Guardrails is defined in agents.guardrails module
+
 
 
 
@@ -26,8 +28,13 @@ class AgentExecutor:
         self.model = model
         self.tools = tool_registry
         self.max_steps = max_steps
+        self.guardrails = Guardrails()
         
 
+    # ------------------------------------------------------------
+    # MAIN RUN LOOP
+    # ------------------------------------------------------------
+   
     def run(self, query: str, context: str = ""):
 
         state = AgentState(query=query)
@@ -36,7 +43,14 @@ class AgentExecutor:
         tool_results: Dict[str, ToolResult] = {}
         failed_tools: Set[str] = set()
 
-        step_id = 0  # ✅ FIX 1: stable step counter
+        step_id = 0  # FIX 1: single consistent counter
+        #
+        # --------------------------------------------------------
+        # GUARDRAIL: PROMPT INJECTION (FIX 2 - CRITICAL)
+        # --------------------------------------------------------
+        if not self.guardrails.validate_prompt(query):
+            return self._fallback_answer("Blocked by prompt guardrail")
+
 
         #
         # CREATE EXECUTION PLAN
@@ -49,12 +63,13 @@ class AgentExecutor:
             return self._fallback_answer(f"Planner error: {str(e)}")
 
         # ----------------------------
-        # FIX 2: PLAN VALIDATION
+        # PLAN VALIDATION (FIX 2)
         # ----------------------------
         if not plan or not plan.steps:
             return self._fallback_answer("Empty plan")
 
-        self._validate_plan(plan)   # ✅ NEW (important for Phase 4)
+        if not self.guardrails.validate_plan(plan):
+            return self._fallback_answer("Invalid plan blocked by guardrails")
 
         #
         # TRACE PLAN ONCE
@@ -73,33 +88,74 @@ class AgentExecutor:
         )
 
         #
-        # EXECUTE PLAN STEPS
+        # EXECUTE PLAN
         #
         for planned_step in plan.steps:
 
-            print(f"[AGENT] Executing: {planned_step.tool}")
+            #print(f"[AGENT] Executing: {planned_step.tool}")
 
             tool_name = planned_step.tool
             args = planned_step.args or {}
-
+   
+            print(f"[AGENT] Executing: {tool_name}")
             # ----------------------------
             # FIX 4: INPUT GUARDRAIL (stub)
             # ----------------------------
-            if not self.guardrails.validate_tool_input(tool_name, args):
-                self._trace_failed(tool_name, args, "Blocked by guardrail")
+            
+
+            if not self.guardrails.validate_tool_permission(tool_name):
+
+                self._trace_failed(
+                    tool_name,
+                    args,
+                    "Permission denied"
+                )
+
+                continue
+
+            # if not self.guardrails.validate_tool_schema(
+            #    tool_name,
+            #    args
+            # ):
+            
+            #    self._trace_failed(
+            #        tool_name,
+            #         args,
+            #         "Schema validation failed"
+            #     )
+
+            #     continue
+
+            #1. check toools existence
+
+            if tool_name not in self.tools.list_tools():
+                self._trace_failed(tool_name, args, "Invalid tool")
                 failed_tools.add(tool_name)
                 continue
 
-            #
-            # invalid tool
-            #
-            if tool_name not in self.tools.list_tools():
-                self._trace_failed(tool_name, args, "Invalid tool")
+            # ----------------------------------------------------
+            # FIX 4: PERMISSION GUARDRAIL
+            # ----------------------------------------------------
+            if not self.guardrails.validate_tool_permission(tool_name):
+                self._trace_failed(tool_name, args, "Permission denied")
+                failed_tools.add(tool_name)
                 continue
 
-            #
-            # already failed
-            #
+            # ----------------------------------------------------
+            # FIX 4: INPUT VALIDATION (schema + safety)
+            # ----------------------------------------------------
+    
+            if not self.guardrails.validate_tool_input(tool_name, args):
+                self._trace_failed(tool_name, args, "Input blocked by guardrail")
+                failed_tools.add(tool_name)
+                continue
+
+         
+            
+
+            # ----------------------------------------------------
+            # SKIP IF PREVIOUSLY FAILED
+            # ----------------------------------------------------
             if tool_name in failed_tools:
 
                 step_id += 1
@@ -116,9 +172,9 @@ class AgentExecutor:
                 )
                 continue
 
-            #
-            # EXECUTE TOOL
-            #
+            # ----------------------------------------------------
+            # EXECUTION
+            # ----------------------------------------------------
             start = time.time()
 
             output = self._execute(tool_name, args)
@@ -174,9 +230,9 @@ class AgentExecutor:
         #
         final_answer = self._final_answer(state, tool_results)
 
-        # ----------------------------
-        # FIX 3: TRACE FINAL ANSWER
-        # ----------------------------
+        # --------------------------------------------------------
+        # FIX 3: FINAL ANSWER TRACE EVENT
+        # --------------------------------------------------------
         step_id += 1
         self.trace.add_step(
             StepTrace(
@@ -467,17 +523,17 @@ Generate a concise final answer.
 
         latency_ms = int((time.time() - start) * 1000)
 
-        self.trace.add_step(
-            StepTrace(
-                step=len(self.trace.steps) + 1,
-                tool="final_answer",
-                event_type=TraceEventType.FINAL_ANSWER,
-                args={},
-                output=answer,
-                success=True,
-                latency_ms=latency_ms
-            )
-        )
+        #self.trace.add_step(
+        #    StepTrace(
+        #        step=len(self.trace.steps) + 1,
+        #        tool="final_answer",
+        #        event_type=TraceEventType.FINAL_ANSWER,
+        #        args={},
+        #        output=answer,
+        #        success=True,
+        #        latency_ms=latency_ms
+        #    )
+        #)
 
         return answer
 
@@ -511,5 +567,27 @@ Generate a concise final answer.
     def _build_response(self, state, answer):
         return {
             "answer": answer,
+            "trace": self.trace.to_dict()
+        }
+
+    # ------------------------------------------------------------
+    # INTERNAL HELPERS
+    # ------------------------------------------------------------
+    def _trace_failed(self, tool_name, args, reason):
+        self.trace.add_step(
+            StepTrace(
+                step=len(self.trace.steps) + 1,
+                tool=tool_name,
+                event_type=TraceEventType.TOOL_FAILED,
+                args=args,
+                output=reason,
+                success=False,
+                latency_ms=0
+            )
+        )
+
+    def _fallback_answer(self, msg: str):
+        return {
+            "answer": msg,
             "trace": self.trace.to_dict()
         }
