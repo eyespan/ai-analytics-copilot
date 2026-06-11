@@ -179,7 +179,11 @@ class AgentExecutor:
                 StepTrace(
                     step=step_id,
                     tool=tool_name,
-                    event_type=TraceEventType.TOOL_EXECUTION,
+                    event_type=(
+                        TraceEventType.TOOL_EXECUTION
+                        if success
+                        else TraceEventType.TOOL_FAILED
+                    ),
                     args=args,
                     output=str(output),
                     success=success,
