@@ -4,6 +4,17 @@ from fastapi.responses import StreamingResponse
 import os
 
 from orchestrator.pipeline import OrchestrationPipeline
+from evaluation.runner import EvaluationRunner
+from evaluation.dataset_loader import load_dataset
+
+from agents.agent_executor import AgentExecutor
+from agents.tool_registry import ToolRegistry
+from agents.tools import (
+    get_time,
+    echo_tool,
+    search_docs_tool
+)
+from router.model_router import ModelRouter
 
 pipeline = OrchestrationPipeline()
 
@@ -20,6 +31,37 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Orchestrator Service", lifespan=lifespan)
+
+def build_eval_agent():
+
+    router = ModelRouter()
+
+    model = router.select_model(
+        query="evaluation",
+        context=""
+    )
+
+    tool_registry = ToolRegistry()
+
+    tool_registry.register(
+        "get_time",
+        get_time
+    )
+
+    tool_registry.register(
+        "echo",
+        echo_tool
+    )
+
+    tool_registry.register(
+        "search_docs",
+        search_docs_tool
+    )
+
+    return AgentExecutor(
+        model=model,
+        tool_registry=tool_registry
+    )
 
 
 @app.get("/health")
@@ -48,3 +90,16 @@ def ask_stream(payload: dict):
         ),
         media_type="text/event-stream"
     )
+
+@app.post("/evaluate")
+def evaluate(payload: dict):
+
+    agent = build_eval_agent()
+
+    runner = EvaluationRunner(agent)
+
+    dataset = payload["dataset"]
+
+    result = runner.run_dataset(dataset)
+
+    return result

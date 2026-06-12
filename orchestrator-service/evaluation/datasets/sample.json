@@ -1,0 +1,17 @@
+[
+    {
+      "id": "test_1",
+      "query": "what time is it and then search docs about tensorflow",
+      "expected_steps": [
+        {"tool": "get_time", "args": {}},
+        {"tool": "search_docs", "args": {"query": "tensorflow"}}
+      ]
+    },
+    {
+      "id": "test_2",
+      "query": "what time is it",
+      "expected_steps": [
+        {"tool": "get_time", "args": {}}
+      ]
+    }
+  ]

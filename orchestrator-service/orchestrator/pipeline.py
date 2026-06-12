@@ -31,7 +31,9 @@ class OrchestrationPipeline:
     def run(self, query: str, session_id: str, stream: bool = False) -> Dict[str, Any]:
         start_time = time.time()
         history = self.memory.get(session_id)
-        retrieval = self._retrieve(query)
+        #retrieval = self._retrieve(query)
+        retrieval_raw = self._retrieve(query)
+        retrieval = self._normalize_retrieval(retrieval_raw)    
 
         hybrid = retrieval.get("hybrid_results") or retrieval.get("results") or []
         reranked = self.rag.rerank(query, hybrid)
@@ -75,8 +77,8 @@ class OrchestrationPipeline:
                     "trace": trace,
                     "model": model.name,
                     "mode": "agent"
-            }
-)
+                }
+            )
 
             if stream:
                 return self._stream_response(model, query, context, session_id)
@@ -98,6 +100,17 @@ class OrchestrationPipeline:
         if not answer or answer.strip() == "":
             answer = "I couldn't generate a response from the model."
 
+        
+        trace = {
+            "type": "rag",
+            "retrieval": {
+                 "bm25": len(retrieval["bm25_results"]),
+                 "vector": len(retrieval["vector_results"]),
+                "hybrid": len(retrieval["hybrid_results"])
+            },
+            "rerank_top": reranked[:3]
+        }
+
         self.memory.append(
             session_id,
             query,
@@ -109,15 +122,7 @@ class OrchestrationPipeline:
             }
         )
 
-        trace = {
-            "type": "rag",
-            "retrieval": {
-                 "bm25": len(retrieval["bm25_results"]),
-                 "vector": len(retrieval["vector_results"]),
-                "hybrid": len(retrieval["hybrid_results"])
-            },
-            "rerank_top": reranked[:3]
-        }
+        
 
         return {
             "answer": answer,
@@ -178,3 +183,15 @@ class OrchestrationPipeline:
         yield f"data: {json.dumps({'token': '[DONE]'})}\n\n"
 
         self.memory.append(session_id, query, full_response)
+
+    def _normalize_retrieval(self, retrieval: dict) -> dict:
+
+        return {
+            "bm25_results": retrieval.get("bm25_results", []),
+            "vector_results": retrieval.get("vector_results", []),
+            "hybrid_results": (
+                retrieval.get("hybrid_results")
+                or retrieval.get("results")
+                or []
+            )
+        }
