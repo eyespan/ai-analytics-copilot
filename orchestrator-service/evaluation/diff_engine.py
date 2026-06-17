@@ -5,7 +5,8 @@ from evaluation.types import EvalResult, StepScore
 
 class DiffEngine:
 
-    IGNORED_TOOLS = {"planner", "final_answer"}
+    IGNORED_TOOLS = {"planner", "plan_repair", "final_answer"}
+   
 
     # ------------------------------------------------------------
     # MAIN ENTRY (STABLE CONTRACT)

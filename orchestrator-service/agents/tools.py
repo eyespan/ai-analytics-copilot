@@ -2,7 +2,10 @@ from datetime import datetime
 
 
 def get_time(_: dict) -> str:
-    return datetime.utcnow().isoformat()
+    # return datetime.utcnow().isoformat()
+    return {
+        "current_time": datetime.utcnow().isoformat()
+    }   
 
 
 def echo_tool(args: dict) -> str:

@@ -58,6 +58,8 @@ class EvaluationRunner:
 
         trace = agent_result["trace"]
 
+        workflow = agent_result.get("workflow")
+
         # -----------------------------
         # 2. REPLAY EXECUTION
         # -----------------------------
@@ -118,7 +120,9 @@ class EvaluationRunner:
 
             "replay": replay_comparison,
 
-            "trace": trace
+            "trace": trace,
+            
+            "workflow": workflow 
         }
 
     # ------------------------------------------------------------

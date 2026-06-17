@@ -10,6 +10,8 @@ class TraceEventType:
     TOOL_FAILED = "tool_failed"
     FINAL_ANSWER = "final_answer"
     PLAN = "plan"
+    PLAN_REPAIRED = "plan_repaired"
+    SCHEMA_VALIDATION_FAILED = "schema_validation_failed"
 
 @dataclass
 class StepTrace:
@@ -17,7 +19,8 @@ class StepTrace:
     tool: str = ""
     event_type: str = TraceEventType.TOOL_EXECUTION
     args: Dict[str, Any] = field(default_factory=dict)
-    output: str = ""
+    validated_args: dict | None = None
+    output: Any = None
     success: bool = True
     latency_ms: int = 0
 

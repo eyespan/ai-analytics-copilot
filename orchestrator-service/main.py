@@ -12,8 +12,9 @@ from agents.tool_registry import ToolRegistry
 from agents.tools import (
     get_time,
     echo_tool,
-    search_docs_tool
+    search_docs_tool,
 )
+from schemas.tool_models import GetTimeInput, GetTimeOutput,SearchDocsInput, SearchDocsOutput
 from router.model_router import ModelRouter
 
 pipeline = OrchestrationPipeline()
@@ -45,19 +46,23 @@ def build_eval_agent():
 
     tool_registry.register(
         "get_time",
-        get_time
+        get_time,
+        input_model=GetTimeInput,
+        output_model=GetTimeOutput
+    )
+
+    tool_registry.register(
+        "search_docs",
+        search_docs_tool,
+        input_model=SearchDocsInput,
+        output_model=SearchDocsOutput
     )
 
     tool_registry.register(
         "echo",
         echo_tool
     )
-
-    tool_registry.register(
-        "search_docs",
-        search_docs_tool
-    )
-
+    
     return AgentExecutor(
         model=model,
         tool_registry=tool_registry

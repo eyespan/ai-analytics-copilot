@@ -10,6 +10,9 @@ from core.structured_output import StructuredOutputValidator, StructuredOutputEr
 from schemas.llm_schemas import ToolAction, FinalAnswer
 from agents.planner import Planner  # Ensure Planner is defined in agents.planner module
 from agents.guardrails import Guardrails  # Ensure Guardrails is defined in agents.guardrails module
+from agents.plan_repair import PlanRepairEngine
+from workflows.workflow_manager import WorkflowManager
+
 
 
 
@@ -29,6 +32,8 @@ class AgentExecutor:
         self.tools = tool_registry
         self.max_steps = max_steps
         self.guardrails = Guardrails()
+        self.plan_repair = PlanRepairEngine()
+        self.workflow_manager = WorkflowManager()
         
 
     # ------------------------------------------------------------
@@ -38,152 +43,208 @@ class AgentExecutor:
     def run(self, query: str, context: str = ""):
 
         state = AgentState(query=query)
+        workflow = self.workflow_manager.create_workflow(query)
+        workflow.start()
         self.trace = AgentTrace(query=query)
 
         tool_results: Dict[str, ToolResult] = {}
         failed_tools: Set[str] = set()
 
-        step_id = 0  # FIX 1: single consistent counter
-        #
+        step_id = 0
+
         # --------------------------------------------------------
-        # GUARDRAIL: PROMPT INJECTION (FIX 2 - CRITICAL)
+        # GUARDRAIL: PROMPT INJECTION
         # --------------------------------------------------------
         if not self.guardrails.validate_prompt(query):
             return self._fallback_answer("Blocked by prompt guardrail")
 
-
-        #
+        # --------------------------------------------------------
         # CREATE EXECUTION PLAN
-        #
+        # --------------------------------------------------------
         planner = Planner(self.model)
 
         try:
-            plan = planner.create_plan(query)
+            original_plan = planner.create_plan(query)
+
+            if not original_plan or not getattr(original_plan, "steps", None):
+                return self._fallback_answer("Empty plan from planner")
+
+            step_id += 1
+            self.trace.add_step(
+                StepTrace(
+                    step=step_id,
+                    tool="planner",
+                    event_type=TraceEventType.PLAN,
+                    args={},
+                    output=original_plan.model_dump(),
+                    success=True,
+                    latency_ms=0
+                )
+            )
+
+            plan = self.plan_repair.repair(original_plan, query)
+
+            if not plan or not getattr(plan, "steps", None):
+                return self._fallback_answer("Empty plan after repair")
+
+            step_id += 1
+            self.trace.add_step(
+                StepTrace(
+                    step=step_id,
+                    tool="plan_repair",
+                    event_type=TraceEventType.PLAN_REPAIRED,
+                    args={},
+                    output={
+                        "changed": original_plan.model_dump() != plan.model_dump(),
+                        "plan": plan.model_dump()
+                    },
+                    success=True,
+                    latency_ms=0
+                )
+            )
+
         except Exception as e:
             return self._fallback_answer(f"Planner error: {str(e)}")
 
-        # ----------------------------
-        # PLAN VALIDATION (FIX 2)
-        # ----------------------------
-        if not plan or not plan.steps:
-            return self._fallback_answer("Empty plan")
-
+        # --------------------------------------------------------
+        # PLAN VALIDATION
+        # --------------------------------------------------------
         if not self.guardrails.validate_plan(plan):
             return self._fallback_answer("Invalid plan blocked by guardrails")
 
-        #
-        # TRACE PLAN ONCE
-        #
-        step_id += 1
-        self.trace.add_step(
-            StepTrace(
-                step=step_id,
-                tool="planner",
-                event_type=TraceEventType.PLAN,
-                args={},
-                output=plan.model_dump(),
-                success=True,
-                latency_ms=0
-            )
-        )
-
-        #
-        # EXECUTE PLAN
-        #
+        # --------------------------------------------------------
+        # EXECUTE PLAN (FIXED LOOP)
+        # --------------------------------------------------------
         for planned_step in plan.steps:
-
-            #print(f"[AGENT] Executing: {planned_step.tool}")
 
             tool_name = planned_step.tool
             args = planned_step.args or {}
-   
+
+           
             print(f"[AGENT] Executing: {tool_name}")
+
             # ----------------------------
-            # FIX 4: INPUT GUARDRAIL (stub)
+            # TOOL EXISTS CHECK
             # ----------------------------
-            
-
-            if not self.guardrails.validate_tool_permission(tool_name):
-
-                self._trace_failed(
-                    tool_name,
-                    args,
-                    "Permission denied"
-                )
-
-                continue
-
-            # if not self.guardrails.validate_tool_schema(
-            #    tool_name,
-            #    args
-            # ):
-            
-            #    self._trace_failed(
-            #        tool_name,
-            #         args,
-            #         "Schema validation failed"
-            #     )
-
-            #     continue
-
-            #1. check toools existence
-
             if tool_name not in self.tools.list_tools():
                 self._trace_failed(tool_name, args, "Invalid tool")
+                workflow.fail_step(tool_name)
                 failed_tools.add(tool_name)
                 continue
 
-            # ----------------------------------------------------
-            # FIX 4: PERMISSION GUARDRAIL
-            # ----------------------------------------------------
+            # ----------------------------
+            # PERMISSION CHECK
+            # ----------------------------
             if not self.guardrails.validate_tool_permission(tool_name):
                 self._trace_failed(tool_name, args, "Permission denied")
+                workflow.fail_step(tool_name)
                 failed_tools.add(tool_name)
                 continue
 
-            # ----------------------------------------------------
-            # FIX 4: INPUT VALIDATION (schema + safety)
-            # ----------------------------------------------------
-    
+            # ----------------------------
+            # INPUT VALIDATION
+            # ----------------------------
             if not self.guardrails.validate_tool_input(tool_name, args):
                 self._trace_failed(tool_name, args, "Input blocked by guardrail")
+                workflow.fail_step(tool_name)
                 failed_tools.add(tool_name)
                 continue
 
-         
-            
-
-            # ----------------------------------------------------
-            # SKIP IF PREVIOUSLY FAILED
-            # ----------------------------------------------------
-            if tool_name in failed_tools:
-
-                step_id += 1
-                self.trace.add_step(
-                    StepTrace(
-                        step=step_id,
-                        tool=tool_name,
-                        event_type=TraceEventType.TOOL_SKIPPED,
-                        args=args,
-                        output="Previously failed",
-                        success=False,
-                        latency_ms=0
-                    )
-                )
-                continue
-
-            # ----------------------------------------------------
+            # ----------------------------
             # EXECUTION
-            # ----------------------------------------------------
+            # ----------------------------
             start = time.time()
+            
+            input_model = self.tools.get_input_model(
+                tool_name
+            )
+            if input_model:
 
-            output = self._execute(tool_name, args)
+                try:
+
+                    validated_args = input_model(
+                            **args
+                        ).model_dump()
+
+                except Exception as e:
+
+                    workflow.fail_step(tool_name)
+
+                    step_id += 1
+
+                    self.trace.add_step(
+                        StepTrace(
+                            step=step_id,
+                            tool=tool_name,
+                            event_type=TraceEventType.SCHEMA_VALIDATION_FAILED,
+                            args=args,
+                            validated_args=validated_args,
+                            output=str(e),
+                            success=False,
+                            latency_ms=0
+                        )
+                    )
+
+                    continue
+            else:
+                validated_args = None
+
+
+            output = self._execute(
+                tool_name,
+                validated_args
+            )
+
+            output_model = self.tools.get_output_model(tool_name)
+
+            #if isinstance(output, str):
+                # normalize scalar → dict if schema exists
+            #    output_model = self.tools.get_output_model(tool_name)
+
+
+            #if not isinstance(output, dict):
+            #    raise ValueError(
+            #        f"Tool {tool_name} must return dict, got {type(output)}"
+            #    )
+
+            if output_model:
+
+                try:
+                    if not isinstance(output, dict):
+                      raise ValueError("Tool output must be dict before validation")
+                    
+                    validated_output = output_model(
+                        **output
+                    ).model_dump()
+
+                    output = validated_output
+
+                except Exception as e:
+
+                    workflow.fail_step(tool_name)
+
+                    step_id += 1
+
+                    self.trace.add_step(
+                        StepTrace(
+                            step=step_id,
+                            tool=tool_name,
+                            event_type=TraceEventType.SCHEMA_VALIDATION_FAILED,
+                            args=args,
+                            validated_args=validated_args,
+                            output=f"Output schema error: {str(e)}",
+                            success=False,
+                            latency_ms=0
+                        )
+                    )
+
+                    continue
+
+
+
 
             latency_ms = int((time.time() - start) * 1000)
 
-            # ----------------------------
-            # FIX 4: OUTPUT GUARDRAIL (stub)
-            # ----------------------------
             output = self.guardrails.validate_tool_output(tool_name, output)
 
             success = not any(
@@ -195,6 +256,12 @@ class AgentExecutor:
                 )
             )
 
+            if success:
+                workflow.complete_step(tool_name)
+            else:
+                workflow.fail_step(tool_name)
+                failed_tools.add(tool_name)
+
             tool_results[tool_name] = ToolResult(
                 tool=tool_name,
                 args=args,
@@ -205,34 +272,29 @@ class AgentExecutor:
             state.observations.append(f"[{tool_name}] {output}")
 
             step_id += 1
-
             self.trace.add_step(
                 StepTrace(
                     step=step_id,
                     tool=tool_name,
-                    event_type=(
-                        TraceEventType.TOOL_EXECUTION
-                        if success
-                        else TraceEventType.TOOL_FAILED
-                    ),
+                    event_type=TraceEventType.TOOL_EXECUTION if success else TraceEventType.TOOL_FAILED,
                     args=args,
-                    output=str(output),
+                    validated_args=validated_args,
+                    output=output,
                     success=success,
                     latency_ms=latency_ms
                 )
             )
 
-            if not success:
-                failed_tools.add(tool_name)
-
-        #
+        # --------------------------------------------------------
         # FINAL ANSWER
-        #
+        # --------------------------------------------------------
         final_answer = self._final_answer(state, tool_results)
 
-        # --------------------------------------------------------
-        # FIX 3: FINAL ANSWER TRACE EVENT
-        # --------------------------------------------------------
+        if workflow.failed_steps:
+            workflow.status = "completed_with_errors"
+        else:
+            workflow.finish()
+
         step_id += 1
         self.trace.add_step(
             StepTrace(
@@ -246,10 +308,19 @@ class AgentExecutor:
             )
         )
 
-        return self._build_response(state, final_answer)
-    #
-    # ------------------------------------------------------------------
-    #
+        response = self._build_response(state, final_answer)
+
+        response["workflow"] = {
+            "workflow_id": workflow.workflow_id,
+            "status": workflow.status,
+            "current_step": workflow.current_step,
+            "completed_steps": workflow.completed_steps,
+            "failed_steps": workflow.failed_steps
+        }
+
+        return response
+        # ------------------------------------------------------------------
+        #
 
     def _think(
         self,
@@ -469,7 +540,7 @@ Return ONLY a JSON object.
                 f"[AGENT] Tool result: {result}"
             )
 
-            return str(result)
+            return result
 
         except Exception as e:
 
