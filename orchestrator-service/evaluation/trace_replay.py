@@ -17,6 +17,9 @@ class TraceReplayEngine:
         print("[REPLAY] Starting trace replay")
 
         # Run fresh execution (deterministic baseline)
+        if hasattr(self.executor, "run_plan"):
+            raise ValueError("Evaluator must use MultiAgentOrchestrator, not AgentExecutor")
+
         result = self.executor.run(
             query=query,
             context=""

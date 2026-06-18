@@ -17,6 +17,10 @@ from agents.tools import (
 from schemas.tool_models import GetTimeInput, GetTimeOutput,SearchDocsInput, SearchDocsOutput
 from router.model_router import ModelRouter
 
+from agents.planner import Planner
+from agents.plan_repair import PlanRepairEngine
+from orchestrator.multi_agent_orchestrator import MultiAgentOrchestrator
+
 pipeline = OrchestrationPipeline()
 
 
@@ -62,11 +66,23 @@ def build_eval_agent():
         "echo",
         echo_tool
     )
-    
-    return AgentExecutor(
+
+    planner = Planner(model)
+
+    repair = PlanRepairEngine()
+
+    executor = AgentExecutor(
         model=model,
         tool_registry=tool_registry
     )
+
+    orchestrator = MultiAgentOrchestrator(
+        planner=planner,
+        repair=repair,
+        executor=executor
+    )
+
+    return orchestrator
 
 
 @app.get("/health")

@@ -70,17 +70,40 @@ class EvaluationRunner:
         # -----------------------------
         # 3. DIFF ENGINE (ALIGNMENT SCORE)
         # -----------------------------
+        execution_steps = [
+            {
+                "tool": s.get("tool"),
+                "args": s.get("args", {})
+            }
+            for s in trace["steps"]
+            if s.get("event_type") in (
+                "tool_execution",
+                "tool_failed"
+            )
+        ]
+
         diff_result = self.diff_engine.diff(
             expected_steps=expected_steps,
-            actual_trace=trace["steps"]
+            actual_trace=execution_steps
         )
-
-        # -----------------------------
+                # -----------------------------
         # 4. REPLAY COMPARISON
         # -----------------------------
+        replay_execution_steps = [
+            {
+                "tool": s.get("tool"),
+                "args": s.get("args", {})
+            }
+            for s in replay_trace["steps"]
+            if s.get("event_type") in (
+                "tool_execution",
+                "tool_failed"
+            )
+        ]
+
         replay_comparison = self._compare_traces(
-            trace["steps"],
-            replay_trace["steps"]
+            execution_steps,
+            replay_execution_steps
         )
 
         # -----------------------------
@@ -121,7 +144,7 @@ class EvaluationRunner:
             "replay": replay_comparison,
 
             "trace": trace,
-            
+
             "workflow": workflow 
         }
 

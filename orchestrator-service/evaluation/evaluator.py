@@ -19,20 +19,30 @@ class Evaluator:
         print(result)
 
         # trace = result["trace"]["steps"]
-        trace_obj = result.get("trace", {})
+        trace_obj = result.get("trace") or {}
 
-        if "steps" not in trace_obj:
+        # normalize executor-style or orchestrator-style traces
+        #trace = trace_obj.get("steps")
+
+        trace = [
+            {
+                "tool": s.get("tool"),
+                "args": s.get("args", {})
+            }
+            for s in trace_obj.get("steps", [])
+            if s.get("event_type") in [
+                "tool_execution",
+                "tool_failed"
+            ]
+        ]
+
+        if trace is None:
             return {
                 "query": query,
                 "passed": False,
-                "error": (
-                    "Expected agent trace but "
-                    f"received trace type={trace_obj.get('type')}"
-                ),
+                "error": f"Invalid trace format: {type(trace_obj)}",
                 "trace": trace_obj
             }
-
-        trace = trace_obj["steps"]
 
         # 2. diff expected vs actual
         diff_result = self.diff_engine.diff(

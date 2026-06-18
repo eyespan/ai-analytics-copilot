@@ -13,6 +13,9 @@ from prompts.prompt_router import PromptType
 from agents.agent_executor import AgentExecutor
 from agents.tool_registry import ToolRegistry
 from agents.tools import get_time, echo_tool, search_docs_tool
+from agents.planner import Planner  # Ensure Planner is defined in agents.planner module
+from agents.plan_repair import PlanRepairEngine
+from orchestrator.multi_agent_orchestrator import MultiAgentOrchestrator
 
 
 class OrchestrationPipeline:
@@ -27,6 +30,7 @@ class OrchestrationPipeline:
         self.tool_registry.register("get_time", get_time)
         self.tool_registry.register("echo", echo_tool)
         self.tool_registry.register("search_docs", search_docs_tool)
+        self.plan_repair = PlanRepairEngine() 
 
     def run(self, query: str, session_id: str, stream: bool = False) -> Dict[str, Any]:
         start_time = time.time()
@@ -55,13 +59,22 @@ class OrchestrationPipeline:
         # 5. 🔥 NEW: AGENT BRANCHING (THIS IS THE ONLY ADDITION)
         # =========================================================
         if prompt_type == PromptType.AGENT:
+
+            planner = Planner(model)
+            repair = PlanRepairEngine()
+
             executor = AgentExecutor(
                 model=model,
                 tool_registry=self.tool_registry
             )
 
-            
-            agent_result = executor.run(
+            orchestrator = MultiAgentOrchestrator(
+                planner=planner,
+                repair=repair,
+                executor=executor
+            )
+
+            agent_result = orchestrator.run(
                 query=query,
                 context=context
             )

@@ -45,5 +45,8 @@ class AgentTrace:
             "trace_id": self.trace_id,
             "query": self.query,
             "start_time": self.start_time,
-            "steps": [s.__dict__ for s in self.steps]
+            "steps": [
+                s if isinstance(s, dict) else s.__dict__
+                for s in self.steps
+            ]
         }
