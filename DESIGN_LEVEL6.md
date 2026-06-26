@@ -1205,6 +1205,7 @@ Each failure produces:
   "event_type": "tool_failed",
   "reason": "Permission denied"
 }
+```
 
 ## 21.3 Pipeline-Level Resilience
 
