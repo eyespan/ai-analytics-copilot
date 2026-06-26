@@ -129,6 +129,8 @@ class MultiAgentOrchestrator:
         # EXECUTION
         # ====================================================
 
+        state.context = context
+        
         result = self.executor.run_plan(
             repaired_plan,
             query=query,

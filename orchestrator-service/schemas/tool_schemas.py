@@ -28,10 +28,13 @@
 
 TOOL_SCHEMAS = {
 
- "get_time": {},
+    "get_time": {},
 
-   "search_docs": {
+    "search_docs": {
        "query": str
-   }
+   },
+   "echo": {
+        "message": str
+    }
 
 }

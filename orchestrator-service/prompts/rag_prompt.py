@@ -12,6 +12,8 @@ Retrieved context:
 {context}
 
 Rules:
-- Use ONLY retrieved context
-- If missing info, say "I don't know"
+- Use retrieved context when it is relevant and helpful
+- If the context is empty or incomplete, rely on general knowledge
+- If context conflicts with general knowledge, prefer correctness over strict adherence
+- Do not say "I don't know" unless the question is truly unanswerable
 """

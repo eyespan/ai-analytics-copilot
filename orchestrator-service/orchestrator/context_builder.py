@@ -19,7 +19,8 @@ class PromptManager:
         print(f"[PROMPT ROUTER] Query: {query}")
         print(f"[PROMPT ROUTER] Classified as: {prompt_type}")
 
-        history_text = self._format_history(history or [])
+        #history_text = self._format_history(history or [])
+        history_text = ""
 
         if prompt_type == PromptType.CODE:
              prompt = SYSTEM_PROMPT + "\n\n" + CODE_PROMPT.format(

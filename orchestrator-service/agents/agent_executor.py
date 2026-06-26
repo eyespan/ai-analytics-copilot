@@ -54,6 +54,12 @@ class AgentExecutor:
         step_id = 0
 
         # ========================================================
+        # 🔥 NEW: TOOL EXECUTION BUDGET
+        # ========================================================
+        max_calls = getattr(self.guardrails, "max_tool_calls", 10)
+        tool_call_count = 0
+
+        # ========================================================
         # EXECUTE PLAN
         # ========================================================
         for planned_step in plan.steps:
@@ -62,6 +68,27 @@ class AgentExecutor:
             args = planned_step.args or {}
 
             print(f"[AGENT] Executing: {tool_name}")
+
+            # ----------------------------------------------------
+            # 🔥 TOOL LIMIT CHECK (HARD STOP)
+            # ----------------------------------------------------
+            if tool_call_count >= max_calls:
+                step_id += 1
+
+                self.trace.add_step(
+                    StepTrace(
+                        step=step_id,
+                        tool="guardrail",
+                        event_type=TraceEventType.TOOL_FAILED,
+                        args={},
+                        output="Tool execution limit exceeded",
+                        success=False,
+                        latency_ms=0
+                    )
+                )
+
+                workflow.fail_step("tool_limit")
+                break
 
             # ----------------------------
             # TOOL EXISTS
@@ -123,6 +150,11 @@ class AgentExecutor:
             start = time.time()
 
             output = self._execute(tool_name, validated_args)
+
+            output = self.guardrails.validate_tool_output(tool_name, output)
+
+            # 🔥 COUNT ONLY AFTER REAL EXECUTION
+            tool_call_count += 1
 
             # ----------------------------
             # OUTPUT SCHEMA VALIDATION
@@ -191,7 +223,7 @@ class AgentExecutor:
             )
 
         # ========================================================
-        # # workflow owned by orchestrator
+        # FINAL ANSWER
         # ========================================================
         final_answer = self._final_answer(state, tool_results)
 
@@ -219,7 +251,6 @@ class AgentExecutor:
                 "failed_steps": workflow.failed_steps
             }
         }
-
     # ============================================================
     # LEGACY SUPPORT (OPTIONAL)
     # ============================================================
@@ -256,10 +287,14 @@ class AgentExecutor:
         prompt = f"""
 USER: {state.query}
 
+RETRIEVED CONTEXT:
+{getattr(state, "context", "")}
+
 TOOLS:
 {resolved}
 
-Return a concise final answer.
+Answer using both retrieved context and tool outputs.
+Be precise and factual.
 """
 
         return self.model.generate(prompt)

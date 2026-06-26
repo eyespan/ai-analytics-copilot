@@ -16,6 +16,7 @@ from agents.tools import get_time, echo_tool, search_docs_tool
 from agents.planner import Planner  # Ensure Planner is defined in agents.planner module
 from agents.plan_repair import PlanRepairEngine
 from orchestrator.multi_agent_orchestrator import MultiAgentOrchestrator
+from agents.guardrails import Guardrails
 
 
 class OrchestrationPipeline:
@@ -31,9 +32,25 @@ class OrchestrationPipeline:
         self.tool_registry.register("echo", echo_tool)
         self.tool_registry.register("search_docs", search_docs_tool)
         self.plan_repair = PlanRepairEngine() 
+        self.guardrails = Guardrails()
 
     def run(self, query: str, session_id: str, stream: bool = False) -> Dict[str, Any]:
         start_time = time.time()
+        # -------------------------------------------------
+        # PROMPT GUARDRAIL
+        # -------------------------------------------------
+        if not self.guardrails.validate_prompt(query):
+
+            return {
+                "answer": "[BLOCKED_BY_GUARDRAIL] Prompt rejected",
+                "trace": {
+                    "type": "guardrail",
+                    "events": self.guardrails.get_events()
+                },
+                "session_id": session_id,
+                "model_used": None,
+                "latency_ms": 0
+            }
         history = self.memory.get(session_id)
         #retrieval = self._retrieve(query)
         retrieval_raw = self._retrieve(query)

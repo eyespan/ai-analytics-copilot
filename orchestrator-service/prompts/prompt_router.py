@@ -7,6 +7,7 @@ class PromptType:
         CODE = "code"
         AGENT = "agent"
         SUMMARY = "summary"
+        DIRECT_LLM = "direct_llm"
 
 
 class PromptRouter:
@@ -39,7 +40,17 @@ class PromptRouter:
         ]):
             return PromptType.SUMMARY
 
+        # -------------------------
+        # HIGH reasoning intent → DIRECT LLM
+        # -------------------------
+        if any(k in q for k in [
+            "explain", "compare", "why", "how", "architecture",
+            "tradeoffs", "design", "cap theorem", "scalability"
+        ]):
+            return PromptType.DIRECT_LLM
+        
         print(f"[PROMPT ROUTER] Query: {query}")
+
         # -------------------------
         # DEFAULT → RAG
         # -------------------------

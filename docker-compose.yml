@@ -151,9 +151,16 @@ services:
       - CLICKHOUSE_PORT=9000
       - PRIMARY_LLM=bedrock
       - FALLBACK_LLM=ollama
+       - AWS_PROFILE=default
+      - AWS_REGION=us-east-1
+      - BEDROCK_ENABLED=true
+      - BEDROCK_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0
+    volumes:
+      - ~/.aws:/root/.aws:ro
 
 volumes:
   clickhouse_data:
   opensearch_data:
   dynamodb_data:
   ollama:
+  orchestrator-service:

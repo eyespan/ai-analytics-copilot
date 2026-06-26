@@ -1,44 +1,55 @@
 from typing import Generator, Optional
 import os
 from clients.ollama_client import OllamaClient
+from clients.bedrock_client import BedrockClient
+from config.settings import *
 
 
 class BaseModel:
-    def __init__(self, name: str):
+
+    def __init__(
+        self,
+        name: str
+    ):
         self.name = name
 
-    def generate(self, prompt: str) -> str:
+    def generate(
+        self,
+        prompt: str
+    ) -> str:
         raise NotImplementedError
 
-    def stream(self, prompt: str) -> Generator[str, None, None]:
-        """Must yield plain strings — no SDK objects, no raw bytes."""
+    def stream(
+        self,
+        prompt: str
+    ):
         raise NotImplementedError
-
 
 class BedrockModel(BaseModel):
-    def __init__(self, client, model_id: str):
+
+    def __init__(
+        self,
+        client,
+        model_id: str
+    ):
         super().__init__(f"bedrock:{model_id}")
+
         self.client = client
         self.model_id = model_id
 
-    def generate(self, prompt: str) -> str:
-        response = self.client.invoke_model(
-            modelId=self.model_id,
-            body={"prompt": prompt}
-        )
-        return response["body"]
+    def generate(
+        self,
+        prompt: str
+    ) -> str:
 
-    def stream(self, prompt: str) -> Generator[str, None, None]:
-        # Bedrock returns an EventStream — extract text chunks here,
-        # never expose SDK objects to the pipeline layer
-        event_stream = self.client.invoke_model_with_response_stream(
-            modelId=self.model_id,
-            body={"prompt": prompt}
-        )
-        for event in event_stream.get("body", []):
-            chunk = event.get("chunk", {})
-            if text := chunk.get("bytes", b"").decode("utf-8", errors="ignore"):
-                yield text
+        return self.client.generate(prompt)
+
+    def stream(
+        self,
+        prompt: str
+    ):
+
+        yield from self.client.stream_generate(prompt)
 
 
 class OpenAIModel(BaseModel):
@@ -92,23 +103,59 @@ class ModelRouter:
             model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
         )
 
-    def select_model(self, query: str, context: str = "") -> BaseModel:
-        complexity = self._estimate_complexity(query, context)
+        self.bedrock_client = None
 
-        if complexity == "high" and self.bedrock_client:
-            return BedrockModel(self.bedrock_client, "anthropic.claude-3-sonnet-20240229-v1:0")
+        if os.getenv("BEDROCK_ENABLED", "true") == "true":
+            self.bedrock_client = BedrockClient(
+                model_id=os.getenv(
+                    "BEDROCK_MODEL_ID",
+                    "anthropic.claude-3-haiku-20240307-v1:0"
+                )
+            )
 
-        if complexity == "medium":
-            if self.openai_client:
-                return OpenAIModel(self.openai_client)
-            if self.bedrock_client:
-                return BedrockModel(self.bedrock_client, "anthropic.claude-3-haiku-20240307-v1:0")
+    def select_model(
+        self,
+        query: str,
+        context: str = ""
+        ) -> BaseModel:
 
+        complexity = self._estimate_complexity(
+            query,
+            context
+        )
+
+        print(f"[ROUTER] complexity={complexity} query={query[:60]}")
+
+        # ------------------------------
+        # 1. HIGH complexity → Bedrock FIRST
+        # ------------------------------
+        if (
+            complexity == "high"
+            and self.bedrock_client
+        ):
+            return BedrockModel(
+                self.bedrock_client,
+                self.bedrock_client.model_id
+            )
+        
+        # 2. MEDIUM → optionally Bedrock or Ollama fallback
+        if complexity == "medium" and self.bedrock_client:
+            return BedrockModel(
+                self.bedrock_client,
+                self.bedrock_client.model_id
+            )
+
+        # ------------------------------
+        # 3. LOW → Ollama
+        # ------------------------------
+         # ------------------------------
+        # Default -> Ollama fallback
+        # ------------------------------
         if self.ollama_client:
             return OllamaModel(self.ollama_client)
-
-        if self.bedrock_client:
-            return BedrockModel(self.bedrock_client, "anthropic.claude-3-haiku-20240307-v1:0")
+            return OllamaModel(
+            self.ollama_client
+        )
 
         raise RuntimeError("No LLM provider available")
 
