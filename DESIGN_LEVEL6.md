@@ -9,10 +9,10 @@ Level 6 transforms the AI Analytics Copilot from an intelligent Retrieval-Augmen
 
 Previous levels focused primarily on improving intelligence:
 
-- Level 1 — Basic LLM integration
-- Level 2 — Semantic retrieval
-- Level 3 — Hybrid search
-- Level 4 — Advanced retrieval and reranking
+- Level 1 — Keyword + Embedding Ingestion Pipeline
+- Level 2 — Keyword (BM25) Retrieval (RAG layer)
+- Level 3 — True hybrid RAG pipeline
+- Level 4 — Advanced RAG + Ranking Intelligence System
 - Level 5 — Memory, agents and orchestration
 
 Level 6 shifts the focus from **building intelligence** to **operating intelligence safely in production**.
