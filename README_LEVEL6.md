@@ -55,7 +55,7 @@ The project has been developed incrementally, with each level introducing a dist
 
 | Level | Focus |
 |---------|---------|
-| Level 1 | Keyword + Embedding Ingestion Pipeline |
+| Level 1 | Embedding & Data Ingestion Pipeline |
 | Level 2 | Keyword (BM25) Retrieval Layer |
 | Level 3 | Hybrid Retrieval Pipeline (BM25 + Vector + RRF) |
 | Level 4 | Advanced RAG + Ranking Intelligence |
@@ -67,7 +67,7 @@ Each level builds upon the previous one without replacing existing functionality
 ```text
 Level 1
         ↓
-Document Ingestion
+Data Ingestion
 
 Level 2
         ↓
@@ -357,11 +357,6 @@ This consistency makes the platform suitable for production deployments where re
 
 ---
 
-**Continue to Part 2 → API Endpoints, Request Examples and Testing**
-
-
----
-
 # 7. API Endpoints Overview
 
 Level 6 exposes three core production endpoints:
@@ -385,6 +380,30 @@ But diverges depending on execution mode:
 | /ask | Standard execution |
 | /ask-stream | Streaming execution |
 | /evaluate | Deterministic evaluation replay |
+
+## Start Services
+
+```bash
+make up
+```
+
+Verify containers:
+
+```bash
+docker ps
+```
+
+Expected:
+
+```text
+api-gateway
+embedding-service
+rag-service
+orchestrator-service
+clickhouse
+opensearch
+ollama
+```
 
 ---
 
@@ -776,21 +795,6 @@ It enhances how retrieval is:
 - evaluated
 - validated
 
----
-
-## Next Section Preview
-
-**Part 3 will cover:**
-
-- Memory system (ClickHouse integration)
-- Multi-agent orchestration (Planner → Repair → Executor)
-- Workflow manager
-- Tool registry
-- Guardrails system
-- Structured outputs
-```
-
----
 
 # 13. Memory Layer (ClickHouse Conversation Store)
 
@@ -1219,19 +1223,6 @@ Ensure:
 - clean separation between retrieval, memory, and reasoning
 
 ---
-
-# End of Part 3
-
-Next section:
-
-👉 **Part 4 will cover:**
-- structured outputs system
-- observability & tracing design
-- evaluation pipeline (`/evaluate`)
-- streaming system (`/ask-stream`)
-- Bedrock runtime integration
-- error handling + constraints
-
 
 ## 21. Structured Outputs System
 
