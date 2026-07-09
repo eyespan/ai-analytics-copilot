@@ -1,5 +1,5 @@
 import requests
-from config import OLLAMA_URL, OLLAMA_MODEL
+from config import OLLAMA_MODEL, OLLAMA_URL
 
 
 def generate(prompt: str):

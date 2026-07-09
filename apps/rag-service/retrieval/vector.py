@@ -1,7 +1,6 @@
-from clients.opensearch_client import opensearch
 from clients.embedding_client import get_embedding
-
-from config import TOP_K, INDEX_NAME
+from clients.opensearch_client import opensearch
+from config import INDEX_NAME, TOP_K
 
 
 def vector_search(query: str):

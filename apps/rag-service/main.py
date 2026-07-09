@@ -1,5 +1,13 @@
+from clickhouse_client import get_top_repositories, test_connection
+from evaluation.batch_eval import run_batch_eval
+from evaluation.metrics import recall_at_k, reciprocal_rank
 from fastapi import FastAPI
-
+from llm.generator import generate_answer
+# ====== Level 3 Addition =======
+# ====== Level 4 Addition =======
+from retrieval.bm25 import bm25_search
+from retrieval.hybrid import expand_query, hybrid_search, rrf_fusion
+from retrieval.reranker import rerank
 # =====Level2 Addition =======
 # import requests - rmoved in level 3
 # from opensearchpy import OpenSearch - removed in level 3
@@ -7,21 +15,10 @@ from fastapi import FastAPI
 # ====== Level2
 # ====== Level 3 Addition =======
 from retrieval.vector import vector_search
-from retrieval.hybrid import hybrid_search
-from llm.generator import generate_answer
-
-# ====== Level 3 Addition =======
-# ====== Level 4 Addition =======
-from retrieval.bm25 import bm25_search
-from retrieval.hybrid import rrf_fusion, expand_query
-from retrieval.reranker import rerank
-from evaluation.metrics import recall_at_k, reciprocal_rank
-from evaluation.batch_eval import run_batch_eval
 
 # ====== Level 4 Addition =======
 
 
-from clickhouse_client import test_connection, get_top_repositories
 
 app = FastAPI(title="RAG Service")
 
@@ -137,12 +134,8 @@ def ask(payload: dict):
 @app.post("/debug-retrieval")
 def debug_retrieval(payload: dict):
     try:
-        from retrieval.hybrid import (
-            expand_query,
-            bm25_search,
-            vector_search,
-            rrf_fusion,
-        )
+        from retrieval.hybrid import (bm25_search, expand_query, rrf_fusion,
+                                      vector_search)
 
         query = payload["query"]
 

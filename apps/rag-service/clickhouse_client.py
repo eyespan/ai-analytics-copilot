@@ -1,5 +1,6 @@
-from clickhouse_driver import Client
 import os
+
+from clickhouse_driver import Client
 
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "clickhouse")
 CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "admin")

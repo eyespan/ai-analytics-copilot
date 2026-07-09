@@ -1,12 +1,14 @@
+import os
+from datetime import datetime
+
 import requests
 from clickhouse_driver import Client
-from datetime import datetime
-import os
 
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "clickhouse")
 CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", "9000"))
 
 import time
+
 from clickhouse_driver import Client
 
 

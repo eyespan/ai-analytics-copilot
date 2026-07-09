@@ -1,5 +1,6 @@
-from sentence_transformers import CrossEncoder
 import random
+
+from sentence_transformers import CrossEncoder
 
 # Lightweight reranker model (good balance for M2 Max)
 _model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")

@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 
 from agents.state import AgentState
-from workflows.workflow_manager import WorkflowManager
-
 from agents.trace import AgentTrace, StepTrace, TraceEventType
+from workflows.workflow_manager import WorkflowManager
 
 
 @dataclass

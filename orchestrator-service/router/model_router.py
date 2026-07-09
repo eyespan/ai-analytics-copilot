@@ -1,7 +1,8 @@
-from typing import Generator, Optional
 import os
-from clients.ollama_client import OllamaClient
+from typing import Generator, Optional
+
 from clients.bedrock_client import BedrockClient
+from clients.ollama_client import OllamaClient
 from config.settings import *
 
 

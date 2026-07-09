@@ -1,5 +1,6 @@
-from opensearchpy import OpenSearch
 import os
+
+from opensearchpy import OpenSearch
 
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST", "opensearch")
 

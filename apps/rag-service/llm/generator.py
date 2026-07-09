@@ -1,6 +1,6 @@
-from llm.prompts import RAG_PROMPT
 from clients.ollama_client import generate
 from config import MAX_CONTEXT_DOCS
+from llm.prompts import RAG_PROMPT
 
 
 def build_context(results):

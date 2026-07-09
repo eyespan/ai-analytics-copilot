@@ -1,8 +1,9 @@
-from clickhouse_driver import Client
-from opensearchpy import OpenSearch
-import requests
 import os
 import time
+
+import requests
+from clickhouse_driver import Client
+from opensearchpy import OpenSearch
 
 # ------------------------
 # ENV CONFIG

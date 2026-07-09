@@ -1,10 +1,9 @@
-from prompts.system_prompt import SYSTEM_PROMPT
-from prompts.rag_prompt import RAG_PROMPT
-from prompts.code_prompt import CODE_PROMPT
 from prompts.agent_prompt import AGENT_PROMPT
-from prompts.summary_prompt import SUMMARY_PROMPT
-
+from prompts.code_prompt import CODE_PROMPT
 from prompts.prompt_router import PromptRouter, PromptType
+from prompts.rag_prompt import RAG_PROMPT
+from prompts.summary_prompt import SUMMARY_PROMPT
+from prompts.system_prompt import SYSTEM_PROMPT
 
 
 class PromptManager:

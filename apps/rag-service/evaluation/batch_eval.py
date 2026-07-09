@@ -1,6 +1,7 @@
 import json
-from retrieval.hybrid import hybrid_search
+
 from evaluation.metrics import recall_at_k, reciprocal_rank
+from retrieval.hybrid import hybrid_search
 
 
 def load_dataset(path="evaluation/dataset.json"):
