@@ -162,28 +162,26 @@ jobs:
       - name: Validate Dockerfiles
         run: |
           set -uo pipefail
-        
-            dockerfiles=$(find . -name Dockerfile)
-            failed=0
-        
-            for file in $dockerfiles; do
-              if [ ! -s "$file" ]; then
-                echo "Skipping empty Dockerfile: $file"
-                continue
-              fi
-        
-              echo "Checking $file"
-        
-              if ! docker build --quiet -f "$file" "$(dirname "$file")"; then
-                echo "FAILED: $file"
-                failed=1
-              fi
-            done
-        
-            if [ "$failed" -eq 1 ]; then
-              echo "One or more Dockerfiles failed to build"
-              exit 1
+          dockerfiles=$(find . -name Dockerfile)
+          failed=0
+
+          for file in $dockerfiles; do
+            if [ ! -s "$file" ]; then
+              echo "Skipping empty Dockerfile: $file"
+              continue
             fi
+
+            echo "Checking $file"
+            if ! docker run --rm -i hadolint/hadolint < "$file"; then
+              echo "FAILED: $file"
+              failed=1
+            fi
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            echo "One or more Dockerfiles failed validation"
+            exit 1
+          fi
 
       ##########################################################
       # Python Formatting
