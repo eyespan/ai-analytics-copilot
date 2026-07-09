@@ -141,10 +141,19 @@ jobs:
 
         run: |
 
-          find kubernetes \
-            -name "*.yaml" \
-            -o -name "*.yml" \
-            | xargs kubeconform -summary
+          manifests=$(find kubernetes \
+            \( -name "*.yaml" -o -name "*.yml" \))
+
+          if [ -z "$manifests" ]; then
+
+            echo "No Kubernetes manifests found. Skipping validation."
+
+            exit 0
+
+          fi
+
+
+          echo "$manifests" | xargs kubeconform -summary
 
       ##########################################################
       # Dockerfiles
