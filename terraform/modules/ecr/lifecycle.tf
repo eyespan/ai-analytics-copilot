@@ -16,9 +16,9 @@ resource "aws_ecr_lifecycle_policy" "this" {
 
         selection = {
 
-          tagStatus   = "any"
+          tagStatus = "any"
 
-          countType   = "imageCountMoreThan"
+          countType = "imageCountMoreThan"
 
           countNumber = var.max_image_count
 

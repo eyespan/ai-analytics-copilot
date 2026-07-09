@@ -19,7 +19,7 @@ module "vpc" {
 
   public_subnets  = var.public_subnets
   private_subnets = var.private_subnets
-  
+
 
   single_nat_gateway = var.single_nat_gateway
 
@@ -35,9 +35,9 @@ module "ecr" {
 
   source = "../../modules/ecr"
 
-  repositories = var.repositories
+  repositories         = var.repositories
   image_tag_mutability = var.image_tag_mutability
-  scan_on_push = var.scan_on_push
+  scan_on_push         = var.scan_on_push
 
 
   tags = local.common_tags
@@ -71,7 +71,7 @@ module "eks" {
 
   cluster_role_arn = module.iam.eks_cluster_role_arn
   node_role_arn    = module.iam.eks_node_role_arn
-  node_groups = var.node_groups
+  node_groups      = var.node_groups
 
   vpc_id = module.vpc.vpc_id
 

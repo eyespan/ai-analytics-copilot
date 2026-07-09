@@ -175,7 +175,7 @@ resource "aws_iam_policy" "bedrock" {
 #Attach policy
 resource "aws_iam_role_policy_attachment" "bedrock" {
 
-  
+
   role = aws_iam_role.bedrock.name
 
 

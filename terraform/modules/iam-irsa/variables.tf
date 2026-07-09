@@ -65,9 +65,9 @@ variable "create_irsa_roles" {
 
   description = "Create IRSA workload roles"
 
-  type        = bool
+  type = bool
 
-  default     = false
+  default = false
 
 }
 

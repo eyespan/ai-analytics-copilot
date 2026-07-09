@@ -1,7 +1,7 @@
 #Security Group
 resource "aws_security_group" "cluster" {
 
-  name        = "${var.name}-eks-cluster"
+  name = "${var.name}-eks-cluster"
 
   description = "Security group for the EKS control plane"
 
@@ -47,7 +47,7 @@ resource "aws_vpc_security_group_egress_rule" "all" {
 #CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "eks" {
 
-  name              = "/aws/eks/${var.name}/cluster"
+  name = "/aws/eks/${var.name}/cluster"
 
   retention_in_days = var.cloudwatch_log_retention_in_days
 
@@ -123,11 +123,11 @@ resource "aws_eks_cluster" "this" {
 
     ignore_changes = [
 
-        tags["LastUpdated"]
+      tags["LastUpdated"]
 
     ]
 
-   }
+  }
 
 }
 
