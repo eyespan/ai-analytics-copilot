@@ -12,15 +12,8 @@ def vector_search(query: str):
         index=INDEX_NAME,
         body={
             "size": TOP_K,
-            "query": {
-                "knn": {
-                    "embedding": {
-                        "vector": embedding,
-                        "k": TOP_K
-                    }
-                }
-            }
-        }
+            "query": {"knn": {"embedding": {"vector": embedding, "k": TOP_K}}},
+        },
     )
 
     hits = response["hits"]["hits"]
@@ -30,11 +23,13 @@ def vector_search(query: str):
     for h in hits:
         src = h["_source"]
 
-        results.append({
-            "repo_name": src.get("repo_name"),
-            "description": src.get("description"),
-            "language": src.get("language"),
-            "score": h.get("_score")
-        })
+        results.append(
+            {
+                "repo_name": src.get("repo_name"),
+                "description": src.get("description"),
+                "language": src.get("language"),
+                "score": h.get("_score"),
+            }
+        )
 
     return results

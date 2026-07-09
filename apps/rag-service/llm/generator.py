@@ -4,12 +4,15 @@ from config import MAX_CONTEXT_DOCS
 
 
 def build_context(results):
-    return "\n---\n".join([
-        f"Repository: {r['repo_name']}\n"
-        f"Description: {r['description']}\n"
-        f"Language: {r['language']}"
-        for r in results
-    ])
+    return "\n---\n".join(
+        [
+            f"Repository: {r['repo_name']}\n"
+            f"Description: {r['description']}\n"
+            f"Language: {r['language']}"
+            for r in results
+        ]
+    )
+
 
 def generate_answer(query: str, results: list):
 
@@ -17,9 +20,6 @@ def generate_answer(query: str, results: list):
 
     context = build_context(context_results)
 
-    prompt = RAG_PROMPT.format(
-        context=context,
-        question=query
-    )
+    prompt = RAG_PROMPT.format(context=context, question=query)
 
     return generate(prompt)

@@ -17,8 +17,8 @@ def build_executor():
     registry = ToolRegistry()
 
     # register tools (example)
-    #from tools.time_tool import get_time
-    #from tools.search_tool import search_docs
+    # from tools.time_tool import get_time
+    # from tools.search_tool import search_docs
 
     registry.register("get_time", get_time)
     registry.register("search_docs", search_docs)

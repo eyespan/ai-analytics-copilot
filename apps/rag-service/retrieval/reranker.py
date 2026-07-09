@@ -23,8 +23,7 @@ def rerank(query: str, docs: list, top_k: int = None):
 
     if not docs:
         return []
-    
-    
+
     #### Level 4 Addition: Random shuffle before reranking to mitigate any bias from retrieval order
     docs_copy = docs.copy()
     random.shuffle(docs_copy)
@@ -38,8 +37,6 @@ def rerank(query: str, docs: list, top_k: int = None):
     # Attach scores
     for doc, score in zip(docs_copy, scores):
         doc["rerank_score"] = float(score)
-
-    
 
     # Sort by reranker score
     reranked = sorted(docs_copy, key=lambda x: x["rerank_score"], reverse=True)

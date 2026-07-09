@@ -11,10 +11,12 @@ class FinalAnswer(BaseModel):
     final: bool
     answer: Optional[str] = None
 
+
 class ToolResultSchema(BaseModel):
     tool: str
     output: str
     success: bool
+
 
 class AgentStepOutput(BaseModel):
     type: str  # "tool" | "final"

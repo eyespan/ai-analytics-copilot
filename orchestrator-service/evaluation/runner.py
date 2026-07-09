@@ -36,9 +36,9 @@ class EvaluationRunner:
                 "total": len(dataset),
                 "passed": passed_count,
                 "failed": len(dataset) - passed_count,
-                "score": total_score / len(dataset) if dataset else 0.0
+                "score": total_score / len(dataset) if dataset else 0.0,
             },
-            "results": results
+            "results": results,
         }
 
     # ------------------------------------------------------------
@@ -71,55 +71,35 @@ class EvaluationRunner:
         # 3. DIFF ENGINE (ALIGNMENT SCORE)
         # -----------------------------
         execution_steps = [
-            {
-                "tool": s.get("tool"),
-                "args": s.get("args", {})
-            }
+            {"tool": s.get("tool"), "args": s.get("args", {})}
             for s in trace["steps"]
-            if s.get("event_type") in (
-                "tool_execution",
-                "tool_failed"
-            )
+            if s.get("event_type") in ("tool_execution", "tool_failed")
         ]
 
         diff_result = self.diff_engine.diff(
-            expected_steps=expected_steps,
-            actual_trace=execution_steps
+            expected_steps=expected_steps, actual_trace=execution_steps
         )
-                # -----------------------------
+        # -----------------------------
         # 4. REPLAY COMPARISON
         # -----------------------------
         replay_execution_steps = [
-            {
-                "tool": s.get("tool"),
-                "args": s.get("args", {})
-            }
+            {"tool": s.get("tool"), "args": s.get("args", {})}
             for s in replay_trace["steps"]
-            if s.get("event_type") in (
-                "tool_execution",
-                "tool_failed"
-            )
+            if s.get("event_type") in ("tool_execution", "tool_failed")
         ]
 
         replay_comparison = self._compare_traces(
-            execution_steps,
-            replay_execution_steps
+            execution_steps, replay_execution_steps
         )
 
         # -----------------------------
         # 5. SCORE BREAKDOWN
         # -----------------------------
-        score_breakdown = self._build_score_breakdown(
-            diff_result,
-            replay_comparison
-        )
+        score_breakdown = self._build_score_breakdown(diff_result, replay_comparison)
 
         final_score = score_breakdown["final_score"]
 
-        passed = (
-            final_score >= 0.85
-            and len(diff_result.missing_steps) == 0
-        )
+        passed = final_score >= 0.85 and len(diff_result.missing_steps) == 0
 
         # -----------------------------
         # 6. FINAL REPORT
@@ -127,31 +107,26 @@ class EvaluationRunner:
         return {
             "id": item["id"],
             "query": query,
-
             "passed": passed,
             "score": final_score,
-
             "score_breakdown": score_breakdown,
-
             "step_scores": diff_result.step_scores,
-
             "diff": {
                 "missing": diff_result.missing_steps,
                 "extra": diff_result.extra_steps,
-                "mismatches": diff_result.mismatched_steps
+                "mismatches": diff_result.mismatched_steps,
             },
-
             "replay": replay_comparison,
-
             "trace": trace,
-
-            "workflow": workflow 
+            "workflow": workflow,
         }
 
     # ------------------------------------------------------------
     # REPLAY COMPARISON
     # ------------------------------------------------------------
-    def _compare_traces(self, original: List[Dict], replay: List[Dict]) -> Dict[str, Any]:
+    def _compare_traces(
+        self, original: List[Dict], replay: List[Dict]
+    ) -> Dict[str, Any]:
 
         original_tools = [s["tool"] for s in original if "tool" in s]
         replay_tools = [s["tool"] for s in replay if "tool" in s]
@@ -159,7 +134,7 @@ class EvaluationRunner:
         return {
             "deterministic": original_tools == replay_tools,
             "trace_match": original == replay,
-            "divergence_points": self._find_divergence(original, replay)
+            "divergence_points": self._find_divergence(original, replay),
         }
 
     def _find_divergence(self, a, b):
@@ -170,11 +145,13 @@ class EvaluationRunner:
         for i in range(min_len):
 
             if a[i].get("tool") != b[i].get("tool"):
-                divergences.append({
-                    "step": i + 1,
-                    "expected": a[i].get("tool"),
-                    "actual": b[i].get("tool")
-                })
+                divergences.append(
+                    {
+                        "step": i + 1,
+                        "expected": a[i].get("tool"),
+                        "actual": b[i].get("tool"),
+                    }
+                )
 
         return divergences
 
@@ -185,9 +162,7 @@ class EvaluationRunner:
 
         alignment_score = getattr(diff_result, "score", 1.0)
 
-        coverage_score = 1.0 - (
-            len(diff_result.missing_steps) * 0.1
-        )
+        coverage_score = 1.0 - (len(diff_result.missing_steps) * 0.1)
 
         ordering_score = 1.0 if replay_comparison["deterministic"] else 0.8
 
@@ -197,11 +172,11 @@ class EvaluationRunner:
             0.0,
             min(
                 1.0,
-                0.5 * alignment_score +
-                0.3 * coverage_score +
-                0.2 * ordering_score -
-                penalty
-            )
+                0.5 * alignment_score
+                + 0.3 * coverage_score
+                + 0.2 * ordering_score
+                - penalty,
+            ),
         )
 
         return {
@@ -209,5 +184,5 @@ class EvaluationRunner:
             "coverage_score": coverage_score,
             "ordering_score": ordering_score,
             "penalties": penalty,
-            "final_score": final_score
+            "final_score": final_score,
         }

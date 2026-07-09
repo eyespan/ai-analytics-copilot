@@ -1,45 +1,43 @@
 from fastapi import FastAPI
-#=====Level2 Addition =======
-#import requests - rmoved in level 3
-#from opensearchpy import OpenSearch - removed in level 3
+
+# =====Level2 Addition =======
+# import requests - rmoved in level 3
+# from opensearchpy import OpenSearch - removed in level 3
 # import os  - rmoved in level 3
-#====== Level2 
-#====== Level 3 Addition =======
+# ====== Level2
+# ====== Level 3 Addition =======
 from retrieval.vector import vector_search
 from retrieval.hybrid import hybrid_search
 from llm.generator import generate_answer
-#====== Level 3 Addition =======
-#====== Level 4 Addition =======
+
+# ====== Level 3 Addition =======
+# ====== Level 4 Addition =======
 from retrieval.bm25 import bm25_search
 from retrieval.hybrid import rrf_fusion, expand_query
 from retrieval.reranker import rerank
-from evaluation.metrics import (
-    recall_at_k,
-    reciprocal_rank
-)
+from evaluation.metrics import recall_at_k, reciprocal_rank
 from evaluation.batch_eval import run_batch_eval
-#====== Level 4 Addition =======
+
+# ====== Level 4 Addition =======
 
 
-from clickhouse_client import (
-    test_connection,
-    get_top_repositories
-)
+from clickhouse_client import test_connection, get_top_repositories
 
 app = FastAPI(title="RAG Service")
 
-#Level 2 ========= Addition ========
-#EMBEDDING_SERVICE = "http://embedding-service:8002/embed"
+# Level 2 ========= Addition ========
+# EMBEDDING_SERVICE = "http://embedding-service:8002/embed"
 
-#client = OpenSearch(
+# client = OpenSearch(
 #    hosts=[{"host": "opensearch", "port": 9200}],
 #    http_auth=("admin", "Opensearch2026!Aa"),
 #    use_ssl=True,
 #    verify_certs=False
-#)
+# )
 
 # INDEX_NAME = "github-repos"
-#======= Level2  ============
+# ======= Level2  ============
+
 
 @app.get("/health")
 def health():
@@ -55,15 +53,9 @@ def root():
 def db_test():
     try:
         version = test_connection()
-        return {
-            "status": "connected",
-            "clickhouse_version": version
-        }
+        return {"status": "connected", "clickhouse_version": version}
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        return {"status": "error", "message": str(e)}
 
 
 @app.get("/top-repos")
@@ -71,48 +63,36 @@ def top_repos():
     try:
         repos = get_top_repositories()
 
-        formatted = [
-            {
-                "repo_name": row[0],
-                "events": row[1]
-            }
-            for row in repos
-        ]
+        formatted = [{"repo_name": row[0], "events": row[1]} for row in repos]
 
-        return {
-            "results": formatted
-        }
+        return {"results": formatted}
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
-    
-
-#======Level2  Addition========
-# search renoved in level3 
-#====== Level2 ===========
+        return {"status": "error", "message": str(e)}
 
 
-#========== Level 3 Addition ===========
+# ======Level2  Addition========
+# search renoved in level3
+# ====== Level2 ===========
+
+
+# ========== Level 3 Addition ===========
 @app.post("/vector-search")
 def vector_search_endpoint(payload: dict):
     try:
         query = payload["query"]
         results = vector_search(query)
 
-        return {
-            "query": query,
-            "results": results
-        }
+        return {"query": query, "results": results}
 
     except Exception as e:
         import traceback
+
         print("VECTOR ERROR:", str(e))
         traceback.print_exc()
         return {"error": str(e)}
-    
+
+
 @app.post("/search")
 def search(payload: dict):
     try:
@@ -120,13 +100,11 @@ def search(payload: dict):
 
         results = hybrid_search(query)
 
-        return {
-            "query": query,
-            "results": results
-        }
+        return {"query": query, "results": results}
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
 
@@ -144,26 +122,27 @@ def ask(payload: dict):
 
         return {
             "query": query,
-
-            "retrieval": {
-                "method": "hybrid",
-                "documents_retrieved": len(results)
-            },
-
+            "retrieval": {"method": "hybrid", "documents_retrieved": len(results)},
             "answer": answer,
-            "sources": results
+            "sources": results,
         }
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
-    
+
 
 @app.post("/debug-retrieval")
 def debug_retrieval(payload: dict):
     try:
-        from retrieval.hybrid import expand_query, bm25_search, vector_search, rrf_fusion
+        from retrieval.hybrid import (
+            expand_query,
+            bm25_search,
+            vector_search,
+            rrf_fusion,
+        )
 
         query = payload["query"]
 
@@ -186,18 +165,21 @@ def debug_retrieval(payload: dict):
             "stats": {
                 "bm25_count": len(bm25_results),
                 "vector_count": len(vector_results),
-                "hybrid_count": len(fused_results)
-            }
+                "hybrid_count": len(fused_results),
+            },
         }
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
-    
-#========== Level 3 Addition ===========
 
-#========== Level 4 Addition ===========
+
+# ========== Level 3 Addition ===========
+
+
+# ========== Level 4 Addition ===========
 @app.post("/debug-rerank")
 def debug_rerank(payload: dict):
     try:
@@ -221,30 +203,21 @@ def debug_rerank(payload: dict):
 
         return {
             "query": query,
-
             "retrieval": {
                 "bm25_count": len(bm25_results),
-                "vector_count": len(vector_results)
+                "vector_count": len(vector_results),
             },
-
-            "fusion": {
-                "method": "RRF",
-                "fused_count": len(fused_results)
-            },
-
-            "rerank": {
-                "method": "cross-encoder",
-                "final_count": len(reranked_results)
-            },
-
-            "results": reranked_results
+            "fusion": {"method": "RRF", "fused_count": len(fused_results)},
+            "rerank": {"method": "cross-encoder", "final_count": len(reranked_results)},
+            "results": reranked_results,
         }
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
-    
+
 
 @app.post("/eval-retrieval")
 def eval_retrieval(payload: dict):
@@ -256,40 +229,34 @@ def eval_retrieval(payload: dict):
 
         results = hybrid_search(query)
 
-        recall = recall_at_k(
-            results,
-            expected_repo
-        )
+        recall = recall_at_k(results, expected_repo)
 
-        rr = reciprocal_rank(
-            results,
-            expected_repo
-        )
+        rr = reciprocal_rank(results, expected_repo)
 
         return {
             "query": query,
             "expected_repo": expected_repo,
-            "metrics": {
-                "recall_at_k": recall,
-                "reciprocal_rank": rr
-            },
-            "results": results
+            "metrics": {"recall_at_k": recall, "reciprocal_rank": rr},
+            "results": results,
         }
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
-    
+
+
 @app.post("/eval-batch-retrieval")
 def eval_batch_retrieval():
     try:
         return run_batch_eval()
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
-    
+
 
 @app.post("/eval-reranker-ab")
 def eval_reranker_ab(payload: dict):
@@ -334,32 +301,30 @@ def eval_reranker_ab(payload: dict):
         return {
             "query": query,
             "expanded_query": expanded_query,
-
             "baseline": {
                 "recall_at_k": baseline_recall,
                 "mrr": baseline_rr,
                 "rank": baseline_rank,
-                "results": fused
+                "results": fused,
             },
-
             "reranked": {
                 "recall_at_k": rerank_recall,
                 "mrr": rerank_rr,
                 "rank": rerank_rank,
-                "results": reranked
+                "results": reranked,
             },
-
             "delta": {
                 "mrr_improvement": rerank_rr - baseline_rr,
-                "rank_change": baseline_rank - rerank_rank
-            }
+                "rank_change": baseline_rank - rerank_rank,
+            },
         }
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
-    
+
 
 @app.post("/eval-ranking-metrics")
 def eval_ranking_metrics(payload: dict):
@@ -382,30 +347,27 @@ def eval_ranking_metrics(payload: dict):
     return {
         "query": query,
         "expanded_query": expanded,
-
         "metrics": {
             "baseline": {
                 "recall_at_k": recall_at_k(baseline, expected),
                 "mrr": reciprocal_rank(baseline, expected),
-                "ndcg": ndcg_at_k(baseline, expected)
+                "ndcg": ndcg_at_k(baseline, expected),
             },
             "reranked": {
                 "recall_at_k": recall_at_k(reranked, expected),
                 "mrr": reciprocal_rank(reranked, expected),
-                "ndcg": ndcg_at_k(reranked, expected)
-            }
+                "ndcg": ndcg_at_k(reranked, expected),
+            },
         },
-
-        "rankings": {
-            "baseline": baseline,
-            "reranked": reranked
-        }
+        "rankings": {"baseline": baseline, "reranked": reranked},
     }
-    
-#========== Level 4 Addition ===========
 
 
-#========== Level 5 Addition ===========
+# ========== Level 4 Addition ===========
+
+
+# ========== Level 5 Addition ===========
+
 
 @app.post("/rerank")
 def rerank_endpoint(payload: dict):
@@ -415,19 +377,15 @@ def rerank_endpoint(payload: dict):
         query = payload["query"]
         docs = payload["documents"]
 
-        results = rerank(
-            query=query,
-            docs=docs
-        )
+        results = rerank(query=query, docs=docs)
 
-        return {
-            "results": results
-        }
+        return {"results": results}
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {"error": str(e)}
 
 
-#========== Level 5 Addition ===========
+# ========== Level 5 Addition ===========

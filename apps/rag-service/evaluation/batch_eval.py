@@ -28,12 +28,14 @@ def run_batch_eval():
         total_recall += recall
         total_rr += rr
 
-        results_summary.append({
-            "query": query,
-            "expected_repo": expected,
-            "recall": recall,
-            "reciprocal_rank": rr
-        })
+        results_summary.append(
+            {
+                "query": query,
+                "expected_repo": expected,
+                "recall": recall,
+                "reciprocal_rank": rr,
+            }
+        )
 
     n = len(dataset)
 
@@ -41,5 +43,5 @@ def run_batch_eval():
         "count": n,
         "mean_recall": total_recall / n,
         "mrr": total_rr / n,
-        "details": results_summary
+        "details": results_summary,
     }

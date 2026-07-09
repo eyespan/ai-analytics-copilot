@@ -9,12 +9,9 @@ def generate(prompt: str):
             "model": OLLAMA_MODEL,
             "prompt": prompt,
             "stream": False,
-            "options": {
-                "temperature": 0.2,
-                "num_ctx": 2048
-            }
+            "options": {"temperature": 0.2, "num_ctx": 2048},
         },
-        timeout=120
+        timeout=120,
     )
 
     if response.status_code != 200:

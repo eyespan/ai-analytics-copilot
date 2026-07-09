@@ -9,6 +9,7 @@ CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", "9000"))
 import time
 from clickhouse_driver import Client
 
+
 def get_clickhouse_client():
     for i in range(20):
         try:
@@ -17,7 +18,7 @@ def get_clickhouse_client():
                 port=9000,
                 database="github",
                 user="admin",
-                password="admin123"
+                password="admin123",
             )
             client.execute("SELECT 1")
             return client
@@ -27,7 +28,9 @@ def get_clickhouse_client():
 
     raise Exception("ClickHouse not available after retries")
 
+
 client = get_clickhouse_client()
+
 
 def insert_sample_data():
     data = [
@@ -41,7 +44,7 @@ def insert_sample_data():
             "Python",
             "Deep learning framework",
             180000,
-            88000
+            88000,
         ),
         (
             datetime.now(),
@@ -53,13 +56,11 @@ def insert_sample_data():
             "Python",
             "PyTorch deep learning library",
             75000,
-            20000
+            20000,
         ),
-
         # =========================
         # Level 4 Expansion Set
         # =========================
-
         (
             datetime.now(),
             "PushEvent",
@@ -70,7 +71,7 @@ def insert_sample_data():
             "Python",
             "High-level neural network API for TensorFlow",
             65000,
-            17000
+            17000,
         ),
         (
             datetime.now(),
@@ -82,7 +83,7 @@ def insert_sample_data():
             "C++",
             "Deep learning framework designed for scalability",
             19000,
-            6000
+            6000,
         ),
         (
             datetime.now(),
@@ -94,9 +95,8 @@ def insert_sample_data():
             "Python",
             "Transformer models library for NLP and deep learning",
             120000,
-            25000
+            25000,
         ),
-
         (
             datetime.now(),
             "PushEvent",
@@ -107,7 +107,7 @@ def insert_sample_data():
             "Python",
             "Machine learning library for classical algorithms",
             60000,
-            23000
+            23000,
         ),
         (
             datetime.now(),
@@ -119,7 +119,7 @@ def insert_sample_data():
             "Python",
             "Data analysis and manipulation library",
             41000,
-            15000
+            15000,
         ),
         (
             datetime.now(),
@@ -131,9 +131,8 @@ def insert_sample_data():
             "Python",
             "Scientific computing library for arrays and math",
             50000,
-            18000
+            18000,
         ),
-
         (
             datetime.now(),
             "PushEvent",
@@ -144,7 +143,7 @@ def insert_sample_data():
             "Scala",
             "Distributed data processing engine",
             42000,
-            22000
+            22000,
         ),
         (
             datetime.now(),
@@ -156,7 +155,7 @@ def insert_sample_data():
             "Go",
             "Containerization platform for application deployment",
             65000,
-            12000
+            12000,
         ),
         (
             datetime.now(),
@@ -168,18 +167,22 @@ def insert_sample_data():
             "Go",
             "Container orchestration system for scaling applications",
             105000,
-            38000
-        )
+            38000,
+        ),
     ]
 
-    client.execute("""
+    client.execute(
+        """
         INSERT INTO github.github_events
         (event_time, event_type, repo_name, repo_url,
          actor_login, action, language, description, stars, forks)
         VALUES
-    """, data)
+    """,
+        data,
+    )
 
     print("Inserted sample GitHub events")
+
 
 if __name__ == "__main__":
     insert_sample_data()

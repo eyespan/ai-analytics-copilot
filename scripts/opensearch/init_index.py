@@ -9,11 +9,7 @@ OPENSEARCH_PASS = "Opensearch2026!Aa"
 INDEX_NAME = "github-repos"
 
 mapping = {
-    "settings": {
-        "index": {
-            "knn": True
-        }
-    },
+    "settings": {"index": {"knn": True}},
     "mappings": {
         "properties": {
             "repo_name": {"type": "text"},
@@ -21,14 +17,10 @@ mapping = {
             "language": {"type": "text"},
             "stars": {"type": "long"},
             "forks": {"type": "long"},
-            "embedding": {
-                "type": "knn_vector",
-                "dimension": 384
-            }
+            "embedding": {"type": "knn_vector", "dimension": 384},
         }
-    }
+    },
 }
-
 
 
 def get_client():
@@ -66,7 +58,7 @@ def create_index_if_not_exists(client):
 
 def main():
     print("Waiting for OpenSearch...")
-    client = get_client()   
+    client = get_client()
     wait_for_opensearch(client)
     create_index_if_not_exists(client)
     print("Index ready for Level 3 (kNN enabled)")

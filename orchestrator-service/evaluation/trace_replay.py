@@ -7,7 +7,9 @@ class TraceReplayEngine:
     def __init__(self, executor: AgentExecutor):
         self.executor = executor
 
-    def replay(self, query: str, expected_trace: Dict[str, Any] = None) -> Dict[str, Any]:
+    def replay(
+        self, query: str, expected_trace: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
         Replay execution for evaluation.
 
@@ -18,12 +20,11 @@ class TraceReplayEngine:
 
         # Run fresh execution (deterministic baseline)
         if hasattr(self.executor, "run_plan"):
-            raise ValueError("Evaluator must use MultiAgentOrchestrator, not AgentExecutor")
+            raise ValueError(
+                "Evaluator must use MultiAgentOrchestrator, not AgentExecutor"
+            )
 
-        result = self.executor.run(
-            query=query,
-            context=""
-        )
+        result = self.executor.run(query=query, context="")
 
         # Optional: attach expected trace for downstream diff engine
         if expected_trace:

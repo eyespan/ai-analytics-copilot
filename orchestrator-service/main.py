@@ -14,7 +14,12 @@ from agents.tools import (
     echo_tool,
     search_docs_tool,
 )
-from schemas.tool_models import GetTimeInput, GetTimeOutput,SearchDocsInput, SearchDocsOutput
+from schemas.tool_models import (
+    GetTimeInput,
+    GetTimeOutput,
+    SearchDocsInput,
+    SearchDocsOutput,
+)
 from router.model_router import ModelRouter
 
 from agents.planner import Planner
@@ -37,49 +42,36 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Orchestrator Service", lifespan=lifespan)
 
+
 def build_eval_agent():
 
     router = ModelRouter()
 
-    model = router.select_model(
-        query="evaluation",
-        context=""
-    )
+    model = router.select_model(query="evaluation", context="")
 
     tool_registry = ToolRegistry()
 
     tool_registry.register(
-        "get_time",
-        get_time,
-        input_model=GetTimeInput,
-        output_model=GetTimeOutput
+        "get_time", get_time, input_model=GetTimeInput, output_model=GetTimeOutput
     )
 
     tool_registry.register(
         "search_docs",
         search_docs_tool,
         input_model=SearchDocsInput,
-        output_model=SearchDocsOutput
+        output_model=SearchDocsOutput,
     )
 
-    tool_registry.register(
-        "echo",
-        echo_tool
-    )
+    tool_registry.register("echo", echo_tool)
 
     planner = Planner(model)
 
     repair = PlanRepairEngine()
 
-    executor = AgentExecutor(
-        model=model,
-        tool_registry=tool_registry
-    )
+    executor = AgentExecutor(model=model, tool_registry=tool_registry)
 
     orchestrator = MultiAgentOrchestrator(
-        planner=planner,
-        repair=repair,
-        executor=executor
+        planner=planner, repair=repair, executor=executor
     )
 
     return orchestrator
@@ -95,7 +87,7 @@ def ask(payload: dict):
     result = pipeline.run(
         query=payload["query"],
         session_id=payload.get("session_id", "default"),
-        stream=False
+        stream=False,
     )
     print("PIPELINE OUTPUT:", result)
     return result
@@ -107,10 +99,11 @@ def ask_stream(payload: dict):
         pipeline.run(
             query=payload["query"],
             session_id=payload.get("session_id", "default"),
-            stream=True
+            stream=True,
         ),
-        media_type="text/event-stream"
+        media_type="text/event-stream",
     )
+
 
 @app.post("/evaluate")
 def evaluate(payload: dict):

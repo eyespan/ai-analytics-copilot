@@ -13,6 +13,7 @@ class TraceEventType:
     PLAN_REPAIRED = "plan_repaired"
     SCHEMA_VALIDATION_FAILED = "schema_validation_failed"
 
+
 @dataclass
 class StepTrace:
     step: int
@@ -37,16 +38,13 @@ class AgentTrace:
         self.steps.append(step)
 
     def add_step(self, step: StepTrace):
-            step.step = len(self.steps) + 1
-            self.steps.append(step)
+        step.step = len(self.steps) + 1
+        self.steps.append(step)
 
     def to_dict(self):
         return {
             "trace_id": self.trace_id,
             "query": self.query,
             "start_time": self.start_time,
-            "steps": [
-                s if isinstance(s, dict) else s.__dict__
-                for s in self.steps
-            ]
+            "steps": [s if isinstance(s, dict) else s.__dict__ for s in self.steps],
         }

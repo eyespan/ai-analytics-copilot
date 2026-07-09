@@ -13,10 +13,7 @@ CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "admin")
 CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD", "admin123")
 
 # IMPORTANT: docker internal DNS (NOT localhost)
-EMBEDDING_SERVICE = os.getenv(
-    "EMBEDDING_SERVICE",
-    "http://embedding-service:8002"
-)
+EMBEDDING_SERVICE = os.getenv("EMBEDDING_SERVICE", "http://embedding-service:8002")
 
 OPENSEARCH_HOST = "opensearch"
 OPENSEARCH_USER = "admin"
@@ -35,7 +32,7 @@ clickhouse = Client(
     host=CLICKHOUSE_HOST,
     user=CLICKHOUSE_USER,
     password=CLICKHOUSE_PASSWORD,
-    database="github"
+    database="github",
 )
 
 
@@ -54,6 +51,7 @@ opensearch = OpenSearch(
 # ------------------------
 # OPENSEARCH HEALTH CHECK
 # ------------------------
+
 
 def wait_for_opensearch(client, retries=20):
     print("Waiting for OpenSearch...")
@@ -74,6 +72,7 @@ def wait_for_opensearch(client, retries=20):
 # ------------------------
 # EMBEDDING HEALTH CHECK
 # ------------------------
+
 
 def wait_for_embedding_service(retries=20, delay=3):
     print("Waiting for embedding service...")
@@ -98,16 +97,13 @@ def wait_for_embedding_service(retries=20, delay=3):
 # EMBEDDING CALL
 # ------------------------
 
+
 def get_embedding(text: str):
     url = f"{EMBEDDING_SERVICE}/embed"
 
     for attempt in range(3):
         try:
-            r = requests.post(
-                url,
-                json={"text": text},
-                timeout=10
-            )
+            r = requests.post(url, json={"text": text}, timeout=10)
 
             if r.status_code == 200:
                 return r.json()["embedding"]
@@ -122,6 +118,7 @@ def get_embedding(text: str):
 # ------------------------
 # MAIN
 # ------------------------
+
 
 def main():
 
@@ -158,14 +155,10 @@ def main():
                 "language": language,
                 "stars": stars,
                 "forks": forks,
-                "embedding": embedding
+                "embedding": embedding,
             }
 
-            opensearch.index(
-                index=INDEX_NAME,
-                id=repo_name,
-                body=doc
-            )
+            opensearch.index(index=INDEX_NAME, id=repo_name, body=doc)
 
             print(f"Indexed: {repo_name}")
 

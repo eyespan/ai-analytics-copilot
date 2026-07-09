@@ -1,5 +1,6 @@
 import math
 
+
 def ndcg_at_k(results, expected_repos, k=10):
     expected_set = set(expected_repos)
 

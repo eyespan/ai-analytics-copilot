@@ -17,7 +17,7 @@ class ToolRegistry:
         name: str,
         func: Callable[..., Any],
         input_model: Type[BaseModel] | None = None,
-        output_model: Type[BaseModel] | None = None
+        output_model: Type[BaseModel] | None = None,
     ):
 
         self.tools[name] = func

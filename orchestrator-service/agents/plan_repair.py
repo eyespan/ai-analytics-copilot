@@ -3,45 +3,31 @@ from copy import deepcopy
 from schemas.tool_schemas import TOOL_SCHEMAS
 from schemas.planner_schema import PlanStep
 
+
 class PlanRepairEngine:
 
     TOOL_ALIASES = {
         "search_document": "search_docs",
         "search": "search_docs",
         "time": "get_time",
-        "clock": "get_time"
+        "clock": "get_time",
     }
 
     def repair(self, plan, query):
 
         repaired = deepcopy(plan)
 
-        repaired.steps = self._remove_invalid_tools(
-            repaired.steps
-        )
+        repaired.steps = self._remove_invalid_tools(repaired.steps)
 
-        repaired.steps = self._repair_tools(
-            repaired.steps
-        )
+        repaired.steps = self._repair_tools(repaired.steps)
 
-        repaired.steps = self._repair_args(
-            repaired.steps,
-            query
-        )
+        repaired.steps = self._repair_args(repaired.steps, query)
 
-        repaired.steps = self._query_based_repair(
-            repaired.steps, 
-            query
-        )
+        repaired.steps = self._query_based_repair(repaired.steps, query)
 
-        repaired.steps = self._remove_duplicates(
-            repaired.steps
-        )
+        repaired.steps = self._remove_duplicates(repaired.steps)
 
-        repaired.steps = self._inject_missing_steps(
-            repaired.steps,
-            query
-        )
+        repaired.steps = self._inject_missing_steps(repaired.steps, query)
 
         return repaired
 
@@ -54,24 +40,15 @@ class PlanRepairEngine:
 
             if step.tool in self.TOOL_ALIASES:
 
-                step.tool = self.TOOL_ALIASES[
-                    step.tool
-                ]
+                step.tool = self.TOOL_ALIASES[step.tool]
 
         return steps
 
-    def _repair_args(
-        self,
-        steps,
-        query
-    ):
+    def _repair_args(self, steps, query):
 
         for step in steps:
 
-            schema = TOOL_SCHEMAS.get(
-                step.tool,
-                {}
-            )
+            schema = TOOL_SCHEMAS.get(step.tool, {})
 
             args = step.args or {}
 
@@ -85,11 +62,7 @@ class PlanRepairEngine:
 
             allowed = set(schema.keys())
 
-            args = {
-                k: v
-                for k, v in args.items()
-                if k in allowed
-            }
+            args = {k: v for k, v in args.items() if k in allowed}
 
             step.args = args
 
@@ -103,10 +76,7 @@ class PlanRepairEngine:
 
         for step in steps:
 
-            current = (
-                step.tool,
-                str(step.args)
-            )
+            current = (step.tool, str(step.args))
 
             if current == previous:
                 continue
@@ -116,7 +86,7 @@ class PlanRepairEngine:
             previous = current
 
         return repaired
-    
+
     def _remove_invalid_tools(self, steps):
 
         repaired = []
@@ -130,7 +100,7 @@ class PlanRepairEngine:
                 repaired.append(step)
 
         return repaired
-    
+
     def _inject_missing_steps(self, steps, query):
 
         # q = query.lower()
@@ -147,12 +117,8 @@ class PlanRepairEngine:
         #     )
 
         return steps
-    
-    def _query_based_repair(
-        self,
-        steps,
-        query
-    ):
+
+    def _query_based_repair(self, steps, query):
         # q = query.lower()
 
         # if "time" in q:
@@ -168,4 +134,3 @@ class PlanRepairEngine:
         #     ]
 
         return steps
-        
