@@ -160,21 +160,30 @@ jobs:
       ##########################################################
 
       - name: Validate Dockerfiles
-
         run: |
-
-          dockerfiles=$(find . -name Dockerfile)
-
-          for file in $dockerfiles; do
-
-            echo "Checking $file"
-
-            docker build \
-              --quiet \
-              -f "$file" \
-              "$(dirname "$file")"
-
-          done
+          set -uo pipefail
+        
+            dockerfiles=$(find . -name Dockerfile)
+            failed=0
+        
+            for file in $dockerfiles; do
+              if [ ! -s "$file" ]; then
+                echo "Skipping empty Dockerfile: $file"
+                continue
+              fi
+        
+              echo "Checking $file"
+        
+              if ! docker build --quiet -f "$file" "$(dirname "$file")"; then
+                echo "FAILED: $file"
+                failed=1
+              fi
+            done
+        
+            if [ "$failed" -eq 1 ]; then
+              echo "One or more Dockerfiles failed to build"
+              exit 1
+            fi
 
       ##########################################################
       # Python Formatting
