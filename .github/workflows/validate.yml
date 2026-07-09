@@ -1,0 +1,214 @@
+name: Validate Repository
+
+on:
+
+  pull_request:
+
+    branches:
+      - main
+      - level7
+
+  push:
+
+    branches:
+      - level7
+
+  workflow_dispatch:
+
+permissions:
+
+  contents: read
+
+jobs:
+
+  validate:
+
+    name: Repository Validation
+
+    runs-on: ubuntu-latest
+
+    defaults:
+
+      run:
+
+        shell: bash
+
+    steps:
+
+      ##########################################################
+      # Checkout
+      ##########################################################
+
+      - name: Checkout Repository
+
+        uses: actions/checkout@v4
+
+      ##########################################################
+      # Python
+      ##########################################################
+
+      - name: Setup Python
+
+        uses: actions/setup-python@v5
+
+        with:
+
+          python-version: "3.12"
+
+      - name: Install Python Validation Tools
+
+        run: |
+
+          python -m pip install --upgrade pip
+
+          pip install \
+            black \
+            isort \
+            flake8 \
+            pytest
+
+      ##########################################################
+      # Terraform
+      ##########################################################
+
+      - name: Setup Terraform
+
+        uses: hashicorp/setup-terraform@v3
+
+        with:
+
+          terraform_wrapper: false
+
+      - name: Terraform Format Check
+
+        run: |
+
+          terraform fmt \
+            -recursive \
+            -check
+
+      - name: Terraform Init
+
+        working-directory: terraform/environments/dev
+
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+
+        working-directory: terraform/environments/dev
+
+        run: terraform validate
+
+      ##########################################################
+      # Helm
+      ##########################################################
+
+      - name: Install Helm
+
+        uses: azure/setup-helm@v4
+
+      - name: Helm Lint
+
+        run: |
+
+          for chart in helm/*; do
+
+            if [ -d "$chart" ]; then
+
+              echo "Linting $chart"
+
+              helm lint "$chart"
+
+            fi
+
+          done
+
+      ##########################################################
+      # Kubernetes YAML Validation
+      ##########################################################
+
+      - name: Install kubeconform
+
+        run: |
+
+          curl -L \
+          https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
+          | tar xz
+
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Validate Kubernetes Manifests
+
+        run: |
+
+          find kubernetes \
+            -name "*.yaml" \
+            -o -name "*.yml" \
+            | xargs kubeconform -summary
+
+      ##########################################################
+      # Dockerfiles
+      ##########################################################
+
+      - name: Validate Dockerfiles
+
+        run: |
+
+          dockerfiles=$(find . -name Dockerfile)
+
+          for file in $dockerfiles; do
+
+            echo "Checking $file"
+
+            docker build \
+              --quiet \
+              -f "$file" \
+              "$(dirname "$file")"
+
+          done
+
+      ##########################################################
+      # Python Formatting
+      ##########################################################
+
+      - name: Black
+
+        run: |
+
+          black \
+            --check \
+            .
+
+      - name: isort
+
+        run: |
+
+          isort \
+            --check-only \
+            .
+
+      - name: flake8
+
+        run: |
+
+          flake8 .
+
+      ##########################################################
+      # Unit Tests
+      ##########################################################
+
+      - name: Run Unit Tests
+
+        run: |
+
+          pytest tests/unit
+
+      ##########################################################
+      # Success
+      ##########################################################
+
+      - name: Validation Complete
+
+        run: |
+
+          echo "Repository validation completed successfully."
