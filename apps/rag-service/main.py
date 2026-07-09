@@ -3,11 +3,13 @@ from evaluation.batch_eval import run_batch_eval
 from evaluation.metrics import recall_at_k, reciprocal_rank
 from fastapi import FastAPI
 from llm.generator import generate_answer
+
 # ====== Level 3 Addition =======
 # ====== Level 4 Addition =======
 from retrieval.bm25 import bm25_search
 from retrieval.hybrid import expand_query, hybrid_search, rrf_fusion
 from retrieval.reranker import rerank
+
 # =====Level2 Addition =======
 # import requests - rmoved in level 3
 # from opensearchpy import OpenSearch - removed in level 3
@@ -17,7 +19,6 @@ from retrieval.reranker import rerank
 from retrieval.vector import vector_search
 
 # ====== Level 4 Addition =======
-
 
 
 app = FastAPI(title="RAG Service")
@@ -134,8 +135,12 @@ def ask(payload: dict):
 @app.post("/debug-retrieval")
 def debug_retrieval(payload: dict):
     try:
-        from retrieval.hybrid import (bm25_search, expand_query, rrf_fusion,
-                                      vector_search)
+        from retrieval.hybrid import (
+            bm25_search,
+            expand_query,
+            rrf_fusion,
+            vector_search,
+        )
 
         query = payload["query"]
 
