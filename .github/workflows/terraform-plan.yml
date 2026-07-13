@@ -2,6 +2,11 @@ name: Terraform Plan
 
 on:
 
+  pull_request:
+    branches:
+      - main
+      - level7
+
   push:
     branches:
       - level7
@@ -14,14 +19,12 @@ on:
 permissions:
 
   contents: read
-
   id-token: write
 
 
 env:
 
   AWS_REGION: us-east-1
-
   TF_WORKING_DIR: terraform/environments/dev
 
 
