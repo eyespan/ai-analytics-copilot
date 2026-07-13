@@ -203,15 +203,21 @@ jobs:
             --server-side-encryption-configuration file://encryption.json
 
       - name: Block Public Access
+        shell: bash
         run: |
+
+          cat > public-access.json <<EOF
+          {
+            "BlockPublicAcls": true,
+            "IgnorePublicAcls": true,
+            "BlockPublicPolicy": true,
+            "RestrictPublicBuckets": true
+          }
+          EOF
 
           aws s3api put-public-access-block \
             --bucket "${TF_STATE_BUCKET}" \
-            --public-access-block-configuration \
-              BlockPublicAcls=true,\
-              IgnorePublicAcls=true,\
-              BlockPublicPolicy=true,\
-              RestrictPublicBuckets=true
+            --public-access-block-configuration file://public-access.json
 
       - name: Bootstrap complete
 
