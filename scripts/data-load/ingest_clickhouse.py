@@ -1,15 +1,12 @@
 import os
 from datetime import datetime
-
-import requests
 from clickhouse_driver import Client
+import time
 
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "clickhouse")
 CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", "9000"))
 
-import time
 
-from clickhouse_driver import Client
 
 
 def get_clickhouse_client():
@@ -24,7 +21,7 @@ def get_clickhouse_client():
             )
             client.execute("SELECT 1")
             return client
-        except Exception as e:
+        except Exception:
             print(f"ClickHouse not ready, retrying... {i}")
             time.sleep(2)
 

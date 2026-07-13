@@ -1,6 +1,6 @@
 import json
 import time
-from typing import Any, Dict, Generator, List
+from typing import Any, Dict, Generator
 
 from agents.agent_executor import AgentExecutor
 from agents.guardrails import Guardrails

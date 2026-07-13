@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Any, Dict, List
 
 from evaluation.types import EvalResult, StepScore

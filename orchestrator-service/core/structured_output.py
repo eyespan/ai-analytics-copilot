@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Dict
 
 
 class StructuredOutputError(Exception):

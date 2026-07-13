@@ -37,10 +37,6 @@ class AgentTrace:
         step.step = len(self.steps) + 1
         self.steps.append(step)
 
-    def add_step(self, step: StepTrace):
-        step.step = len(self.steps) + 1
-        self.steps.append(step)
-
     def to_dict(self):
         return {
             "trace_id": self.trace_id,

@@ -1,6 +1,4 @@
 from copy import deepcopy
-
-from schemas.planner_schema import PlanStep
 from schemas.tool_schemas import TOOL_SCHEMAS
 
 

@@ -62,7 +62,7 @@ def wait_for_opensearch(client, retries=20):
             if client.ping():
                 print("OpenSearch is ready")
                 return
-        except:
+        except Exception:
             pass
 
         time.sleep(3)

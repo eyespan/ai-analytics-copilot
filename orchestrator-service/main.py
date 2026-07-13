@@ -6,7 +6,6 @@ from agents.plan_repair import PlanRepairEngine
 from agents.planner import Planner
 from agents.tool_registry import ToolRegistry
 from agents.tools import echo_tool, get_time, search_docs_tool
-from evaluation.dataset_loader import load_dataset
 from evaluation.runner import EvaluationRunner
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
