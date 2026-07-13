@@ -124,17 +124,13 @@ class Guardrails:
 
             if field_name not in args:
 
-                self.record_event(
-                    "missing_argument", {"tool": tool_name, "field": field_name}
-                )
+                self.record_event("missing_argument", {"tool": tool_name, "field": field_name})
 
                 return False
 
             if not isinstance(args[field_name], field_type):
 
-                self.record_event(
-                    "invalid_argument_type", {"tool": tool_name, "field": field_name}
-                )
+                self.record_event("invalid_argument_type", {"tool": tool_name, "field": field_name})
 
                 return False
 
@@ -142,9 +138,7 @@ class Guardrails:
 
             if field_name not in schema:
 
-                self.record_event(
-                    "unexpected_argument", {"tool": tool_name, "field": field_name}
-                )
+                self.record_event("unexpected_argument", {"tool": tool_name, "field": field_name})
 
                 return False
 

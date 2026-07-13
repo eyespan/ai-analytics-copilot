@@ -10,9 +10,7 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 
 BEDROCK_ENABLED = os.getenv("BEDROCK_ENABLED", "false").lower() == "true"
 
-BEDROCK_MODEL_ID = os.getenv(
-    "BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0"
-)
+BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
 
 BEDROCK_TIMEOUT = int(os.getenv("BEDROCK_TIMEOUT", "120"))
 

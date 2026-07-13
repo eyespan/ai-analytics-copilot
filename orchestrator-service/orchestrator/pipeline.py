@@ -27,9 +27,7 @@ class OrchestrationPipeline:
         self.prompt_manager = PromptManager()
         self.router = ModelRouter()
         self.memory = ConversationMemory()
-        self.sse = (
-            StreamEmitter()
-        )  # renamed: was self.stream, which shadowed the stream() method
+        self.sse = StreamEmitter()  # renamed: was self.stream, which shadowed the stream() method
         self.tool_registry = ToolRegistry()
         self.tool_registry.register("get_time", get_time)
         self.tool_registry.register("echo", echo_tool)
@@ -58,9 +56,7 @@ class OrchestrationPipeline:
 
         hybrid = retrieval.get("hybrid_results") or retrieval.get("results") or []
         reranked = self.rag.rerank(query, hybrid)
-        result = self.prompt_manager.build_prompt(
-            query=query, docs=reranked, history=history
-        )
+        result = self.prompt_manager.build_prompt(query=query, docs=reranked, history=history)
         context = result["prompt"]
         prompt_type = result["type"]
         print(f"[PIPELINE] Prompt type received: {prompt_type}")
@@ -77,9 +73,7 @@ class OrchestrationPipeline:
 
             executor = AgentExecutor(model=model, tool_registry=self.tool_registry)
 
-            orchestrator = MultiAgentOrchestrator(
-                planner=planner, repair=repair, executor=executor
-            )
+            orchestrator = MultiAgentOrchestrator(planner=planner, repair=repair, executor=executor)
 
             agent_result = orchestrator.run(query=query, context=context)
 
@@ -195,7 +189,5 @@ class OrchestrationPipeline:
         return {
             "bm25_results": retrieval.get("bm25_results", []),
             "vector_results": retrieval.get("vector_results", []),
-            "hybrid_results": (
-                retrieval.get("hybrid_results") or retrieval.get("results") or []
-            ),
+            "hybrid_results": (retrieval.get("hybrid_results") or retrieval.get("results") or []),
         }

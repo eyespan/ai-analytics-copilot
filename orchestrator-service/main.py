@@ -64,9 +64,7 @@ def build_eval_agent():
 
     executor = AgentExecutor(model=model, tool_registry=tool_registry)
 
-    orchestrator = MultiAgentOrchestrator(
-        planner=planner, repair=repair, executor=executor
-    )
+    orchestrator = MultiAgentOrchestrator(planner=planner, repair=repair, executor=executor)
 
     return orchestrator
 

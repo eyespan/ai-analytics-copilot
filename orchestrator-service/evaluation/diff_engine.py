@@ -152,9 +152,7 @@ class DiffEngine:
 
                 used.add(best_j)
 
-                matches.append(
-                    {"expected": exp, "actual": best_actual, "score": best_score}
-                )
+                matches.append({"expected": exp, "actual": best_actual, "score": best_score})
 
                 if best_score < 0.8:
                     mismatches.append(

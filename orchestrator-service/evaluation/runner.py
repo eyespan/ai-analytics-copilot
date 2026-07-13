@@ -89,9 +89,7 @@ class EvaluationRunner:
             if s.get("event_type") in ("tool_execution", "tool_failed")
         ]
 
-        replay_comparison = self._compare_traces(
-            execution_steps, replay_execution_steps
-        )
+        replay_comparison = self._compare_traces(execution_steps, replay_execution_steps)
 
         # -----------------------------
         # 5. SCORE BREAKDOWN
@@ -125,9 +123,7 @@ class EvaluationRunner:
     # ------------------------------------------------------------
     # REPLAY COMPARISON
     # ------------------------------------------------------------
-    def _compare_traces(
-        self, original: List[Dict], replay: List[Dict]
-    ) -> Dict[str, Any]:
+    def _compare_traces(self, original: List[Dict], replay: List[Dict]) -> Dict[str, Any]:
 
         original_tools = [s["tool"] for s in original if "tool" in s]
         replay_tools = [s["tool"] for s in replay if "tool" in s]
@@ -173,10 +169,7 @@ class EvaluationRunner:
             0.0,
             min(
                 1.0,
-                0.5 * alignment_score
-                + 0.3 * coverage_score
-                + 0.2 * ordering_score
-                - penalty,
+                0.5 * alignment_score + 0.3 * coverage_score + 0.2 * ordering_score - penalty,
             ),
         )
 

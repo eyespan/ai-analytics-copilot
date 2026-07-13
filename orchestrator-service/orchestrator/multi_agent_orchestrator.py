@@ -104,9 +104,7 @@ class MultiAgentOrchestrator:
 
         state.context = context
 
-        result = self.executor.run_plan(
-            repaired_plan, query=query, workflow=workflow, state=state
-        )
+        result = self.executor.run_plan(repaired_plan, query=query, workflow=workflow, state=state)
 
         executor_trace = result.get("trace", {})
 

@@ -86,10 +86,7 @@ class Planner:
             # ------------------------------------------------
             if len(deduped_steps) > self.MAX_PLAN_STEPS:
 
-                print(
-                    f"[PLANNER] Plan exceeded "
-                    f"{self.MAX_PLAN_STEPS} steps. Truncating."
-                )
+                print(f"[PLANNER] Plan exceeded " f"{self.MAX_PLAN_STEPS} steps. Truncating.")
 
                 deduped_steps = deduped_steps[: self.MAX_PLAN_STEPS]
 

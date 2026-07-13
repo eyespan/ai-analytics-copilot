@@ -32,9 +32,7 @@ class AgentExecutor:
     # ============================================================
     # OPTION B ENTRY POINT (MAIN)
     # ============================================================
-    def run_plan(
-        self, plan, query: str, workflow=None, state: Optional[AgentState] = None
-    ):
+    def run_plan(self, plan, query: str, workflow=None, state: Optional[AgentState] = None):
 
         state = state or AgentState(query=query)
 
@@ -208,9 +206,7 @@ class AgentExecutor:
                     step=step_id,
                     tool=tool_name,
                     event_type=(
-                        TraceEventType.TOOL_EXECUTION
-                        if success
-                        else TraceEventType.TOOL_FAILED
+                        TraceEventType.TOOL_EXECUTION if success else TraceEventType.TOOL_FAILED
                     ),
                     args=validated_args,
                     output=output,

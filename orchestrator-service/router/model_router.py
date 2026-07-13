@@ -89,9 +89,7 @@ class ModelRouter:
 
         if os.getenv("BEDROCK_ENABLED", "true") == "true":
             self.bedrock_client = BedrockClient(
-                model_id=os.getenv(
-                    "BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0"
-                )
+                model_id=os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
             )
 
     def select_model(self, query: str, context: str = "") -> BaseModel:
@@ -126,8 +124,7 @@ class ModelRouter:
         q = query.lower()
         long_query = len(q.split()) > 12
         has_reasoning_words = any(
-            w in q
-            for w in ["explain", "compare", "why", "how", "architecture", "design"]
+            w in q for w in ["explain", "compare", "why", "how", "architecture", "design"]
         )
         has_multiple_intents = " and " in q or " vs " in q
 

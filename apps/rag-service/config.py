@@ -15,9 +15,7 @@ TOP_K = 20
 # Embeddings
 # =====================
 
-EMBEDDING_SERVICE = os.getenv(
-    "EMBEDDING_SERVICE", "http://embedding-service:8002/embed"
-)
+EMBEDDING_SERVICE = os.getenv("EMBEDDING_SERVICE", "http://embedding-service:8002/embed")
 
 
 # =====================

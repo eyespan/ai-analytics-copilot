@@ -22,26 +22,16 @@ class PromptManager:
         history_text = ""
 
         if prompt_type == PromptType.CODE:
-            prompt = (
-                SYSTEM_PROMPT
-                + "\n\n"
-                + CODE_PROMPT.format(query=query, history=history_text)
-            )
+            prompt = SYSTEM_PROMPT + "\n\n" + CODE_PROMPT.format(query=query, history=history_text)
             return {"prompt": prompt, "type": prompt_type}
 
         if prompt_type == PromptType.AGENT:
-            prompt = (
-                SYSTEM_PROMPT
-                + "\n\n"
-                + AGENT_PROMPT.format(query=query, history=history_text)
-            )
+            prompt = SYSTEM_PROMPT + "\n\n" + AGENT_PROMPT.format(query=query, history=history_text)
             return {"prompt": prompt, "type": prompt_type}
 
         if prompt_type == PromptType.SUMMARY:
             prompt = (
-                SYSTEM_PROMPT
-                + "\n\n"
-                + SUMMARY_PROMPT.format(query=query, history=history_text)
+                SYSTEM_PROMPT + "\n\n" + SUMMARY_PROMPT.format(query=query, history=history_text)
             )
             return {"prompt": prompt, "type": prompt_type}
 
@@ -51,9 +41,7 @@ class PromptManager:
         prompt = (
             SYSTEM_PROMPT
             + "\n\n"
-            + RAG_PROMPT.format(
-                query=query, context=retrieved_text, history=history_text
-            )
+            + RAG_PROMPT.format(query=query, context=retrieved_text, history=history_text)
         )
         return {"prompt": prompt, "type": prompt_type}
 
@@ -69,6 +57,4 @@ class PromptManager:
         )
 
     def _format_history(self, history):
-        return "\n".join(
-            [f"User: {h['query']}\nAssistant: {h['response']}" for h in history[-3:]]
-        )
+        return "\n".join([f"User: {h['query']}\nAssistant: {h['response']}" for h in history[-3:]])
