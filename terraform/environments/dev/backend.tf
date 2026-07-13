@@ -1,8 +1,16 @@
 terraform {
 
-  backend "local" {
+  backend "s3" {
 
-    path = "terraform.tfstate"
+    bucket = "ai-analytics-copilot-terraform-state"
+
+    key = "dev/terraform.tfstate"
+
+    region = "us-east-1"
+
+    encrypt = true
+
+    use_lockfile = true
 
   }
 

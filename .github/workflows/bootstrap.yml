@@ -20,6 +20,7 @@ env:
   AWS_REGION: us-east-1
   PROJECT_NAME: ai-analytics-copilot
   ROLE_NAME: ai-analytics-copilot-github-actions
+  TF_STATE_BUCKET: ai-analytics-copilot-terraform-state
 
 
 jobs:
@@ -152,6 +153,67 @@ jobs:
 
           echo "${ROLE_ARN}"
 
+    
+      - name: Create Terraform State S3 Bucket
+        shell: bash
+        run: |
+
+          set -e
+
+          BUCKET_NAME="${TF_STATE_BUCKET}"
+
+
+          if aws s3api head-bucket \
+             --bucket "${BUCKET_NAME}" 2>/dev/null
+
+          then
+
+            echo "Terraform state bucket already exists"
+
+          else
+
+            echo "Creating Terraform state bucket"
+
+
+            aws s3api create-bucket \
+              --bucket "${BUCKET_NAME}" \
+              --region "${AWS_REGION}"
+
+          fi
+
+      - name: Enable Terraform State Versioning
+        run: |
+
+          aws s3api put-bucket-versioning \
+            --bucket "${TF_STATE_BUCKET}" \
+            --versioning-configuration Status=Enabled
+
+      - name: Enable Terraform State Encryption
+        run: |
+
+          aws s3api put-bucket-encryption \
+            --bucket "${TF_STATE_BUCKET}" \
+            --server-side-encryption-configuration
+          '{
+            "Rules": [
+              {
+                "ApplyServerSideEncryptionByDefault": {
+                  "SSEAlgorithm": "AES256"
+                }
+              }
+            ]
+          }'
+
+     - name: Block Public Access
+        run: |
+
+          aws s3api put-public-access-block \
+            --bucket "${TF_STATE_BUCKET}" \
+            --public-access-block-configuration \
+              BlockPublicAcls=true,\
+              IgnorePublicAcls=true,\
+              BlockPublicPolicy=true,\
+              RestrictPublicBuckets=true
 
       - name: Bootstrap complete
 
