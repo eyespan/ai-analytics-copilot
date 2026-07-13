@@ -161,7 +161,7 @@ jobs:
 
         env:
 
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 
         shell: bash
 
@@ -171,6 +171,7 @@ jobs:
           ROLE_ARN="${{ steps.role.outputs.ROLE_ARN }}"
 
           gh secret set AWS_TERRAFORM_ROLE_ARN \
+            --repo "${{ github.repository }}" \
             --body "${ROLE_ARN}"
 
 
