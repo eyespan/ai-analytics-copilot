@@ -97,9 +97,9 @@ node_groups = {
 }
 
 
-github_org = "eyespan"
+#github_org = "eyespan"
 
-github_repo = "ai-analytics-copilot"
+#github_repo = "ai-analytics-copilot"
 
 
 irsa_roles = {

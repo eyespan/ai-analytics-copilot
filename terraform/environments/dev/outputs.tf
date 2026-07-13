@@ -33,3 +33,11 @@ output "cluster_oidc_issuer" {
 output "ecr_repository_urls" {
   value = module.ecr.repository_urls
 }
+
+#output "github_actions_role_arn" {
+
+#  description = "IAM role ARN assumed by GitHub Actions"
+
+#  value = module.iam_irsa.github_actions_role_arn
+
+#}

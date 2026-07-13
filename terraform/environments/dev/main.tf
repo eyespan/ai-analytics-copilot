@@ -108,9 +108,9 @@ module "iam_irsa" {
   eks_oidc_provider_arn = module.eks.oidc_provider_arn
 
 
-  github_org = var.github_org
+  #github_org = var.github_org
 
-  github_repo = var.github_repo
+  #github_repo = var.github_repo
 
 
   irsa_roles = var.irsa_roles

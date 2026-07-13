@@ -9,6 +9,7 @@ variable "tags" {
   default     = {}
 }
 
+/*
 variable "github_org" {
 
   description = "GitHub organisation"
@@ -24,7 +25,7 @@ variable "github_repo" {
 
   type = string
 
-}
+}*/
 
 
 variable "eks_oidc_provider_arn" {

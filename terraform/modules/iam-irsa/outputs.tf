@@ -1,13 +1,13 @@
-output "github_actions_role_arn" {
+#output "github_actions_role_arn" {
 
 
-  description = "IAM role assumed by GitHub Actions"
+#  description = "IAM role assumed by GitHub Actions"
 
 
-  value = aws_iam_role.github_actions.arn
+#  value = aws_iam_role.github_actions.arn
 
 
-}
+#}
 
 output "irsa_role_arns" {
 

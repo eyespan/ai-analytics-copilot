@@ -142,7 +142,7 @@ variable "node_groups" {
 
 }
 
-variable "github_org" {
+/*variable "github_org" {
 
   description = "GitHub organisation"
 
@@ -157,7 +157,7 @@ variable "github_repo" {
 
   type = string
 
-}
+}*/
 
 variable "eks_oidc_provider_arn" {
 
