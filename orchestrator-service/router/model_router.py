@@ -3,9 +3,6 @@ from typing import Generator
 
 from clients.bedrock_client import BedrockClient
 from clients.ollama_client import OllamaClient
-from config.settings import (
-    OLLAMA_MODEL,
-)
 
 
 class BaseModel:
