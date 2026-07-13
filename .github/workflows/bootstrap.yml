@@ -1,8 +1,8 @@
 name: Bootstrap AWS OIDC
 
 on:
-
   workflow_dispatch:
+
   push:
     branches:
       - level7
@@ -189,12 +189,11 @@ jobs:
             --versioning-configuration Status=Enabled
 
       - name: Enable Terraform State Encryption
+        shell: bash
         run: |
 
-          aws s3api put-bucket-encryption \
-            --bucket "${TF_STATE_BUCKET}" \
-            --server-side-encryption-configuration '
-            {
+          cat > encryption.json <<EOF
+          {
             "Rules": [
               {
                 "ApplyServerSideEncryptionByDefault": {
@@ -202,9 +201,14 @@ jobs:
                 }
               }
             ]
-          }'
+          }
+          EOF
 
-     - name: Block Public Access
+          aws s3api put-bucket-encryption \
+            --bucket "${TF_STATE_BUCKET}" \
+            --server-side-encryption-configuration file://encryption.json
+
+      - name: Block Public Access
        run: |
 
           aws s3api put-public-access-block \
