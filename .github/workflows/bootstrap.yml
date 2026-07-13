@@ -205,7 +205,7 @@ jobs:
           }'
 
      - name: Block Public Access
-        run: |
+       run: |
 
           aws s3api put-public-access-block \
             --bucket "${TF_STATE_BUCKET}" \
