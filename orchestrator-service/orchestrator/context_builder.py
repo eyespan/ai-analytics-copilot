@@ -48,9 +48,9 @@ class PromptManager:
     def _format_docs(self, docs):
         return "\n".join(
             [
-                f"{d.get('repo_name','')} "
-                f"({d.get('language','Unknown')}) - "
-                f"{d.get('description','')} "
+                f"{d.get('repo_name', '')} "
+                f"({d.get('language', 'Unknown')}) - "
+                f"{d.get('description', '')} "
                 f"[rerank_score={round(d.get('rerank_score', 0), 2)}]"
                 for d in docs[:5]
             ]
