@@ -193,8 +193,8 @@ jobs:
 
           aws s3api put-bucket-encryption \
             --bucket "${TF_STATE_BUCKET}" \
-            --server-side-encryption-configuration
-          '{
+            --server-side-encryption-configuration '
+            {
             "Rules": [
               {
                 "ApplyServerSideEncryptionByDefault": {
