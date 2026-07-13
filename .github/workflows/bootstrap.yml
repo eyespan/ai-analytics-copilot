@@ -3,6 +3,12 @@ name: Bootstrap AWS OIDC
 on:
 
   workflow_dispatch:
+
+  push:
+    branches:
+      - level7
+    paths:
+      - ".github/workflows/bootstrap.yml"
   
 
 
