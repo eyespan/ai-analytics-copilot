@@ -153,29 +153,6 @@ jobs:
           echo "${ROLE_ARN}"
 
 
-
-
-      - name: Create GitHub Terraform Role Secret
-
-        if: success()
-
-        env:
-
-          GH_TOKEN: ${{ github.token }}
-
-        shell: bash
-
-        run: |
-
-
-          ROLE_ARN="${{ steps.role.outputs.ROLE_ARN }}"
-
-          gh secret set AWS_TERRAFORM_ROLE_ARN \
-            --repo "${{ github.repository }}" \
-            --body "${ROLE_ARN}"
-
-
-
       - name: Bootstrap complete
 
         run: |

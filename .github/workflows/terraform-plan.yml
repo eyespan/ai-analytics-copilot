@@ -1,0 +1,5 @@
+- name: Configure AWS credentials
+  uses: aws-actions/configure-aws-credentials@v4
+  with:
+    role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ai-analytics-copilot-github-actions
+    aws-region: us-east-1
