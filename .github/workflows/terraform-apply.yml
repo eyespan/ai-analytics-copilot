@@ -2,57 +2,10 @@ name: Terraform Apply
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Environment"
-        required: true
-        default: dev
-        type: choice
-        options:
-          - dev
-
-permissions:
-  id-token: write
-  contents: read
-
-env:
-  AWS_REGION: us-east-1
 
 jobs:
-
-  terraform-apply:
-
-    name: Terraform Apply
-
+  test:
     runs-on: ubuntu-latest
 
-    environment:
-      name: ${{ github.event.inputs.environment }}
-
-    defaults:
-      run:
-        working-directory: terraform/environments/${{ github.event.inputs.environment }}
-
     steps:
-
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-
-        uses: aws-actions/configure-aws-credentials@v4
-
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ai-analytics-copilot-github-actions
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Setup Terraform
-
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-
-        run: terraform init
-
-      - name: Terraform Apply
-
-        run: terraform apply -auto-approve
+      - run: echo "Hello Terraform"
