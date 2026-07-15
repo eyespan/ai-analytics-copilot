@@ -27,6 +27,7 @@ jobs:
   terraform-apply:
 
     name: Terraform Apply
+    if: github.event_name == 'workflow_dispatch'
 
     runs-on: ubuntu-latest
 
