@@ -1,11 +1,10 @@
 name: Terraform Apply
 
 on:
+  push:
+      branches:
+        - level7
 
- push:
-    branches:
-      - level7
-      
   workflow_dispatch:
 
 jobs:
