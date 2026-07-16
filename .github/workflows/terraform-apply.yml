@@ -50,9 +50,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       #- name: Configure AWS Credentials
-
       #  uses: aws-actions/configure-aws-credentials@v4
-
       #  with:
       #    role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ai-analytics-copilot-github-actions
       #    aws-region: ${{ env.AWS_REGION }}
