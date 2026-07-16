@@ -21,6 +21,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
+  TF_WORKING_DIR: terraform/environments/dev
 
 jobs:
 
@@ -35,7 +36,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: terraform/environments/${{ github.event.inputs.environment }}
+        working-directory: ${{ env.TF_WORKING_DIR }}
 
     steps:
 
@@ -54,9 +55,9 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
       - name: Terraform Apply
-
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve
