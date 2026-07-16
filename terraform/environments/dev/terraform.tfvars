@@ -14,7 +14,6 @@ project_name = "ai-analytics-copilot"
 
 vpc_cidr = "10.20.0.0/16"
 
-
 public_subnets = {
 
   public-a = {
