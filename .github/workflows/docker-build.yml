@@ -100,16 +100,22 @@ jobs:
 
 
       - name: Build Docker image
-
+        shell: bash
         run: |
+          if [ "${{ matrix.service }}" = "orchestrator-service" ]; then
+            CONTEXT="orchestrator-service"
+          else
+            CONTEXT="apps/${{ matrix.service }}"
+          fi
 
           IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
 
-          echo "Building ${IMAGE}"
+          echo "Context: ${CONTEXT}"
+          echo "Image: ${IMAGE}"
 
           docker build \
             -t "${IMAGE}" \
-            ${{ matrix.service == 'orchestrator-service' && 'orchestrator-service' || format('apps/{0}', matrix.service) }}
+            "${CONTEXT}"
 
 
       - name: Push Docker image
