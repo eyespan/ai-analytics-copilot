@@ -24,6 +24,14 @@ variable "cluster_role_arn" {
   type        = string
 }
 
+
+variable "efs_csi_role_arn" {
+  description = "IAM Role ARN for the efs csi driver addon"
+  type        = string
+}
+
+
+
 variable "endpoint_private_access" {
   description = "Enable private API endpoint"
   type        = bool

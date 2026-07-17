@@ -73,6 +73,8 @@ module "eks" {
   node_role_arn    = module.iam.eks_node_role_arn
   node_groups      = var.node_groups
 
+  efs_csi_role_arn = module.iam.efs_csi_role_arn
+
   vpc_id = module.vpc.vpc_id
 
   private_subnet_ids = module.vpc.private_subnet_ids
@@ -88,7 +90,8 @@ module "eks" {
 
   depends_on = [
     module.vpc,
-    module.iam
+    module.iam,
+    module.iam_irsa
   ]
 
 }
