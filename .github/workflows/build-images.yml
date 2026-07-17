@@ -1,0 +1,49 @@
+name: Build Docker Images
+
+
+on:
+
+  workflow_dispatch:
+
+    inputs:
+
+      service:
+
+        description: "Service to build"
+
+        required: true
+
+        type: choice
+
+        options:
+
+          - api-gateway
+          - embedding-service
+          - indexer-service
+          - orchestrator-service
+          - rag-service
+          - all
+
+
+
+permissions:
+
+  contents: read
+
+
+
+jobs:
+
+
+  docker-build:
+
+
+    uses: ./.github/workflows/reusable/docker-build.yml
+
+
+    with:
+
+      service: ${{ github.event.inputs.service }}
+
+
+    secrets: inherit

@@ -1,0 +1,165 @@
+name: Reusable Docker Build
+
+
+on:
+
+  workflow_call:
+
+
+
+jobs:
+
+
+  docker-build:
+
+
+    name: Build ${{ matrix.service }}
+
+    runs-on: ubuntu-latest
+
+
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+
+        service:
+
+          - api-gateway
+          - embedding-service
+          - frontend
+          - indexer-service
+          - orchestrator-service
+          - rag-service
+
+
+
+    env:
+
+      AWS_REGION: us-east-1
+
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+      IMAGE_TAG: ${{ github.sha }}
+
+
+
+    steps:
+
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+
+      - name: Configure AWS credentials
+
+        uses: aws-actions/configure-aws-credentials@v4
+
+        with:
+
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+          aws-region: ${{ env.AWS_REGION }}
+
+
+
+      - name: Login to Amazon ECR
+
+        uses: aws-actions/amazon-ecr-login@v2
+
+
+
+      - name: Set Docker build context
+
+        id: docker-context
+
+        shell: bash
+
+        run: |
+
+
+          if [ "${{ matrix.service }}" = "orchestrator-service" ]; then
+
+            echo "path=orchestrator-service" >> $GITHUB_OUTPUT
+
+          else
+
+            echo "path=apps/${{ matrix.service }}" >> $GITHUB_OUTPUT
+
+          fi
+
+
+
+
+      - name: Build Docker image
+
+        shell: bash
+
+        run: |
+
+
+          IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
+
+
+          echo "Building ${IMAGE}"
+
+
+          docker build \
+            -t "${IMAGE}" \
+            "${{ steps.docker-context.outputs.path }}"
+
+
+
+
+      - name: Push Docker image
+
+        shell: bash
+
+        run: |
+
+
+          IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
+
+
+          echo "Pushing ${IMAGE}"
+
+
+          docker push "${IMAGE}"
+
+
+
+
+      - name: Tag latest image
+
+        shell: bash
+
+        run: |
+
+
+          IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
+
+
+          docker tag \
+
+            "${IMAGE}" \
+
+            "${ECR_REGISTRY}/${{ matrix.service }}:latest"
+
+
+
+
+      - name: Push latest image
+
+        shell: bash
+
+        run: |
+
+
+          docker push \
+
+            "${ECR_REGISTRY}/${{ matrix.service }}:latest"
