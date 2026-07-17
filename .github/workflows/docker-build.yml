@@ -34,7 +34,7 @@ jobs:
 
       matrix:
 
-      service: ${{ fromJson(inputs.service == 'all' && '["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service"]' || format('["{0}"]', inputs.service)) }}
+        service: ${{ fromJson(inputs.service == 'all' && '["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service"]' || format('["{0}"]', inputs.service)) }}
 
 
     env:
