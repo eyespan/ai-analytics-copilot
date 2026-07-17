@@ -90,8 +90,7 @@ module "eks" {
 
   depends_on = [
     module.vpc,
-    module.iam,
-    module.iam_irsa
+    module.iam
   ]
 
 }
