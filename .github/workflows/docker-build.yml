@@ -1,6 +1,5 @@
 name: Reusable Docker Build
 
-
 on:
 
   workflow_call:
@@ -9,19 +8,50 @@ on:
 
       service:
 
-        description: "Service to build"
+        description: Service to build
 
         required: true
 
         type: string
 
 
-
 jobs:
+
+
+  prepare:
+
+    runs-on: ubuntu-latest
+
+    outputs:
+
+      services: ${{ steps.services.outputs.services }}
+
+    steps:
+
+      - name: Set services
+
+        id: services
+
+        shell: bash
+
+        run: |
+
+          if [ "${{ inputs.service }}" = "all" ]; then
+
+            echo 'services=["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service"]' >> $GITHUB_OUTPUT
+
+          else
+
+            echo 'services=["${{ inputs.service }}"]' >> $GITHUB_OUTPUT
+
+          fi
+
 
 
   docker-build:
 
+
+    needs: prepare
 
     name: Build ${{ matrix.service }}
 
@@ -34,7 +64,7 @@ jobs:
 
       matrix:
 
-        service: ${{ fromJson(inputs.service == 'all' && '["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service"]' || format('["{0}"]', inputs.service)) }}
+        service: ${{ fromJson(needs.prepare.outputs.services) }}
 
 
     env:
@@ -46,14 +76,9 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
 
 
-
     steps:
 
-
-      - name: Checkout repository
-
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
 
 
       - name: Configure AWS credentials
@@ -69,99 +94,28 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
 
-
-      - name: Login to Amazon ECR
+      - name: Login to ECR
 
         uses: aws-actions/amazon-ecr-login@v2
 
 
-
-      - name: Set Docker build context
-
-        id: docker-context
-
-        shell: bash
-
-        run: |
-
-
-          if [ "${{ matrix.service }}" = "orchestrator-service" ]; then
-
-            echo "path=orchestrator-service" >> $GITHUB_OUTPUT
-
-          else
-
-            echo "path=apps/${{ matrix.service }}" >> $GITHUB_OUTPUT
-
-          fi
-
-
-
-
       - name: Build Docker image
 
-        shell: bash
-
         run: |
-
 
           IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
 
-
           echo "Building ${IMAGE}"
-
 
           docker build \
             -t "${IMAGE}" \
-            "${{ steps.docker-context.outputs.path }}"
-
-
+            ${{ matrix.service == 'orchestrator-service' && 'orchestrator-service' || format('apps/{0}', matrix.service) }}
 
 
       - name: Push Docker image
 
-        shell: bash
-
         run: |
 
-
           IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
-
-
-          echo "Pushing ${IMAGE}"
-
 
           docker push "${IMAGE}"
-
-
-
-
-      - name: Tag latest image
-
-        shell: bash
-
-        run: |
-
-
-          IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
-
-
-          docker tag \
-
-            "${IMAGE}" \
-
-            "${ECR_REGISTRY}/${{ matrix.service }}:latest"
-
-
-
-
-      - name: Push latest image
-
-        shell: bash
-
-        run: |
-
-
-          docker push \
-
-            "${ECR_REGISTRY}/${{ matrix.service }}:latest"
