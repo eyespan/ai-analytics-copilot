@@ -2,6 +2,9 @@ name: Build Docker Images
 
 
 on:
+  push:
+      branches:
+        - level7
 
   workflow_dispatch:
 
