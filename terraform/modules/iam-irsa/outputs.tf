@@ -41,9 +41,9 @@ output "external_dns_role_arn" {
 }
 
 
-output "efs_csi_role_arn" {
+output "ebs_csi_role_arn" {
 
-  description = "IAM role ARN for EFS CSI Driver"
+  description = "IAM role ARN for EBS CSI Driver"
 
   value = aws_iam_role.efs_csi.arn
 

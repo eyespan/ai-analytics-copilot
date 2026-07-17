@@ -73,7 +73,7 @@ module "eks" {
   node_role_arn    = module.iam.eks_node_role_arn
   node_groups      = var.node_groups
 
-  efs_csi_role_arn = module.iam_irsa.efs_csi_role_arn
+  ebs_csi_role_arn = module.iam_irsa.ebs_csi_role_arn
 
   vpc_id = module.vpc.vpc_id
 

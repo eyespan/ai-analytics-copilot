@@ -3,7 +3,7 @@
 # =====================================
 #
 # Used by:
-# kube-system/efs-csi-controller-sa
+# kube-system/ebs-csi-controller-sa
 #
 # Purpose:
 # Allow Kubernetes EFS CSI Driver
@@ -16,7 +16,7 @@
 # Trust Policy
 # -------------------------------------
 
-data "aws_iam_policy_document" "efs_csi_assume" {
+data "aws_iam_policy_document" "ebs_csi_assume" {
 
 
   statement {
@@ -76,7 +76,7 @@ data "aws_iam_policy_document" "efs_csi_assume" {
 
       values = [
 
-        "system:serviceaccount:kube-system:efs-csi-controller-sa"
+        "system:serviceaccount:kube-system:ebs-csi-controller-sa"
 
       ]
 
@@ -92,19 +92,19 @@ data "aws_iam_policy_document" "efs_csi_assume" {
 # IAM Role
 # -------------------------------------
 
-resource "aws_iam_role" "efs_csi" {
+resource "aws_iam_role" "ebs_csi" {
 
-  name = "${var.name}-efs-csi-driver"
+  name = "${var.name}-ebs-csi-driver"
 
 
-  assume_role_policy = data.aws_iam_policy_document.efs_csi_assume.json
+  assume_role_policy = data.aws_iam_policy_document.ebs_csi_assume.json
 
 
 
   tags = merge(
     local.common_tags,
     {
-      Name = "${var.name}-efs-csi-driver"
+      Name = "${var.name}-ebs-csi-driver"
     }
   )
 
@@ -116,13 +116,13 @@ resource "aws_iam_role" "efs_csi" {
 # Attach AWS Managed Policy
 # -------------------------------------
 
-resource "aws_iam_role_policy_attachment" "efs_csi" {
+resource "aws_iam_role_policy_attachment" "ebs_csi" {
 
 
-  role = aws_iam_role.efs_csi.name
+  role = aws_iam_role.ebs_csi.name
 
 
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 
 
 }

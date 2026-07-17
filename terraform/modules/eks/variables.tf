@@ -25,8 +25,8 @@ variable "cluster_role_arn" {
 }
 
 
-variable "efs_csi_role_arn" {
-  description = "IAM Role ARN for the efs csi driver addon"
+variable "ebs_csi_role_arn" {
+  description = "IAM Role ARN for the ebs csi driver addon"
   type        = string
 }
 
