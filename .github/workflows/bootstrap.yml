@@ -20,7 +20,7 @@ env:
   AWS_REGION: us-east-1
   PROJECT_NAME: ai-analytics-copilot
   ROLE_NAME: ai-analytics-copilot-github-actions
-  TF_STATE_BUCKET: ai-analytics-copilot-terraform-state
+  TF_STATE_BUCKET: ai-analytics-copilot-dev-erraform-state
 
 
 jobs:
