@@ -112,8 +112,10 @@ jobs:
 
           echo "Context: ${CONTEXT}"
           echo "Image: ${IMAGE}"
+          echo "Registry: ${ECR_REGISTRY}"
 
           docker build \
+            --build-arg ECR_REGISTRY="${ECR_REGISTRY}" \
             -t "${IMAGE}" \
             "${CONTEXT}"
 
