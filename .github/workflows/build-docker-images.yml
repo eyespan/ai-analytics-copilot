@@ -7,6 +7,7 @@ on:
       - level7
 
   workflow_dispatch:
+  
     inputs:
 
       version:
@@ -29,7 +30,7 @@ jobs:
     with:
 
       service: all
-      
+
       version: ${{ inputs.version }}
 
     secrets: inherit
