@@ -65,11 +65,11 @@ node_groups = {
 
   general = {
 
-    desired_size = 2
+    desired_size = 4
 
     min_size = 2
 
-    max_size = 4
+    max_size = 8
 
 
     instance_types = [
