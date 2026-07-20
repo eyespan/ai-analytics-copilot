@@ -121,3 +121,29 @@ module "iam_irsa" {
   tags = local.common_tags
 
 }
+
+module "kubernetes_namespaces" {
+
+  source = "../../modules/kubernetes/namespaces"
+
+
+  environment = "dev"
+
+
+  namespaces = [
+
+    "ai-analytics",
+
+    "monitoring",
+
+    "ingress-nginx"
+
+  ]
+
+  depends_on = [
+
+    module.eks
+
+  ]
+
+}
