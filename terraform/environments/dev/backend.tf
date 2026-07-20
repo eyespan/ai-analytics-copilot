@@ -2,7 +2,7 @@ terraform {
 
   backend "s3" {
 
-    bucket = "ai-analytics-copilot-terraform-state"
+    bucket = "ai-analytics-copilot-dev-terraform-state"
 
     key = "dev/terraform.tfstate"
 
