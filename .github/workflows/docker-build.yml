@@ -88,11 +88,11 @@ jobs:
 
       - uses: actions/checkout@v4
 
-       - name: Debug
-         run: |
-           echo "EVENT=${{ github.event_name }}"
-           echo "INPUT=${{ inputs.version }}"
-           echo "EVENT_INPUT=${{ github.event.inputs.version }}"
+      - name: Debug
+        run: |
+          echo "EVENT=${{ github.event_name }}"
+          echo "INPUT=${{ inputs.version }}"
+          echo "EVENT_INPUT=${{ github.event.inputs.version }}"
 
 
       - name: Configure AWS credentials
