@@ -1,6 +1,13 @@
 name:  Docker Image Builder
 
 on:
+
+  push:
+    branches:
+      - level7
+    paths:
+      - "infra/base-images/ml-base/**"
+
   workflow_dispatch:
 
 permissions:

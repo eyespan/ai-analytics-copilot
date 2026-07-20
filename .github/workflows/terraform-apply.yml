@@ -4,6 +4,8 @@ on:
   push:
       branches:
         - level7
+      paths:
+        - "terraform/**"
 
   workflow_dispatch:
     inputs:
