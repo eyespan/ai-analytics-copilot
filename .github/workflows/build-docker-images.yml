@@ -5,8 +5,17 @@ on:
   push:
     branches:
       - level7
-      
+
   workflow_dispatch:
+    inputs:
+
+      version:
+
+        description: Image version
+
+        required: true
+
+        default: v1.0.0
 
 permissions:
   contents: read
@@ -20,5 +29,7 @@ jobs:
     with:
 
       service: all
+      
+      version: ${{ inputs.version }}
 
     secrets: inherit

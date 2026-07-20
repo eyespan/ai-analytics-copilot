@@ -1,0 +1,25 @@
+namespace: ai-analytics
+
+name: orchestrator-service
+
+image:
+  name: orchestrator-service
+  tag: v1.0.0
+  pullPolicy: Always
+
+replicaCount: 2
+
+containerPort: 8000
+
+service:
+  port: 80
+
+resources:
+
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+  limits:
+    cpu: 2
+    memory: 4Gi

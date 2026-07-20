@@ -1,1 +1,114 @@
+name: Reusable Helm Deploy
 
+
+on:
+
+  workflow_call:
+
+    inputs:
+
+      service:
+
+        description: Service to deploy
+
+        required: true
+
+        type: string
+
+
+      namespace:
+
+        description: Kubernetes namespace
+
+        required: false
+
+        default: ai-analytics
+
+        type: string
+
+
+      image_tag:
+
+        description: Docker image tag
+
+        required: true
+
+        type: string
+
+
+permissions:
+
+  contents: read
+
+
+jobs:
+
+
+  helm-deploy:
+
+
+    runs-on: ubuntu-latest
+
+
+    env:
+
+      AWS_REGION: us-east-1
+
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+
+    steps:
+
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      - name: Configure AWS Credentials
+
+        uses: aws-actions/configure-aws-credentials@v4
+
+        with:
+
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      - name: Update kubeconfig
+
+        run: |
+
+          aws eks update-kubeconfig \
+            --name ai-analytics-copilot \
+            --region ${AWS_REGION}
+
+
+      - name: Install Helm
+
+        uses: azure/setup-helm@v4
+
+
+      - name: Helm Deploy
+
+        run: |
+
+          helm upgrade --install \
+            ${{ inputs.service }} \
+            helm/charts/application \
+            --namespace ${{ inputs.namespace }} \
+            --create-namespace \
+            -f helm/values/${{ inputs.service }}.yaml \
+            --set image.repository=${ECR_REGISTRY} \
+            --set image.tag=${{ inputs.image_tag }}
+
+
+      - name: Verify deployment
+
+        run: |
+
+          kubectl rollout status deployment/${{ inputs.service }} \
+            -n ${{ inputs.namespace }}

@@ -1,0 +1,163 @@
+name: Deploy Dev
+
+
+on:
+
+  workflow_dispatch:
+
+    inputs:
+
+      image_tag:
+
+        description: Docker image tag to deploy
+
+        required: true
+
+        type: string
+
+        default: latest
+
+
+
+permissions:
+
+  contents: read
+
+
+
+jobs:
+
+
+  deploy-api-gateway:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: api-gateway
+
+      namespace: ai-analytics
+
+      image_tag: ${{ inputs.image_tag }}
+
+    secrets: inherit
+
+
+
+  deploy-orchestrator-service:
+
+
+    needs:
+
+      - deploy-api-gateway
+
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+
+    with:
+
+      service: orchestrator-service
+
+      namespace: ai-analytics
+
+      image_tag: ${{ inputs.image_tag }}
+
+
+    secrets: inherit
+
+
+
+  deploy-rag-service:
+
+
+    needs:
+
+      - deploy-orchestrator-service
+
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+
+    with:
+
+      service: rag-service
+
+      namespace: ai-analytics
+
+      image_tag: ${{ inputs.image_tag }}
+
+
+    secrets: inherit
+
+
+
+  deploy-embedding-service:
+
+
+    needs:
+
+      - deploy-rag-service
+
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+
+    with:
+
+      service: embedding-service
+
+      namespace: ai-analytics
+
+      image_tag: ${{ inputs.image_tag }}
+
+
+    secrets: inherit
+
+
+
+  deploy-indexer-service:
+
+
+    needs:
+
+      - deploy-embedding-service
+
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+
+    with:
+
+      service: indexer-service
+
+      namespace: ai-analytics
+
+      image_tag: ${{ inputs.image_tag }}
+
+
+    secrets: inherit
+
+
+
+  deploy-frontend:
+
+
+    needs:
+
+      - deploy-indexer-service
+
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+
+    with:
+
+      service: frontend
+
+      namespace: ai-analytics
+
+      image_tag: ${{ inputs.image_tag }}
+
+
+    secrets: inherit

@@ -79,7 +79,7 @@ orchestrator-service/evaluation/results/
 
 ### Kubernetes / Helm ###
 kubernetes/**/secrets/
-helm/**/charts/
+#helm/**/charts/
 helm/**/*.tgz
 
 ### Observability (local state, not config) ###

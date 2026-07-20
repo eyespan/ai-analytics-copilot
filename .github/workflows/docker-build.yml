@@ -13,6 +13,14 @@ on:
         required: true
 
         type: string
+        
+    version:
+
+        description: Image version
+
+        required: true
+
+        type: string
 
 
 jobs:
@@ -73,7 +81,7 @@ jobs:
 
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
 
-      IMAGE_TAG: ${{ github.sha }}
+      IMAGE_TAG: ${{ inputs.version }}
 
 
     steps:
