@@ -1,22 +1,23 @@
-from typing import Dict, Any, List, Generator
 import json
 import time
+from typing import Any, Dict, Generator
 
-from router.model_router import ModelRouter, BaseModel
-from memory.short_term import ConversationMemory
-from streaming.sse import StreamEmitter
-from rag_client import RagClient
-#from prompts.system_prompt import SYSTEM_PROMPT
-#from prompts.rag_prompt import RAG_PROMPT
-from orchestrator.context_builder import PromptManager
-from prompts.prompt_router import PromptType
 from agents.agent_executor import AgentExecutor
-from agents.tool_registry import ToolRegistry
-from agents.tools import get_time, echo_tool, search_docs_tool
-from agents.planner import Planner  # Ensure Planner is defined in agents.planner module
-from agents.plan_repair import PlanRepairEngine
-from orchestrator.multi_agent_orchestrator import MultiAgentOrchestrator
 from agents.guardrails import Guardrails
+from agents.plan_repair import PlanRepairEngine
+from agents.planner import Planner  # Ensure Planner is defined in agents.planner module
+from agents.tool_registry import ToolRegistry
+from agents.tools import echo_tool, get_time, search_docs_tool
+from memory.short_term import ConversationMemory
+
+# from prompts.system_prompt import SYSTEM_PROMPT
+# from prompts.rag_prompt import RAG_PROMPT
+from orchestrator.context_builder import PromptManager
+from orchestrator.multi_agent_orchestrator import MultiAgentOrchestrator
+from prompts.prompt_router import PromptType
+from rag_client import RagClient
+from router.model_router import BaseModel, ModelRouter
+from streaming.sse import StreamEmitter
 
 
 class OrchestrationPipeline:
@@ -31,7 +32,7 @@ class OrchestrationPipeline:
         self.tool_registry.register("get_time", get_time)
         self.tool_registry.register("echo", echo_tool)
         self.tool_registry.register("search_docs", search_docs_tool)
-        self.plan_repair = PlanRepairEngine() 
+        self.plan_repair = PlanRepairEngine()
         self.guardrails = Guardrails()
 
     def run(self, query: str, session_id: str, stream: bool = False) -> Dict[str, Any]:
@@ -43,34 +44,24 @@ class OrchestrationPipeline:
 
             return {
                 "answer": "[BLOCKED_BY_GUARDRAIL] Prompt rejected",
-                "trace": {
-                    "type": "guardrail",
-                    "events": self.guardrails.get_events()
-                },
+                "trace": {"type": "guardrail", "events": self.guardrails.get_events()},
                 "session_id": session_id,
                 "model_used": None,
-                "latency_ms": 0
+                "latency_ms": 0,
             }
         history = self.memory.get(session_id)
-        #retrieval = self._retrieve(query)
+        # retrieval = self._retrieve(query)
         retrieval_raw = self._retrieve(query)
-        retrieval = self._normalize_retrieval(retrieval_raw)    
+        retrieval = self._normalize_retrieval(retrieval_raw)
 
         hybrid = retrieval.get("hybrid_results") or retrieval.get("results") or []
         reranked = self.rag.rerank(query, hybrid)
-        result = self.prompt_manager.build_prompt(
-            query=query,
-            docs=reranked,
-            history=history
-        )
+        result = self.prompt_manager.build_prompt(query=query, docs=reranked, history=history)
         context = result["prompt"]
         prompt_type = result["type"]
         print(f"[PIPELINE] Prompt type received: {prompt_type}")
         # model = self.router.select_model(query=query, context=context)
-        model = self.router.select_model(
-            query=query,
-            context=context
-        )
+        model = self.router.select_model(query=query, context=context)
 
         # =========================================================
         # 5. 🔥 NEW: AGENT BRANCHING (THIS IS THE ONLY ADDITION)
@@ -80,21 +71,11 @@ class OrchestrationPipeline:
             planner = Planner(model)
             repair = PlanRepairEngine()
 
-            executor = AgentExecutor(
-                model=model,
-                tool_registry=self.tool_registry
-            )
+            executor = AgentExecutor(model=model, tool_registry=self.tool_registry)
 
-            orchestrator = MultiAgentOrchestrator(
-                planner=planner,
-                repair=repair,
-                executor=executor
-            )
+            orchestrator = MultiAgentOrchestrator(planner=planner, repair=repair, executor=executor)
 
-            agent_result = orchestrator.run(
-                query=query,
-                context=context
-            )
+            agent_result = orchestrator.run(query=query, context=context)
 
             answer = agent_result["answer"]
             trace = agent_result["trace"]
@@ -103,11 +84,7 @@ class OrchestrationPipeline:
                 session_id,
                 query,
                 answer,
-                metadata={
-                    "trace": trace,
-                    "model": model.name,
-                    "mode": "agent"
-                }
+                metadata={"trace": trace, "model": model.name, "mode": "agent"},
             )
 
             if stream:
@@ -130,39 +107,32 @@ class OrchestrationPipeline:
         if not answer or answer.strip() == "":
             answer = "I couldn't generate a response from the model."
 
-        
         trace = {
             "type": "rag",
             "retrieval": {
-                 "bm25": len(retrieval["bm25_results"]),
-                 "vector": len(retrieval["vector_results"]),
-                "hybrid": len(retrieval["hybrid_results"])
+                "bm25": len(retrieval["bm25_results"]),
+                "vector": len(retrieval["vector_results"]),
+                "hybrid": len(retrieval["hybrid_results"]),
             },
-            "rerank_top": reranked[:3]
+            "rerank_top": reranked[:3],
         }
 
         self.memory.append(
             session_id,
             query,
             answer,
-            metadata={
-                "trace": trace,
-                "model": model.name,
-                "mode": "agent"
-            }
+            metadata={"trace": trace, "model": model.name, "mode": "agent"},
         )
-
-        
 
         return {
             "answer": answer,
             "trace": trace,
             "session_id": session_id,
             "model_used": model.name,
-            "latency_ms": int((time.time() - start_time) * 1000)
+            "latency_ms": int((time.time() - start_time) * 1000),
         }
 
-        #return {
+        # return {
         #    "answer": answer,
         #    "session_id": session_id,
         #    "model_used": model.name,
@@ -175,12 +145,12 @@ class OrchestrationPipeline:
         #    "reranked_top": reranked[:3],
         #    # placeholder for Level 6 parity
         #     "trace": None
-        #}
+        # }
 
     def _retrieve(self, query: str) -> Dict[str, Any]:
         return self.rag.debug_retrieval(query)
 
-    #def _build_context(self, query: str, docs: List[Dict], history: List[Dict]) -> str:
+    # def _build_context(self, query: str, docs: List[Dict], history: List[Dict]) -> str:
     #    retrieved_text = "\n".join([
     #        f"{d.get('repo_name', '')}: {d.get('description', '')}"
     #        for d in docs[:5]
@@ -219,9 +189,5 @@ class OrchestrationPipeline:
         return {
             "bm25_results": retrieval.get("bm25_results", []),
             "vector_results": retrieval.get("vector_results", []),
-            "hybrid_results": (
-                retrieval.get("hybrid_results")
-                or retrieval.get("results")
-                or []
-            )
+            "hybrid_results": (retrieval.get("hybrid_results") or retrieval.get("results") or []),
         }

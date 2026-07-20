@@ -1,5 +1,7 @@
-import requests
 import json
+
+import requests
+
 
 class OllamaClient:
     def __init__(self, base_url: str, model: str):
@@ -9,12 +11,8 @@ class OllamaClient:
     def generate(self, prompt: str, stream: bool = False):
         r = requests.post(
             f"{self.base_url}/api/generate",
-            json={
-                "model": self.model,
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=120
+            json={"model": self.model, "prompt": prompt, "stream": False},
+            timeout=120,
         )
         r.raise_for_status()
         data = r.json()
@@ -27,13 +25,9 @@ class OllamaClient:
     def stream_generate(self, prompt: str):
         with requests.post(
             f"{self.base_url}/api/generate",
-            json={
-                "model": self.model,
-                "prompt": prompt,
-                "stream": True
-            },
+            json={"model": self.model, "prompt": prompt, "stream": True},
             stream=True,
-            timeout=120
+            timeout=120,
         ) as r:
             r.raise_for_status()
             buffer = ""

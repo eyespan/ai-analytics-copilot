@@ -1,0 +1,32 @@
+name:  Docker Image Builder
+
+on:
+
+  workflow_dispatch:
+
+    inputs:
+
+      version:
+
+        description: Image version
+
+        required: true
+
+        default: v1.0.0
+
+permissions:
+  contents: read
+
+jobs:
+
+  docker-build:
+
+    uses: ./.github/workflows/docker-build.yml
+
+    with:
+
+      service: all
+
+      version:  ${{ github.event.inputs.version }}
+
+    secrets: inherit

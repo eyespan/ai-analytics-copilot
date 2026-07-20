@@ -1,4 +1,5 @@
-from typing import Dict, Any
+from typing import Any, Dict
+
 from agents.agent_executor import AgentExecutor
 
 
@@ -20,10 +21,7 @@ class TraceReplayEngine:
         if hasattr(self.executor, "run_plan"):
             raise ValueError("Evaluator must use MultiAgentOrchestrator, not AgentExecutor")
 
-        result = self.executor.run(
-            query=query,
-            context=""
-        )
+        result = self.executor.run(query=query, context="")
 
         # Optional: attach expected trace for downstream diff engine
         if expected_trace:

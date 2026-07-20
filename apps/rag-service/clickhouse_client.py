@@ -1,5 +1,6 @@
-from clickhouse_driver import Client
 import os
+
+from clickhouse_driver import Client
 
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "clickhouse")
 CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "admin")
@@ -10,8 +11,9 @@ client = Client(
     host=CLICKHOUSE_HOST,
     user=CLICKHOUSE_USER,
     password=CLICKHOUSE_PASSWORD,
-    database=CLICKHOUSE_DB
+    database=CLICKHOUSE_DB,
 )
+
 
 def test_connection():
     return client.execute("SELECT version()")

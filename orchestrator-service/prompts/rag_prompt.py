@@ -1,4 +1,3 @@
-
 RAG_PROMPT = """
 [MODE: RAG]
 

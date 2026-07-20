@@ -1,9 +1,9 @@
 from retrieval.bm25 import bm25_search
-from retrieval.vector import vector_search
-#====== Level 4 Addition =======
-from retrieval.reranker import rerank
-#====== Level 4 Addition =======
 
+# ====== Level 4 Addition =======
+from retrieval.vector import vector_search
+
+# ====== Level 4 Addition =======
 
 
 # -----------------------
@@ -14,7 +14,7 @@ def expand_query(query: str) -> str:
         "neural networks": "deep learning neural networks AI machine learning",
         "machine learning": "ML AI models training inference",
         "framework": "library toolkit API implementation",
-        "python": "Python programming language"
+        "python": "Python programming language",
     }
 
     q = query.lower()
@@ -42,7 +42,7 @@ def rrf_fusion(bm25_results, vector_results, k=60):
                     "repo_name": item["repo_name"],
                     "description": item["description"],
                     "language": item["language"],
-                    "score": 0
+                    "score": 0,
                 }
 
             scores[key]["score"] += score
@@ -72,6 +72,6 @@ def hybrid_search(query: str):
     print("\n[DEBUG RERANK]")
     for r in results[:3]:
         print(r["repo_name"], r.get("rerank_score"))
-    #====== Level 4 Addition =======
+    # ====== Level 4 Addition =======
 
     return results

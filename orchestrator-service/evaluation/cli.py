@@ -1,12 +1,11 @@
 import argparse
 import json
 
-from evaluation.dataset_loader import load_dataset
-from evaluation.runner import EvaluationRunner
 from agents.agent_executor import AgentExecutor
 from agents.tool_registry import ToolRegistry
-from agents.tools import get_time
-from agents.tools import search_docs
+from agents.tools import get_time, search_docs
+from evaluation.dataset_loader import load_dataset
+from evaluation.runner import EvaluationRunner
 
 
 def build_executor():
@@ -17,8 +16,8 @@ def build_executor():
     registry = ToolRegistry()
 
     # register tools (example)
-    #from tools.time_tool import get_time
-    #from tools.search_tool import search_docs
+    # from tools.time_tool import get_time
+    # from tools.search_tool import search_docs
 
     registry.register("get_time", get_time)
     registry.register("search_docs", search_docs)

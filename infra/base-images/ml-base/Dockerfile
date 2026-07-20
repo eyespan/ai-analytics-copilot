@@ -5,7 +5,8 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     && rm -rf /var/lib/apt/lists/*
-
+    
+#upgrade pip to the latest version to avoid any compatibility issues
 RUN pip install --upgrade pip
 
 # Install torch separately (correct way)

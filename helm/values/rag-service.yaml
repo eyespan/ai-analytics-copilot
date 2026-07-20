@@ -1,0 +1,25 @@
+namespace: ai-analytics
+
+name: rag-service
+
+image:
+  name: rag-service
+  tag: v1.0.0
+  pullPolicy: Always
+
+replicaCount: 1
+
+containerPort: 8000
+
+service:
+  port: 80
+
+resources:
+
+  requests:
+    cpu: 500m
+    memory: 2Gi
+
+  limits:
+    cpu: 2
+    memory: 4Gi

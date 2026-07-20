@@ -1,7 +1,6 @@
-from clients.opensearch_client import opensearch
 from clients.embedding_client import get_embedding
-
-from config import TOP_K, INDEX_NAME
+from clients.opensearch_client import opensearch
+from config import INDEX_NAME, TOP_K
 
 
 def vector_search(query: str):
@@ -12,15 +11,8 @@ def vector_search(query: str):
         index=INDEX_NAME,
         body={
             "size": TOP_K,
-            "query": {
-                "knn": {
-                    "embedding": {
-                        "vector": embedding,
-                        "k": TOP_K
-                    }
-                }
-            }
-        }
+            "query": {"knn": {"embedding": {"vector": embedding, "k": TOP_K}}},
+        },
     )
 
     hits = response["hits"]["hits"]
@@ -30,11 +22,13 @@ def vector_search(query: str):
     for h in hits:
         src = h["_source"]
 
-        results.append({
-            "repo_name": src.get("repo_name"),
-            "description": src.get("description"),
-            "language": src.get("language"),
-            "score": h.get("_score")
-        })
+        results.append(
+            {
+                "repo_name": src.get("repo_name"),
+                "description": src.get("description"),
+                "language": src.get("language"),
+                "score": h.get("_score"),
+            }
+        )
 
     return results

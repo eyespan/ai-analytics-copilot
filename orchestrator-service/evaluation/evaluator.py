@@ -22,18 +22,12 @@ class Evaluator:
         trace_obj = result.get("trace") or {}
 
         # normalize executor-style or orchestrator-style traces
-        #trace = trace_obj.get("steps")
+        # trace = trace_obj.get("steps")
 
         trace = [
-            {
-                "tool": s.get("tool"),
-                "args": s.get("args", {})
-            }
+            {"tool": s.get("tool"), "args": s.get("args", {})}
             for s in trace_obj.get("steps", [])
-            if s.get("event_type") in [
-                "tool_execution",
-                "tool_failed"
-            ]
+            if s.get("event_type") in ["tool_execution", "tool_failed"]
         ]
 
         if trace is None:
@@ -41,14 +35,11 @@ class Evaluator:
                 "query": query,
                 "passed": False,
                 "error": f"Invalid trace format: {type(trace_obj)}",
-                "trace": trace_obj
+                "trace": trace_obj,
             }
 
         # 2. diff expected vs actual
-        diff_result = self.diff_engine.diff(
-            expected_plan,
-            trace
-        )
+        diff_result = self.diff_engine.diff(expected_plan, trace)
 
         return {
             "query": query,
@@ -56,5 +47,5 @@ class Evaluator:
             "missing_steps": diff_result.missing_steps,
             "extra_steps": diff_result.extra_steps,
             "mismatches": diff_result.mismatched_steps,
-            "trace": result["trace"]
+            "trace": result["trace"],
         }

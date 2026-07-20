@@ -1,0 +1,143 @@
+name: Reusable Docker Build
+
+on:
+
+  workflow_call:
+
+    inputs:
+
+      service:
+
+        description: Service to build
+
+        required: true
+
+        type: string
+
+      version:
+
+        description: Image version
+
+        required: true
+
+        type: string
+
+
+jobs:
+
+
+  prepare:
+
+    runs-on: ubuntu-latest
+
+    outputs:
+
+      services: ${{ steps.services.outputs.services }}
+
+    steps:
+
+      - name: Set services
+
+        id: services
+
+        shell: bash
+
+        run: |
+
+          if [ "${{ inputs.service }}" = "all" ]; then
+
+            echo 'services=["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service"]' >> $GITHUB_OUTPUT
+
+          else
+
+            echo 'services=["${{ inputs.service }}"]' >> $GITHUB_OUTPUT
+
+          fi
+
+
+
+  docker-build:
+
+
+    needs: prepare
+
+    name: Build ${{ matrix.service }}
+
+    runs-on: ubuntu-latest
+
+
+    strategy:
+
+      fail-fast: false
+
+      matrix:
+
+        service: ${{ fromJson(needs.prepare.outputs.services) }}
+
+
+    env:
+
+      AWS_REGION: us-east-1
+
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+      IMAGE_TAG: ${{ inputs.version }}
+
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+       - name: Debug
+         run: |
+           echo "EVENT=${{ github.event_name }}"
+           echo "INPUT=${{ inputs.version }}"
+           echo "EVENT_INPUT=${{ github.event.inputs.version }}"
+
+
+      - name: Configure AWS credentials
+
+        uses: aws-actions/configure-aws-credentials@v4
+
+        with:
+
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      - name: Login to ECR
+
+        uses: aws-actions/amazon-ecr-login@v2
+
+
+      - name: Build Docker image
+        shell: bash
+        run: |
+          if [ "${{ matrix.service }}" = "orchestrator-service" ]; then
+            CONTEXT="orchestrator-service"
+          else
+            CONTEXT="apps/${{ matrix.service }}"
+          fi
+
+          IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
+
+          echo "Context: ${CONTEXT}"
+          echo "Image: ${IMAGE}"
+          echo "Registry: ${ECR_REGISTRY}"
+
+          docker build \
+            --build-arg ECR_REGISTRY="${ECR_REGISTRY}" \
+            -t "${IMAGE}" \
+            "${CONTEXT}"
+
+
+      - name: Push Docker image
+
+        run: |
+
+          IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
+
+          docker push "${IMAGE}"

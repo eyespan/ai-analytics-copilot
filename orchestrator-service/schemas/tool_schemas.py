@@ -1,6 +1,6 @@
 # schemas/tool_schemas.py
 
-#from dataclasses import dataclass
+# from dataclasses import dataclass
 # from typing import Dict, Type
 
 
@@ -26,15 +26,4 @@
 # }
 
 
-TOOL_SCHEMAS = {
-
-    "get_time": {},
-
-    "search_docs": {
-       "query": str
-   },
-   "echo": {
-        "message": str
-    }
-
-}
+TOOL_SCHEMAS = {"get_time": {}, "search_docs": {"query": str}, "echo": {"message": str}}

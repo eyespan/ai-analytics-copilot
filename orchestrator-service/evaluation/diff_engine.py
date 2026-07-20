@@ -1,20 +1,17 @@
-from typing import List, Dict, Any
-from dataclasses import dataclass
+from typing import Any, Dict, List
+
 from evaluation.types import EvalResult, StepScore
 
 
 class DiffEngine:
 
     IGNORED_TOOLS = {"planner", "plan_repair", "final_answer"}
-   
 
     # ------------------------------------------------------------
     # MAIN ENTRY (STABLE CONTRACT)
     # ------------------------------------------------------------
     def diff(
-        self,
-        expected_steps: List[Dict[str, Any]],
-        actual_trace: List[Dict[str, Any]]
+        self, expected_steps: List[Dict[str, Any]], actual_trace: List[Dict[str, Any]]
     ) -> EvalResult:
 
         # --------------------------------------------------------
@@ -35,16 +32,15 @@ class DiffEngine:
         total_score = 0.0
 
         for match in alignment_result["matches"]:
-            score = self._score_step(
-                match["expected"],
-                match["actual"]
-            )
+            score = self._score_step(match["expected"], match["actual"])
 
-            step_scores.append({
-                "expected": match["expected"],
-                "actual": match["actual"],
-                "score": score
-            })
+            step_scores.append(
+                {
+                    "expected": match["expected"],
+                    "actual": match["actual"],
+                    "score": score,
+                }
+            )
 
             total_score += score
 
@@ -54,11 +50,7 @@ class DiffEngine:
         missing = alignment_result["missing"]
 
         for m in missing:
-            step_scores.append({
-                "expected": m,
-                "actual": None,
-                "score": 0.0
-            })
+            step_scores.append({"expected": m, "actual": None, "score": 0.0})
 
         # --------------------------------------------------------
         # 5. EXTRA STEPS
@@ -75,11 +67,7 @@ class DiffEngine:
             coverage = len(alignment_result["matches"]) / len(expected_steps)
             penalty = 0.05 * len(extra)
 
-            final_score = max(0.0, min(1.0,
-                0.7 * avg_score +
-                0.3 * coverage -
-                penalty
-            ))
+            final_score = max(0.0, min(1.0, 0.7 * avg_score + 0.3 * coverage - penalty))
 
         passed = final_score >= 0.85 and len(missing) == 0
 
@@ -91,20 +79,15 @@ class DiffEngine:
             missing_steps=[m.get("tool") for m in missing],
             extra_steps=[e.get("tool") for e in extra],
             mismatched_steps=alignment_result["mismatches"],
-
             score=final_score,
             step_scores=[
-                StepScore(
-                    expected=s["expected"],
-                    actual=s["actual"],
-                    score=s["score"]
-                )
+                StepScore(expected=s["expected"], actual=s["actual"], score=s["score"])
                 for s in step_scores
             ],
-
-            alignment_score=coverage,   # or your alignment metric
-            coverage_score=coverage
+            alignment_score=coverage,  # or your alignment metric
+            coverage_score=coverage,
         )
+
     # ------------------------------------------------------------
     # NORMALIZATION LAYER (CRITICAL FIX)
     # ------------------------------------------------------------
@@ -112,10 +95,7 @@ class DiffEngine:
         normalized = []
 
         for s in steps:
-            normalized.append({
-                "tool": s.get("tool"),
-                "args": s.get("args", {}) or {}
-            })
+            normalized.append({"tool": s.get("tool"), "args": s.get("args", {}) or {}})
 
         return normalized
 
@@ -131,10 +111,7 @@ class DiffEngine:
             if tool in self.IGNORED_TOOLS:
                 continue
 
-            normalized.append({
-                "tool": tool,
-                "args": step.get("args", {}) or {}
-            })
+            normalized.append({"tool": tool, "args": step.get("args", {}) or {}})
 
         return normalized
 
@@ -159,15 +136,9 @@ class DiffEngine:
                 if j in used:
                     continue
 
-                tool_score = self._tool_score(
-                    exp["tool"],
-                    act["tool"]
-                )
+                tool_score = self._tool_score(exp["tool"], act["tool"])
 
-                arg_score = self._arg_score(
-                    exp.get("args", {}),
-                    act.get("args", {})
-                )
+                arg_score = self._arg_score(exp.get("args", {}), act.get("args", {}))
 
                 score = tool_score * 0.6 + arg_score * 0.4
 
@@ -180,34 +151,28 @@ class DiffEngine:
 
                 used.add(best_j)
 
-                matches.append({
-                    "expected": exp,
-                    "actual": best_actual,
-                    "score": best_score
-                })
+                matches.append({"expected": exp, "actual": best_actual, "score": best_score})
 
                 if best_score < 0.8:
-                    mismatches.append({
-                        "expected": exp,
-                        "actual": best_actual,
-                        "reason": "partial mismatch",
-                        "score": best_score
-                    })
+                    mismatches.append(
+                        {
+                            "expected": exp,
+                            "actual": best_actual,
+                            "reason": "partial mismatch",
+                            "score": best_score,
+                        }
+                    )
 
             else:
                 missing.append(exp)
 
-        extra = [
-            actual[i]
-            for i in range(len(actual))
-            if i not in used
-        ]
+        extra = [actual[i] for i in range(len(actual)) if i not in used]
 
         return {
             "matches": matches,
             "missing": missing,
             "extra": extra,
-            "mismatches": mismatches
+            "mismatches": mismatches,
         }
 
     # ------------------------------------------------------------
@@ -267,8 +232,7 @@ class DiffEngine:
                     arg_score = 0.0
                 else:
                     arg_score = sum(
-                        1 for k in common
-                        if expected_args.get(k) == actual_args.get(k)
+                        1 for k in common if expected_args.get(k) == actual_args.get(k)
                     ) / len(expected_args)
 
         return 0.7 * tool_score + 0.3 * arg_score

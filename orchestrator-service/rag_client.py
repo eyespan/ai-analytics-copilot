@@ -1,4 +1,5 @@
 import os
+
 import requests
 
 
@@ -6,10 +7,7 @@ class RagClient:
 
     def __init__(self):
 
-        self.base_url = os.getenv(
-            "RAG_SERVICE_URL",
-            "http://rag-service:8001"
-        )
+        self.base_url = os.getenv("RAG_SERVICE_URL", "http://rag-service:8001")
 
     # ----------------------------------
     # Level 4 Retrieval Debug Endpoint
@@ -17,11 +15,7 @@ class RagClient:
     def debug_retrieval(self, query: str):
 
         response = requests.post(
-            f"{self.base_url}/debug-retrieval",
-            json={
-                "query": query
-            },
-            timeout=60
+            f"{self.base_url}/debug-retrieval", json={"query": query}, timeout=60
         )
 
         response.raise_for_status()
@@ -35,11 +29,8 @@ class RagClient:
 
         response = requests.post(
             f"{self.base_url}/rerank",
-            json={
-                "query": query,
-                "documents": docs
-            },
-            timeout=60
+            json={"query": query, "documents": docs},
+            timeout=60,
         )
 
         response.raise_for_status()
@@ -51,12 +42,7 @@ class RagClient:
     # ----------------------------------
     def ask(self, query: str):
 
-        response = requests.post(
-            f"{self.base_url}/ask",
-            json={
-                "query": query
-            }
-        )
+        response = requests.post(f"{self.base_url}/ask", json={"query": query})
 
         response.raise_for_status()
 

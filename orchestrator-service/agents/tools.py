@@ -3,9 +3,7 @@ from datetime import datetime
 
 def get_time(_: dict) -> str:
     # return datetime.utcnow().isoformat()
-    return {
-        "current_time": datetime.utcnow().isoformat()
-    }   
+    return {"current_time": datetime.utcnow().isoformat()}
 
 
 def echo_tool(args: dict) -> str:
@@ -28,9 +26,6 @@ def search_docs_tool(args: dict) -> str:
     if not docs:
         return "[DOC_EMPTY] no documents found"
 
-    return "[DOC_RESULTS]\n" + "\n".join([
-        f"{d.get('repo_name')} - {d.get('description')}"
-        for d in docs
-    ])
-
-
+    return "[DOC_RESULTS]\n" + "\n".join(
+        [f"{d.get('repo_name')} - {d.get('description')}" for d in docs]
+    )

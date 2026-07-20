@@ -6,7 +6,7 @@ from typing import List
 class WorkflowStepRecord:
     tool: str
     args: dict
-    status: str = "pending"   # running | success | failed
+    status: str = "pending"  # running | success | failed
     output: any = None
     latency_ms: int = 0
 
@@ -34,9 +34,7 @@ class WorkflowState:
         self.status = "running"
 
     def add_step(self, tool: str, args: dict):
-        self.steps.append(
-            WorkflowStepRecord(tool=tool, args=args)
-    )
+        self.steps.append(WorkflowStepRecord(tool=tool, args=args))
 
     def complete_step(self, tool_name: str):
         self.completed_steps.append(tool_name)
@@ -44,7 +42,6 @@ class WorkflowState:
 
         if self.steps:
             self.steps[-1].status = "success"
-
 
     def fail_step(self, tool_name: str):
         self.failed_steps.append(tool_name)
@@ -60,4 +57,3 @@ class WorkflowState:
     def fail_workflow(self):
 
         self.status = "failed"
-

@@ -1,4 +1,5 @@
-from typing import Dict, Callable, Any, Type
+from typing import Any, Callable, Type
+
 from pydantic import BaseModel
 
 
@@ -17,7 +18,7 @@ class ToolRegistry:
         name: str,
         func: Callable[..., Any],
         input_model: Type[BaseModel] | None = None,
-        output_model: Type[BaseModel] | None = None
+        output_model: Type[BaseModel] | None = None,
     ):
 
         self.tools[name] = func

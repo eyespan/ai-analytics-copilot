@@ -1,5 +1,6 @@
+from typing import Any, Dict, Optional
+
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
 
 
 class ToolAction(BaseModel):
@@ -11,10 +12,12 @@ class FinalAnswer(BaseModel):
     final: bool
     answer: Optional[str] = None
 
+
 class ToolResultSchema(BaseModel):
     tool: str
     output: str
     success: bool
+
 
 class AgentStepOutput(BaseModel):
     type: str  # "tool" | "final"

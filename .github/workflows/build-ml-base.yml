@@ -1,0 +1,62 @@
+name: Build ML Base Image
+
+on:
+
+  push:
+    branches:
+      - level7
+    paths:
+      - "infra/base-images/ml-base/**"
+      
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+
+  build-ml-base:
+
+    runs-on: ubuntu-latest
+
+    env:
+
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+
+        uses: aws-actions/configure-aws-credentials@v4
+
+        with:
+
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build ml-base
+
+        run: |
+
+          docker build \
+            -t ${ECR_REGISTRY}/ml-base:latest \
+            -f infra/base-images/ml-base/Dockerfile \
+            .
+
+      - name: Push ml-base
+
+        run: |
+
+          docker push ${ECR_REGISTRY}/ml-base:latest

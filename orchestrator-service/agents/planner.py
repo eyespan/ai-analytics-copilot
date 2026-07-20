@@ -17,16 +17,9 @@ class Planner:
         # ----------------------------------------------------
         # Build tool list dynamically from TOOL_SCHEMAS
         # ----------------------------------------------------
-        tool_list = "\n".join(
-            f"- {tool}"
-            for tool in TOOL_SCHEMAS.keys()
-        )
+        tool_list = "\n".join(f"- {tool}" for tool in TOOL_SCHEMAS.keys())
 
-        prompt = (
-            PLANNER_PROMPT
-            .replace("{tools}", tool_list)
-            .replace("{query}", query)
-        )
+        prompt = PLANNER_PROMPT.replace("{tools}", tool_list).replace("{query}", query)
 
         raw = self.model.generate(prompt)
 
@@ -56,9 +49,7 @@ class Planner:
             # ------------------------------------------------
             # Filter invalid tools
             # ------------------------------------------------
-            allowed_tools = set(
-                TOOL_SCHEMAS.keys()
-            )
+            allowed_tools = set(TOOL_SCHEMAS.keys())
 
             filtered_steps = []
 
@@ -68,9 +59,7 @@ class Planner:
 
                 if tool not in allowed_tools:
 
-                    print(
-                        f"[PLANNER] Removing invalid tool: {tool}"
-                    )
+                    print(f"[PLANNER] Removing invalid tool: {tool}")
 
                     continue
 
@@ -86,8 +75,7 @@ class Planner:
                 if (
                     deduped_steps
                     and deduped_steps[-1].get("tool") == step.get("tool")
-                    and deduped_steps[-1].get("args", {})
-                    == step.get("args", {})
+                    and deduped_steps[-1].get("args", {}) == step.get("args", {})
                 ):
                     continue
 
@@ -98,14 +86,9 @@ class Planner:
             # ------------------------------------------------
             if len(deduped_steps) > self.MAX_PLAN_STEPS:
 
-                print(
-                    f"[PLANNER] Plan exceeded "
-                    f"{self.MAX_PLAN_STEPS} steps. Truncating."
-                )
+                print(f"[PLANNER] Plan exceeded " f"{self.MAX_PLAN_STEPS} steps. Truncating.")
 
-                deduped_steps = deduped_steps[
-                    : self.MAX_PLAN_STEPS
-                ]
+                deduped_steps = deduped_steps[: self.MAX_PLAN_STEPS]
 
             data["steps"] = deduped_steps
 
@@ -116,8 +99,6 @@ class Planner:
 
         except Exception as e:
 
-            print(
-                f"[PLANNER] Invalid plan: {e}"
-            )
+            print(f"[PLANNER] Invalid plan: {e}")
 
             return ExecutionPlan(steps=[])

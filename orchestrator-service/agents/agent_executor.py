@@ -1,14 +1,14 @@
 import time
-from typing import Dict, Any, Set, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, Optional, Set
 
+# from core.structured_output import StructuredOutputValidator, StructuredOutputError
+# from schemas.llm_schemas import ToolAction, FinalAnswer
+from agents.guardrails import Guardrails
+from agents.plan_repair import PlanRepairEngine  # optional fallback only
 from agents.state import AgentState
 from agents.trace import AgentTrace, StepTrace, TraceEventType
-#from core.structured_output import StructuredOutputValidator, StructuredOutputError
-#from schemas.llm_schemas import ToolAction, FinalAnswer
-from agents.guardrails import Guardrails
 from workflows.workflow_manager import WorkflowManager
-from agents.plan_repair import PlanRepairEngine  # optional fallback only
 
 
 @dataclass
@@ -32,13 +32,7 @@ class AgentExecutor:
     # ============================================================
     # OPTION B ENTRY POINT (MAIN)
     # ============================================================
-    def run_plan(
-        self,
-        plan,
-        query: str,
-        workflow=None,
-        state: Optional[AgentState] = None
-    ):
+    def run_plan(self, plan, query: str, workflow=None, state: Optional[AgentState] = None):
 
         state = state or AgentState(query=query)
 
@@ -83,7 +77,7 @@ class AgentExecutor:
                         args={},
                         output="Tool execution limit exceeded",
                         success=False,
-                        latency_ms=0
+                        latency_ms=0,
                     )
                 )
 
@@ -139,7 +133,7 @@ class AgentExecutor:
                             args=args,
                             output=str(e),
                             success=False,
-                            latency_ms=0
+                            latency_ms=0,
                         )
                     )
                     continue
@@ -180,7 +174,7 @@ class AgentExecutor:
                             args=validated_args,
                             output=f"Output schema error: {str(e)}",
                             success=False,
-                            latency_ms=0
+                            latency_ms=0,
                         )
                     )
                     continue
@@ -201,10 +195,7 @@ class AgentExecutor:
                 failed_tools.add(tool_name)
 
             tool_results[tool_name] = ToolResult(
-                tool=tool_name,
-                args=validated_args,
-                output=str(output),
-                success=success
+                tool=tool_name, args=validated_args, output=str(output), success=success
             )
 
             state.observations.append(f"[{tool_name}] {output}")
@@ -214,11 +205,13 @@ class AgentExecutor:
                 StepTrace(
                     step=step_id,
                     tool=tool_name,
-                    event_type=TraceEventType.TOOL_EXECUTION if success else TraceEventType.TOOL_FAILED,
+                    event_type=(
+                        TraceEventType.TOOL_EXECUTION if success else TraceEventType.TOOL_FAILED
+                    ),
                     args=validated_args,
                     output=output,
                     success=success,
-                    latency_ms=latency_ms
+                    latency_ms=latency_ms,
                 )
             )
 
@@ -236,7 +229,7 @@ class AgentExecutor:
                 args={},
                 output=final_answer,
                 success=True,
-                latency_ms=0
+                latency_ms=0,
             )
         )
 
@@ -248,16 +241,15 @@ class AgentExecutor:
                 "status": workflow.status,
                 "current_step": workflow.current_step,
                 "completed_steps": workflow.completed_steps,
-                "failed_steps": workflow.failed_steps
-            }
+                "failed_steps": workflow.failed_steps,
+            },
         }
+
     # ============================================================
     # LEGACY SUPPORT (OPTIONAL)
     # ============================================================
     def run(self, query: str, context: str = ""):
-        raise NotImplementedError(
-        "Use MultiAgentOrchestrator.run()"
-    )
+        raise NotImplementedError("Use MultiAgentOrchestrator.run()")
 
     # ============================================================
     # TOOL EXECUTION
@@ -279,10 +271,7 @@ class AgentExecutor:
     # ============================================================
     def _final_answer(self, state: AgentState, tool_results: Dict[str, ToolResult]):
 
-        resolved = "\n".join(
-            f"{k}: {v.output}"
-            for k, v in tool_results.items()
-        )
+        resolved = "\n".join(f"{k}: {v.output}" for k, v in tool_results.items())
 
         prompt = f"""
 USER: {state.query}
@@ -311,6 +300,6 @@ Be precise and factual.
                 args=args,
                 output=reason,
                 success=False,
-                latency_ms=0
+                latency_ms=0,
             )
         )
