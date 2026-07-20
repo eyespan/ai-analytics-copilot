@@ -49,7 +49,8 @@ private_subnets = {
 #################################################
 
 repositories = [
-
+  
+  "ml-base",
   "api-gateway",
   "embedding-service",
   "indexer-service",

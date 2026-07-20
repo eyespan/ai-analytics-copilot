@@ -1,4 +1,6 @@
-FROM ml-base:latest
+ARG ECR_REGISTRY
+
+FROM ${ECR_REGISTRY}/ml-base:latest
 
 WORKDIR /app
 
