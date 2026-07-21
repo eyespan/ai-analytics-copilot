@@ -29,9 +29,9 @@ on:
 
       chart:
 
-        description: Helm chart path or chart name
+        description: Helm chart reference
 
-        required: true
+        required: false
 
         type: string
 
@@ -134,6 +134,10 @@ jobs:
             helm repo update
 
             CHART="platform/${{ inputs.chart }}"
+          
+          else
+
+            CHART="helm/charts/application"
 
           fi
 

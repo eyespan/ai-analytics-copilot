@@ -38,8 +38,6 @@ jobs:
 
       namespace: ai-analytics
 
-      chart: api-gateway
-
       image_tag: ${{ inputs.image_tag }}
 
     secrets: inherit
@@ -62,8 +60,6 @@ jobs:
       service: orchestrator-service
 
       namespace: ai-analytics
-
-      chart: orchestrator-service
 
       image_tag: ${{ inputs.image_tag }}
 
@@ -89,8 +85,6 @@ jobs:
 
       namespace: ai-analytics
 
-      chart: rag-service
-
       image_tag: ${{ inputs.image_tag }}
 
 
@@ -114,8 +108,6 @@ jobs:
       service: embedding-service
 
       namespace: ai-analytics
-
-      chart: embedding-service
 
       image_tag: ${{ inputs.image_tag }}
 
@@ -141,8 +133,6 @@ jobs:
 
       namespace: ai-analytics
 
-      chart: indexer-service
-
       image_tag: ${{ inputs.image_tag }}
 
 
@@ -166,8 +156,6 @@ jobs:
       service: frontend
 
       namespace: ai-analytics
-
-      chart: frontend
 
       image_tag: ${{ inputs.image_tag }}
 
