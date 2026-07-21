@@ -147,23 +147,3 @@ module "kubernetes_namespaces" {
   ]
 
 }
-
-
-module "ingress" {
-
-  source = "../../modules/kubernetes/addons/ingress-nginx"
-
-  depends_on = [
-    module.kubernetes_namespaces
-  ]
-}
-
-
-module "metrics_server" {
-
-  source = "../../modules/kubernetes/addons/metrics-server"
-
-  depends_on = [
-    module.eks
-  ]
-}
