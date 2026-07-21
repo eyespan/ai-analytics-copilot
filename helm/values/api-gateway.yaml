@@ -24,8 +24,8 @@ resources:
     cpu: 1
     memory: 2Gi
 
-#ingress:
+ingress:
 
-#  enabled: true
+  enabled: true
 
-#  path: /api
+  path: /api

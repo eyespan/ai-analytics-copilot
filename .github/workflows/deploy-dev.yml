@@ -40,6 +40,8 @@ jobs:
 
       image_tag: ${{ inputs.image_tag }}
 
+      values: helm/values/api-gateway.yaml
+
     secrets: inherit
 
 
@@ -62,6 +64,8 @@ jobs:
       namespace: ai-analytics
 
       image_tag: ${{ inputs.image_tag }}
+
+      values: helm/values/orchestrator-service.yaml
 
 
     secrets: inherit
@@ -87,6 +91,8 @@ jobs:
 
       image_tag: ${{ inputs.image_tag }}
 
+      values: helm/values/rag-service.yaml
+
 
     secrets: inherit
 
@@ -110,6 +116,8 @@ jobs:
       namespace: ai-analytics
 
       image_tag: ${{ inputs.image_tag }}
+
+      values: helm/values/embedding-service.yaml
 
 
     secrets: inherit
@@ -135,6 +143,8 @@ jobs:
 
       image_tag: ${{ inputs.image_tag }}
 
+      values: helm/values/indexer-service.yaml
+
 
     secrets: inherit
 
@@ -158,6 +168,8 @@ jobs:
       namespace: ai-analytics
 
       image_tag: ${{ inputs.image_tag }}
+
+      values: helm/values/frontend.yaml
 
 
     secrets: inherit
