@@ -16,6 +16,17 @@ on:
         type: string
 
 
+      namespace:
+
+        description: Kubernetes namespace
+
+        required: false
+
+        default: default
+
+        type: string
+
+
       chart:
 
         description: Helm chart path or chart name
@@ -50,7 +61,6 @@ on:
         required: false
 
         type: string
-
 
 permissions:
 
