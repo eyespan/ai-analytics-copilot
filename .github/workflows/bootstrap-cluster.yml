@@ -1,0 +1,43 @@
+name: Bootstrap Kubernetes Platform
+
+
+on:
+
+  workflow_dispatch:
+
+
+jobs:
+
+
+  ingress-nginx:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: ingress-nginx
+
+      namespace: ingress-nginx
+
+      chart: ingress-nginx
+
+      repository: https://kubernetes.github.io/ingress-nginx
+
+    secrets: inherit
+
+
+  metrics-server:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: metrics-server
+
+      namespace: kube-system
+
+      chart: metrics-server
+
+      repository: https://kubernetes-sigs.github.io/metrics-server/
+
+    secrets: inherit

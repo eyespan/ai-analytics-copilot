@@ -9,20 +9,36 @@ on:
 
       service:
 
-        description: Service to deploy
+        description: Helm release name
 
         required: true
 
         type: string
 
 
-      namespace:
+      chart:
 
-        description: Kubernetes namespace
+        description: Helm chart path or chart name
+
+        required: true
+
+        type: string
+
+
+      repository:
+
+        description: Helm repository URL
 
         required: false
 
-        default: ai-analytics
+        type: string
+
+
+      values:
+
+        description: Values file
+
+        required: false
 
         type: string
 
@@ -31,7 +47,7 @@ on:
 
         description: Docker image tag
 
-        required: true
+        required: false
 
         type: string
 
@@ -94,16 +110,46 @@ jobs:
 
       - name: Helm Deploy
 
+        shell: bash
+
         run: |
+
+          if [ -n "${{ inputs.repository }}" ]; then
+
+            helm repo add platform \
+            ${{ inputs.repository }}
+
+            helm repo update
+
+          fi
+
+
+          VALUES=""
+
+          if [ -n "${{ inputs.values }}" ]; then
+
+            VALUES="-f ${{ inputs.values }}"
+
+          fi
+
+
+          IMAGE=""
+
+          if [ -n "${{ inputs.image_tag }}" ]; then
+
+            IMAGE="--set image.repository=${ECR_REGISTRY} \
+                  --set image.tag=${{ inputs.image_tag }}"
+
+          fi
+
 
           helm upgrade --install \
             ${{ inputs.service }} \
-            helm/charts/application \
+            ${{ inputs.chart }} \
             --namespace ${{ inputs.namespace }} \
             --create-namespace \
-            -f helm/values/${{ inputs.service }}.yaml \
-            --set image.repository=${ECR_REGISTRY} \
-            --set image.tag=${{ inputs.image_tag }}
+            ${VALUES} \
+            ${IMAGE}
 
 
       - name: Verify deployment
