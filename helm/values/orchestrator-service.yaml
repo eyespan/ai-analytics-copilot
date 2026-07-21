@@ -24,6 +24,6 @@ resources:
     cpu: 2
     memory: 4Gi
 
-ingress:
+#ingress:
 
-  enabled: false
+#  enabled: false

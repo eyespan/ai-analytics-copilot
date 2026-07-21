@@ -24,8 +24,8 @@ resources:
     cpu: 500m
     memory: 512Mi
 
-ingress:
+#ingress:
 
-  enabled: true
+#  enabled: true
 
-  path: /
+#  path: /
