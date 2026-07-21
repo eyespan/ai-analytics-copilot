@@ -117,57 +117,56 @@ jobs:
 
         uses: azure/setup-helm@v4
 
+      - name: Helm Deploy
 
-     - name: Helm Deploy
+        shell: bash
 
-       shell: bash
+        run: |
 
-       run: |
-
-         CHART="${{ inputs.chart }}"
-
-
-         if [ -n "${{ inputs.repository }}" ]; then
-
-           helm repo add platform \
-             ${{ inputs.repository }}
-
-           helm repo update
-
-           CHART="platform/${{ inputs.chart }}"
-
-         fi
+          CHART="${{ inputs.chart }}"
 
 
-         VALUES=""
+          if [ -n "${{ inputs.repository }}" ]; then
 
-         if [ -n "${{ inputs.values }}" ]; then
+            helm repo add platform \
+              ${{ inputs.repository }}
 
-           VALUES="-f ${{ inputs.values }}"
+            helm repo update
 
-         fi
+            CHART="platform/${{ inputs.chart }}"
 
-
-         IMAGE=""
-
-         if [ -n "${{ inputs.image_tag }}" ]; then
-
-           IMAGE="--set image.repository=${ECR_REGISTRY} \
-                 --set image.tag=${{ inputs.image_tag }}"
-
-         fi
+          fi
 
 
-         echo "Installing chart: ${CHART}"
+          VALUES=""
+
+          if [ -n "${{ inputs.values }}" ]; then
+
+            VALUES="-f ${{ inputs.values }}"
+
+          fi
 
 
-         helm upgrade --install \
-           ${{ inputs.service }} \
-           ${CHART} \
-           --namespace ${{ inputs.namespace }} \
-           --create-namespace \
-           ${VALUES} \
-           ${IMAGE}
+          IMAGE=""
+
+          if [ -n "${{ inputs.image_tag }}" ]; then
+
+            IMAGE="--set image.repository=${ECR_REGISTRY} \
+                  --set image.tag=${{ inputs.image_tag }}"
+
+          fi
+
+
+          echo "Installing chart: ${CHART}"
+
+
+          helm upgrade --install \
+            ${{ inputs.service }} \
+            ${CHART} \
+            --namespace ${{ inputs.namespace }} \
+            --create-namespace \
+            ${VALUES} \
+            ${IMAGE}
 
 
       - name: Verify deployment
