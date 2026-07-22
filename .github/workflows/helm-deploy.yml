@@ -187,6 +187,13 @@ jobs:
 
           fi
 
+          if [ "${{ inputs.service }}" = "aws-load-balancer-controller" ]; then
+
+            EXTRA="${EXTRA} \
+              --set serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn=arn:aws:iam::${{ inputs.aws_account_id }}:role/ai-analytics-copilot-aws-load-balancer-controller"
+
+          fi
+
 
           echo "Installing chart: ${CHART}"
 

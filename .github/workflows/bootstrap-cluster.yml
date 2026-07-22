@@ -63,6 +63,5 @@ jobs:
         --set clusterName=ai-analytics-copilot
         --set serviceAccount.create=true
         --set serviceAccount.name=aws-load-balancer-controller
-        --set serviceAccount.annotations.eks\.amazonaws\.com/role-arn=arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ai-analytics-copilot-aws-load-balancer-controller
-
+       
     secrets: inherit
