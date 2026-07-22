@@ -9,7 +9,7 @@ image:
 
 replicaCount: 2
 
-containerPort: 3000
+containerPort: 80
 
 service:
   port: 80
