@@ -41,3 +41,20 @@ jobs:
       repository: https://kubernetes-sigs.github.io/metrics-server/
 
     secrets: inherit
+
+  
+  deploy-aws-load-balancer-controller:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: aws-load-balancer-controller
+
+      namespace: kube-system
+
+      chart: aws-load-balancer-controller
+
+      repository: https://aws.github.io/eks-charts
+
+    secrets: inherit

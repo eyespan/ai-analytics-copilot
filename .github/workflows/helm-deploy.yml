@@ -62,6 +62,16 @@ on:
 
         type: string
 
+
+      extra_values:
+
+        description: Additional Helm values
+
+        required: false
+
+        type: string
+
+
 permissions:
 
   contents: read
@@ -161,6 +171,15 @@ jobs:
           fi
 
 
+          EXTRA=""
+
+          if [ -n "${{ inputs.extra_values }}" ]; then
+
+            EXTRA="${{ inputs.extra_values }}"
+
+          fi
+
+
           echo "Installing chart: ${CHART}"
 
 
@@ -170,7 +189,8 @@ jobs:
             --namespace ${{ inputs.namespace }} \
             --create-namespace \
             ${VALUES} \
-            ${IMAGE}
+            ${IMAGE} \
+            ${EXTRA}
 
 
       - name: Verify deployment
