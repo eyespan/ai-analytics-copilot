@@ -57,6 +57,8 @@ jobs:
 
       repository: https://aws.github.io/eks-charts
 
+      aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+
       extra_values: >
         --set clusterName=ai-analytics-copilot
         --set serviceAccount.create=true
