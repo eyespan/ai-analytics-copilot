@@ -54,7 +54,12 @@ jobs:
       namespace: kube-system
 
       chart: aws-load-balancer-controller
-
+      
       repository: https://aws.github.io/eks-charts
+
+      extra_values: >
+        --set clusterName=ai-analytics-copilot
+        --set serviceAccount.create=false
+        --set serviceAccount.name=aws-load-balancer-controller
 
     secrets: inherit
