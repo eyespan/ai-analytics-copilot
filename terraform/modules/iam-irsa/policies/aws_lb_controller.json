@@ -24,6 +24,7 @@
           "ec2:DescribeNetworkInterfaces",
           "ec2:DescribeSecurityGroups",
           "ec2:DescribeSubnets",
+          "ec2:DescribeRouteTables",
           "ec2:DescribeTags",
           "ec2:DescribeVpcs"
         ],
@@ -39,8 +40,15 @@
       {
         "Effect": "Allow",
         "Action": [
+          "ec2:CreateSecurityGroup",
+          "ec2:DeleteSecurityGroup",
+          "ec2:DescribeSecurityGroups",
           "ec2:AuthorizeSecurityGroupIngress",
-          "ec2:RevokeSecurityGroupIngress"
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:AuthorizeSecurityGroupEgress",
+          "ec2:RevokeSecurityGroupEgress",
+          "tag:GetResources",
+          "tag:TagResources"
         ],
         "Resource": "*"
       }
