@@ -40,6 +40,9 @@ jobs:
       run:
         working-directory: ${{ env.TF_WORKING_DIR }}
 
+    outputs:
+      vpc_id: ${{ steps.terraform.outputs.vpc_id }}
+
     steps:
 
       - uses: actions/checkout@v4
@@ -68,3 +71,8 @@ jobs:
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve
+
+      - name: Get Terraform Outputs
+        id: terraform
+        run: |
+          echo "vpc_id=$(terraform output -raw vpc_id)" >> $GITHUB_OUTPUT

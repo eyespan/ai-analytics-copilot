@@ -4,6 +4,13 @@ name: Bootstrap Kubernetes Platform
 on:
 
   workflow_dispatch:
+  
+    inputs:
+
+      vpc_id:
+        description: "VPC ID"
+        required: true
+        type: string
 
 
 jobs:
@@ -62,9 +69,11 @@ jobs:
 
       repository: https://aws.github.io/eks-charts
 
+      vpc_id: ${{ needs.terraform-apply.outputs.vpc_id }}
+
       extra_values: >
         --set clusterName=ai-analytics-copilot
-        --set vpcId=vpc-06145cd12671a75be
+        --set vpcId=${{ inputs.vpc_id }}
         --set serviceAccount.create=true
         --set serviceAccount.name=aws-load-balancer-controller
        
