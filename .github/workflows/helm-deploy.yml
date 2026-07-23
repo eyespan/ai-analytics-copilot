@@ -70,6 +70,17 @@ on:
         required: false
 
         type: string
+      
+      wait_for_ready:
+
+        description: Wait for deployment readiness
+
+        required: false
+
+        default: "false"
+
+        type: string
+
 
      #vpc_id:
 
@@ -79,16 +90,7 @@ on:
 
      #   type: string
 
-     wait_for_ready:
-
-      description: Wait for deployment readiness
-
-      required: false
-
-      default: "false"
-
-      type: string
-
+    
 
 permissions:
 
