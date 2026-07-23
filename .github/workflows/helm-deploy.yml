@@ -79,6 +79,16 @@ on:
 
      #   type: string
 
+     wait_for_ready:
+
+      description: Wait for deployment readiness
+
+      required: false
+
+      default: "false"
+
+      type: string
+
 
 permissions:
 
@@ -213,7 +223,10 @@ jobs:
 
       - name: Verify deployment
 
-        run: |
+      if: inputs.wait_for_ready == 'true'
 
-          kubectl rollout status deployment/${{ inputs.service }} \
-            -n ${{ inputs.namespace }}
+      run: |
+
+        kubectl rollout status deployment/${{ inputs.service }} \
+          -n ${{ inputs.namespace }} \
+          --timeout=300s
