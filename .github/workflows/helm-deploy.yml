@@ -225,10 +225,10 @@ jobs:
 
       - name: Verify deployment
 
-      if: inputs.wait_for_ready == 'true'
+        if: inputs.wait_for_ready == 'true'
 
-      run: |
+        run: |
 
-        kubectl rollout status deployment/${{ inputs.service }} \
-          -n ${{ inputs.namespace }} \
-          --timeout=300s
+          kubectl rollout status deployment/${{ inputs.service }} \
+            -n ${{ inputs.namespace }} \
+            --timeout=300s
