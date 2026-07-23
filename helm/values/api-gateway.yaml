@@ -29,3 +29,5 @@ ingress:
   enabled: true
 
   path: /api
+
+  rewrite: true

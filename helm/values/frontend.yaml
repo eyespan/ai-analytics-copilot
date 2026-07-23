@@ -30,6 +30,8 @@ ingress:
 
   path: /
 
+  rewrite: false
+
 readinessProbe:
   httpGet:
     path: /

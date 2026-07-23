@@ -8,6 +8,12 @@ metadata:
 
   name: {{ .Values.name }}
 
+  {{- if .Values.ingress.rewrite }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  {{- end }}
+
 spec:
 
   ingressClassName: nginx
@@ -18,9 +24,9 @@ spec:
 
       paths:
 
-      - path: {{ .Values.ingress.path }}
+      - path: {{ if .Values.ingress.rewrite }}{{ .Values.ingress.path }}(/|$)(.*){{ else }}{{ .Values.ingress.path }}{{ end }}
 
-        pathType: Prefix
+        pathType: {{ if .Values.ingress.rewrite }}ImplementationSpecific{{ else }}Prefix{{ end }}
 
         backend:
 

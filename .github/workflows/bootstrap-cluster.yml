@@ -70,3 +70,23 @@ jobs:
         --set serviceAccount.name=aws-load-balancer-controller
        
     secrets: inherit
+
+  
+  deploy-prometheus:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: prometheus
+
+      namespace: monitoring
+
+      chart: kube-prometheus-stack
+
+      repository: https://prometheus-community.github.io/helm-charts
+
+      extra_values: >
+        --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+
+    secrets: inherit
