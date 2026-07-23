@@ -47,6 +47,7 @@
           "ec2:RevokeSecurityGroupIngress",
           "ec2:AuthorizeSecurityGroupEgress",
           "ec2:RevokeSecurityGroupEgress",
+          "ec2:CreateTags",
           "tag:GetResources",
           "tag:TagResources"
         ],
