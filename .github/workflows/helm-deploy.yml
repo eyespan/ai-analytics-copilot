@@ -44,6 +44,16 @@ on:
 
         type: string
 
+      repo_name:
+
+        description: Helm repository name
+
+        required: false
+
+        default: platform
+
+        type: string
+
 
       values:
 
@@ -80,8 +90,7 @@ on:
         default: "false"
 
         type: string
-
-
+      
       deployment_name:
 
         description: Deployment name override
@@ -169,13 +178,14 @@ jobs:
 
           if [ -n "${{ inputs.repository }}" ]; then
 
-            helm repo add platform \
+            helm repo add \
+              ${{ inputs.repo_name }} \
               ${{ inputs.repository }}
 
             helm repo update
 
-            CHART="platform/${{ inputs.chart }}"
-          
+            CHART="${{ inputs.repo_name }}/${{ inputs.chart }}"
+
           else
 
             CHART="helm/charts/application"
@@ -267,6 +277,13 @@ jobs:
                 statefulset/clickhouse-shard1 \
                 -n data \
                 --timeout=600s
+              
+
+              kubectl rollout status \
+                statefulset/clickhouse-keeper \
+                -n data \
+                --timeout=600s
+
               ;;
 
             *)

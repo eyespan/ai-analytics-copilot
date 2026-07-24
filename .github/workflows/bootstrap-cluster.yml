@@ -22,6 +22,8 @@ jobs:
 
       repository: https://aws.github.io/eks-charts
 
+      repo_name: aws
+
       wait_for_ready: "true"
 
       extra_values: >
@@ -119,7 +121,9 @@ jobs:
 
       chart: clickhouse
 
-      repository: https://charts.bitnami.com/bitnami
+      repository: https://clickhouse.github.io/helm-charts
+
+      repo_name: clickhouse
 
       values: helm/values/data/clickhouse.yaml
 
