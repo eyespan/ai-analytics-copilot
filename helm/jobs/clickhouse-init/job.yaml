@@ -1,0 +1,65 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: clickhouse-init
+  namespace: data
+
+spec:
+
+  backoffLimit: 5
+
+  template:
+
+    spec:
+
+      restartPolicy: Never
+
+
+      containers:
+
+      - name: clickhouse-init
+
+        image: clickhouse/clickhouse-client:25.3
+
+        command:
+          - /bin/sh
+          - -c
+          - |
+            echo "Waiting for ClickHouse..."
+
+            until clickhouse-client \
+              --host clickhouse.data.svc.cluster.local \
+              --user admin \
+              --password admin123 \
+              --query "SELECT 1"
+            do
+              sleep 5
+            done
+
+
+            echo "Running schema migration"
+
+            clickhouse-client \
+              --host clickhouse.data.svc.cluster.local \
+              --user admin \
+              --password admin123 \
+              < /scripts/init_clickhouse.sql
+
+
+            echo "ClickHouse initialization completed"
+
+
+        volumeMounts:
+
+        - name: sql
+          mountPath: /scripts
+
+
+
+      volumes:
+
+      - name: sql
+
+        configMap:
+          name: clickhouse-init-sql

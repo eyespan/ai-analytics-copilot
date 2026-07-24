@@ -130,3 +130,22 @@ jobs:
       wait_for_ready: "true"
 
     secrets: inherit
+
+
+clickhouse-init:
+
+    uses: ./.github/workflows/kubectl-apply.yml
+
+    needs:
+
+      - deploy-clickhouse
+
+    with:
+
+      namespace: data
+
+      manifests: |
+        helm/jobs/clickhouse-init/configmap.yaml
+        helm/jobs/clickhouse-init/job.yaml
+
+    secrets: inherit
