@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: clickhouse/clickhouse-server
+  tag: "25.3"
+
+auth:
+  username: admin
+  password: admin123
+  database: github
+
+persistence:
+  enabled: true
+  storageClass: gp3
+  size: 50Gi
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 2Gi
+  limits:
+    cpu: 2
+    memory: 4Gi
+
+service:
+  type: ClusterIP

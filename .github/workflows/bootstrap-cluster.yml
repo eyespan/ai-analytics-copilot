@@ -23,7 +23,7 @@ jobs:
 
       repository: https://kubernetes.github.io/ingress-nginx
 
-      values: helm/values/ingress-nginx.yaml
+      values: helm/values/infrastructure/ingress-nginx.yaml
 
       wait_for_ready: "true"
 
@@ -86,5 +86,26 @@ jobs:
 
       extra_values: >
         --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+
+    secrets: inherit
+
+  
+  deploy-clickhouse:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: clickhouse
+
+      namespace: data
+
+      chart: clickhouse
+
+      repository: https://charts.bitnami.com/bitnami
+
+      values: helm/values/infrastructure/clickhouse.yaml
+
+      wait_for_ready: "true"
 
     secrets: inherit

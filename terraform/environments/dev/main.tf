@@ -136,7 +136,9 @@ module "kubernetes_namespaces" {
 
     "monitoring",
 
-    "ingress-nginx"
+    "ingress-nginx",
+    
+    "data"
 
   ]
 

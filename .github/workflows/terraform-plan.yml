@@ -7,12 +7,6 @@ on:
       - main
       - level7
 
-  push:
-    branches:
-      - level7
-    paths:
-      - "terraform/**"
-
   workflow_dispatch:
 
 
