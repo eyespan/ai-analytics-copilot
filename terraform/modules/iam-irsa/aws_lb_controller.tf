@@ -69,7 +69,8 @@ data "aws_iam_policy_document" "aws_lb_controller_assume" {
       test = "StringEquals"
 
 
-      variable = "${var.eks_oidc_issuer}:aud"
+      #variable = "${var.eks_oidc_issuer}:aud"
+      variable = "${replace(var.eks_oidc_issuer, "https://", "")}:aud"
 
 
       values = [
@@ -87,7 +88,8 @@ data "aws_iam_policy_document" "aws_lb_controller_assume" {
       test = "StringEquals"
 
 
-      variable = "${var.eks_oidc_issuer}:sub"
+      #variable = "${var.eks_oidc_issuer}:sub"
+      variable = "${replace(var.eks_oidc_issuer, "https://", "")}:sub"
 
 
       values = [

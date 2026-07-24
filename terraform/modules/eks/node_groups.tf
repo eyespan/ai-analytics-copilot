@@ -2,9 +2,43 @@
 # EKS Managed Node Groups
 # =====================================
 
+
+
+resource "aws_launch_template" "eks_nodes" {
+
+  name_prefix = "${var.name}-nodes-"
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
+
+  block_device_mappings {
+    device_name = "/dev/xvda"
+
+    ebs {
+      volume_size = 50
+      volume_type = "gp3"
+      encrypted   = true
+      delete_on_termination = true
+    }
+  }
+
+  tags = local.common_tags
+}
+
+
+
 resource "aws_eks_node_group" "this" {
 
   for_each = var.node_groups
+
+
+  launch_template {
+    id      = aws_launch_template.eks_nodes.id
+    version = aws_launch_template.eks_nodes.latest_version
+  }
 
 
   # -----------------------------
@@ -57,7 +91,7 @@ resource "aws_eks_node_group" "this" {
   ami_type = each.value.ami_type
 
 
-  disk_size = each.value.disk_size
+  #disk_size = each.value.disk_size
 
 
 

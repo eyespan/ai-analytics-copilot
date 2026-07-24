@@ -41,3 +41,9 @@ output "ecr_repository_urls" {
 #  value = module.iam_irsa.github_actions_role_arn
 
 #}
+
+output "aws_lb_controller_role_arn" {
+
+  value = module.iam_irsa.aws_lb_controller_role_arn
+
+}

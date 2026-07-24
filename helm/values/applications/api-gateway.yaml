@@ -1,15 +1,15 @@
 namespace: ai-analytics
 
-name: frontend
+name: api-gateway
 
 image:
-  name: frontend
+  name: api-gateway
   tag: v1.0.0
   pullPolicy: Always
 
 replicaCount: 2
 
-containerPort: 3000
+containerPort: 8000
 
 service:
   port: 80
@@ -17,15 +17,17 @@ service:
 resources:
 
   requests:
-    cpu: 100m
-    memory: 256Mi
+    cpu: 250m
+    memory: 512Mi
 
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 1
+    memory: 2Gi
 
 ingress:
 
   enabled: true
 
-  path: /
+  path: /api
+
+  rewrite: true

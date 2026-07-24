@@ -1,0 +1,47 @@
+namespace: ai-analytics
+
+name: frontend
+
+image:
+  name: frontend
+  tag: v1.0.0
+  pullPolicy: Always
+
+replicaCount: 2
+
+containerPort: 80
+
+service:
+  port: 80
+
+resources:
+
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+ingress:
+
+  enabled: true
+
+  path: /
+
+  rewrite: false
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initialDelaySeconds: 15
+  periodSeconds: 20

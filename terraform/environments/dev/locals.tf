@@ -6,7 +6,7 @@ locals {
     ManagedBy   = "Terraform"
   }
 
-  cluster_name = "${var.project_name}-${var.environment}-eks"
+  cluster_name = "${var.project_name}"
 
 
 }

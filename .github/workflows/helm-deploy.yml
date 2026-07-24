@@ -16,11 +16,22 @@ on:
         type: string
 
 
+      namespace:
+
+        description: Kubernetes namespace
+
+        required: false
+
+        default: default
+
+        type: string
+
+
       chart:
 
-        description: Helm chart path or chart name
+        description: Helm chart reference
 
-        required: true
+        required: false
 
         type: string
 
@@ -30,6 +41,16 @@ on:
         description: Helm repository URL
 
         required: false
+
+        type: string
+
+      repo_name:
+
+        description: Helm repository name
+
+        required: false
+
+        default: platform
 
         type: string
 
@@ -52,6 +73,43 @@ on:
         type: string
 
 
+      extra_values:
+
+        description: Additional Helm values
+
+        required: false
+
+        type: string
+      
+      wait_for_ready:
+
+        description: Wait for deployment readiness
+
+        required: false
+
+        default: "false"
+
+        type: string
+      
+      deployment_name:
+
+        description: Deployment name override
+
+        required: false
+
+        type: string
+
+
+     #vpc_id:
+
+     #   description: VPC ID
+
+     #   required: false
+
+     #   type: string
+
+    
+
 permissions:
 
   contents: read
@@ -71,6 +129,8 @@ jobs:
       AWS_REGION: us-east-1
 
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+      AWS_LB_CONTROLLER_ROLE_ARN: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ai-analytics-copilot-aws-lb-controller
 
 
     steps:
@@ -107,19 +167,28 @@ jobs:
 
         uses: azure/setup-helm@v4
 
-
       - name: Helm Deploy
 
         shell: bash
 
         run: |
 
+          CHART="${{ inputs.chart }}"
+
+
           if [ -n "${{ inputs.repository }}" ]; then
 
-            helm repo add platform \
-            ${{ inputs.repository }}
+            helm repo add \
+              ${{ inputs.repo_name }} \
+              ${{ inputs.repository }}
 
             helm repo update
+
+            CHART="${{ inputs.repo_name }}/${{ inputs.chart }}"
+
+          else
+
+            CHART="helm/charts/application"
 
           fi
 
@@ -143,18 +212,86 @@ jobs:
           fi
 
 
+          EXTRA=""
+
+          if [ -n "${{ inputs.extra_values }}" ]; then
+
+            EXTRA="${{ inputs.extra_values }}"
+
+          fi
+
+          
+          if [ "${{ inputs.service }}" = "aws-load-balancer-controller" ]; then
+
+            EXTRA="${EXTRA} \
+            --set serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn=${AWS_LB_CONTROLLER_ROLE_ARN}"
+
+          fi
+
+
+          echo "Installing chart: ${CHART}"
+
+
           helm upgrade --install \
             ${{ inputs.service }} \
-            ${{ inputs.chart }} \
+            ${CHART} \
             --namespace ${{ inputs.namespace }} \
             --create-namespace \
             ${VALUES} \
-            ${IMAGE}
+            ${IMAGE} \
+            ${EXTRA}
 
 
       - name: Verify deployment
 
+        if: inputs.wait_for_ready == 'true'
+
         run: |
 
-          kubectl rollout status deployment/${{ inputs.service }} \
-            -n ${{ inputs.namespace }}
+          case "${{ inputs.service }}" in
+
+            aws-load-balancer-controller)
+
+              kubectl rollout status \
+                deployment/aws-load-balancer-controller \
+                -n kube-system \
+                --timeout=300s
+              ;;
+
+            ingress-nginx)
+
+              kubectl rollout status \
+                deployment/ingress-nginx-controller \
+                -n ingress-nginx \
+                --timeout=300s
+              ;;
+
+            clickhouse)
+
+              kubectl rollout status \
+                statefulset/clickhouse-shard0 \
+                -n data \
+                --timeout=600s
+
+              kubectl rollout status \
+                statefulset/clickhouse-shard1 \
+                -n data \
+                --timeout=600s
+              
+
+              kubectl rollout status \
+                statefulset/clickhouse-keeper \
+                -n data \
+                --timeout=600s
+
+              ;;
+
+            *)
+
+              kubectl rollout status \
+                deployment/${{ inputs.service }} \
+                -n ${{ inputs.namespace }} \
+                --timeout=300s
+              ;;
+
+          esac

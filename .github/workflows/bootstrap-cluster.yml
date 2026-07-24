@@ -5,13 +5,41 @@ on:
 
   workflow_dispatch:
 
-
+ 
 jobs:
 
+  deploy-aws-load-balancer-controller:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: aws-load-balancer-controller
+
+      namespace: kube-system
+
+      chart: aws-load-balancer-controller
+
+      repository: https://aws.github.io/eks-charts
+
+      repo_name: aws
+
+      wait_for_ready: "true"
+
+      extra_values: >
+        --set clusterName=ai-analytics-copilot
+        --set serviceAccount.create=true
+        --set serviceAccount.name=aws-load-balancer-controller
+       
+    secrets: inherit
 
   ingress-nginx:
 
     uses: ./.github/workflows/helm-deploy.yml
+
+    needs:
+
+      - deploy-aws-load-balancer-controller
 
     with:
 
@@ -19,9 +47,16 @@ jobs:
 
       namespace: ingress-nginx
 
+      deployment_name: ingress-nginx-controller
+
       chart: ingress-nginx
 
       repository: https://kubernetes.github.io/ingress-nginx
+
+      values: helm/values/infrastructure/ingress-nginx.yaml
+
+      wait_for_ready: "true"
+
 
     secrets: inherit
 
@@ -29,6 +64,10 @@ jobs:
   metrics-server:
 
     uses: ./.github/workflows/helm-deploy.yml
+
+    needs:
+
+      - ingress-nginx
 
     with:
 
@@ -39,5 +78,74 @@ jobs:
       chart: metrics-server
 
       repository: https://kubernetes-sigs.github.io/metrics-server/
+
+    secrets: inherit
+  
+  deploy-prometheus:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    needs:
+
+      - metrics-server
+
+    with:
+
+      service: prometheus
+
+      namespace: monitoring
+
+      chart: kube-prometheus-stack
+
+      repository: https://prometheus-community.github.io/helm-charts
+
+      extra_values: >
+        --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
+
+    secrets: inherit
+
+  
+  deploy-clickhouse:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    needs:
+
+      - deploy-prometheus
+
+    with:
+
+      service: clickhouse
+
+      namespace: data
+
+      chart: clickhouse
+
+      repository: https://charts.bitnami.com/bitnami
+
+      repo_name: bitnami
+
+      values: helm/values/data/clickhouse.yaml
+
+      wait_for_ready: "true"
+
+    secrets: inherit
+
+
+clickhouse-init:
+
+    uses: ./.github/workflows/kubectl-apply.yml
+
+    needs:
+
+      - deploy-clickhouse
+
+    with:
+
+      namespace: data
+
+      manifests: |
+        helm/jobs/clickhouse-init/configmap.yaml
+        helm/jobs/clickhouse-init/job.yaml
 
     secrets: inherit
