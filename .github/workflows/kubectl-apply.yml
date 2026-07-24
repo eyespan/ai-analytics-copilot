@@ -63,13 +63,22 @@ jobs:
 
       - name: Apply manifests
 
+        shell: bash
+
         run: |
 
-          echo "${{ inputs.manifests }}" | while read manifest
+          while IFS= read -r manifest
           do
-             kubectl apply -f $manifest \
-             -n ${{ inputs.namespace }}
-          done
+
+            if [ -n "$manifest" ]; then
+
+              kubectl apply \
+                -f "$manifest" \
+                -n ${{ inputs.namespace }}
+
+            fi
+
+          done <<< "${{ inputs.manifests }}"
 
 
 
