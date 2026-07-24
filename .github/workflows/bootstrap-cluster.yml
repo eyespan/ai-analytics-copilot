@@ -121,7 +121,7 @@ jobs:
 
       chart: clickhouse
 
-      repository: https://charts.clickhouse.com
+      repository: https://clickhouse.github.io/ClickStack-helm-charts
 
       repo_name: clickhouse
 
