@@ -104,7 +104,7 @@ jobs:
 
       repository: https://charts.bitnami.com/bitnami
 
-      values: helm/values/infrastructure/clickhouse.yaml
+      values: helm/values/data/clickhouse.yaml
 
       wait_for_ready: "true"
 
