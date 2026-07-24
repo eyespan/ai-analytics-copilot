@@ -76,3 +76,7 @@ jobs:
         id: terraform
         run: |
           echo "vpc_id=$(terraform output -raw vpc_id)" >> $GITHUB_OUTPUT
+
+      - name: Save VPC ID
+        run: |
+          echo "VPC_ID=$(terraform output -raw vpc_id)" >> $GITHUB_ENV
