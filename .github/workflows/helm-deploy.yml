@@ -82,6 +82,15 @@ on:
         type: string
 
 
+      deployment_name:
+
+        description: Deployment name override
+
+        required: false
+
+        type: string
+
+
      #vpc_id:
 
      #   description: VPC ID
@@ -229,6 +238,12 @@ jobs:
 
         run: |
 
-          kubectl rollout status deployment/${{ inputs.service }} \
+          DEPLOYMENT="${{ inputs.deployment_name }}"
+
+          if [ -z "$DEPLOYMENT" ]; then
+            DEPLOYMENT="${{ inputs.service }}"
+          fi
+
+          kubectl rollout status deployment/$DEPLOYMENT \
             -n ${{ inputs.namespace }} \
             --timeout=300s

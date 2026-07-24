@@ -8,16 +8,44 @@ on:
  
 jobs:
 
+  deploy-aws-load-balancer-controller:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: aws-load-balancer-controller
+
+      namespace: kube-system
+
+      chart: aws-load-balancer-controller
+
+      repository: https://aws.github.io/eks-charts
+
+      wait_for_ready: "true"
+
+      extra_values: >
+        --set clusterName=ai-analytics-copilot
+        --set serviceAccount.create=true
+        --set serviceAccount.name=aws-load-balancer-controller
+       
+    secrets: inherit
 
   ingress-nginx:
 
     uses: ./.github/workflows/helm-deploy.yml
+
+    needs:
+
+      - deploy-aws-load-balancer-controller
 
     with:
 
       service: ingress-nginx
 
       namespace: ingress-nginx
+
+      deployment_name: ingress-nginx-controller
 
       chart: ingress-nginx
 
@@ -35,6 +63,10 @@ jobs:
 
     uses: ./.github/workflows/helm-deploy.yml
 
+    needs:
+
+      - ingress-nginx
+
     with:
 
       service: metrics-server
@@ -46,33 +78,14 @@ jobs:
       repository: https://kubernetes-sigs.github.io/metrics-server/
 
     secrets: inherit
-
-  
-  deploy-aws-load-balancer-controller:
-
-    uses: ./.github/workflows/helm-deploy.yml
-
-    with:
-
-      service: aws-load-balancer-controller
-
-      namespace: kube-system
-
-      chart: aws-load-balancer-controller
-
-      repository: https://aws.github.io/eks-charts
-
-      extra_values: >
-        --set clusterName=ai-analytics-copilot
-        --set serviceAccount.create=true
-        --set serviceAccount.name=aws-load-balancer-controller
-       
-    secrets: inherit
-
   
   deploy-prometheus:
 
     uses: ./.github/workflows/helm-deploy.yml
+
+    needs:
+
+      - metrics-server
 
     with:
 
@@ -94,6 +107,10 @@ jobs:
 
     uses: ./.github/workflows/helm-deploy.yml
 
+    needs:
+
+      - deploy-prometheus
+
     with:
 
       service: clickhouse
@@ -102,7 +119,7 @@ jobs:
 
       chart: clickhouse
 
-      repository: https://charts.bitnami.com/bitnami
+      repository: https://clickhouse.github.io/helm-charts
 
       values: helm/values/data/clickhouse.yaml
 
