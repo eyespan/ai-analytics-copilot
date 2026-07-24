@@ -91,7 +91,7 @@ resource "aws_eks_node_group" "this" {
   ami_type = each.value.ami_type
 
 
-  disk_size = each.value.disk_size
+  #disk_size = each.value.disk_size
 
 
 
