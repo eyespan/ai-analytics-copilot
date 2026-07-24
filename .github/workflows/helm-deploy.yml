@@ -256,6 +256,19 @@ jobs:
                 --timeout=300s
               ;;
 
+            clickhouse)
+
+              kubectl rollout status \
+                statefulset/clickhouse-shard0 \
+                -n data \
+                --timeout=600s
+
+              kubectl rollout status \
+                statefulset/clickhouse-shard1 \
+                -n data \
+                --timeout=600s
+              ;;
+
             *)
 
               kubectl rollout status \
