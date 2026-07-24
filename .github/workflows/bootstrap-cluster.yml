@@ -119,7 +119,7 @@ jobs:
 
       chart: clickhouse
 
-      repository: https://clickhouse.github.io/helm-charts
+      repository: https://charts.bitnami.com/bitnami
 
       values: helm/values/data/clickhouse.yaml
 
