@@ -121,9 +121,9 @@ jobs:
 
       chart: clickhouse
 
-      repository: https://clickhouse.github.io/ClickStack-helm-charts
+      repository: https://charts.bitnami.com/bitnami
 
-      repo_name: clickhouse
+      repo_name: bitnami
 
       values: helm/values/data/clickhouse.yaml
 
