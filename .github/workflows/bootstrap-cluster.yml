@@ -64,7 +64,6 @@ jobs:
 
       extra_values: >
         --set clusterName=ai-analytics-copilot
-        --set vpcId=${{ vars.VPC_ID }}
         --set serviceAccount.create=true
         --set serviceAccount.name=aws-load-balancer-controller
        
