@@ -9,6 +9,11 @@ image:
   repository: clickhouse/clickhouse-server
   tag: "25.3"
 
+keeper:
+  image:
+    repository: clickhouse/clickhouse-keeper
+    tag: "25.3"
+    
 auth:
   username: admin
   password: admin123
