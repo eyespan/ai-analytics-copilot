@@ -132,20 +132,20 @@ jobs:
     secrets: inherit
 
 
-clickhouse-init:
+  clickhouse-init:
 
-    uses: ./.github/workflows/kubectl-apply.yml
+      uses: ./.github/workflows/kubectl-apply.yml
 
-    needs:
+      needs:
 
-      - deploy-clickhouse
+        - deploy-clickhouse
 
-    with:
+      with:
 
-      namespace: data
+        namespace: data
 
-      manifests: |
-        helm/jobs/clickhouse-init/configmap.yaml
-        helm/jobs/clickhouse-init/job.yaml
+        manifests: |
+          helm/jobs/clickhouse-init/configmap.yaml
+          helm/jobs/clickhouse-init/job.yaml
 
-    secrets: inherit
+      secrets: inherit
