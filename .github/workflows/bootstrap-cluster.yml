@@ -201,24 +201,24 @@ jobs:
 
   opensearch-init:
 
-  uses: ./.github/workflows/kubectl-apply.yml
+    uses: ./.github/workflows/kubectl-apply.yml
 
 
-  needs:
+    needs:
 
-    - deploy-opensearch
-
-
-  with:
-
-    namespace: search
+      - deploy-opensearch
 
 
-    manifests: |
+    with:
 
-      helm/jobs/opensearch-init/configmap.yaml
-
-      helm/jobs/opensearch-init/job.yaml
+      namespace: search
 
 
-  secrets: inherit
+      manifests: |
+
+        helm/jobs/opensearch-init/configmap.yaml
+
+        helm/jobs/opensearch-init/job.yaml
+
+
+    secrets: inherit
