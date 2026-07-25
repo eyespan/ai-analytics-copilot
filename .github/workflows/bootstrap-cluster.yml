@@ -149,3 +149,22 @@ jobs:
           helm/jobs/clickhouse-init/job.yaml
 
       secrets: inherit
+
+
+  clickhouse-seed:
+
+    uses: ./.github/workflows/kubectl-apply.yml
+
+    needs:
+
+      - clickhouse-init
+
+    with:
+
+      namespace: data
+
+      manifests: |
+        helm/jobs/clickhouse-seed/configmap.yaml
+        helm/jobs/clickhouse-seed/job.yaml
+
+    secrets: inherit
