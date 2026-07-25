@@ -198,3 +198,27 @@ jobs:
 
 
     secrets: inherit
+
+  opensearch-init:
+
+  uses: ./.github/workflows/kubectl-apply.yml
+
+
+  needs:
+
+    - deploy-opensearch
+
+
+  with:
+
+    namespace: search
+
+
+    manifests: |
+
+      helm/jobs/opensearch-init/configmap.yaml
+
+      helm/jobs/opensearch-init/job.yaml
+
+
+  secrets: inherit

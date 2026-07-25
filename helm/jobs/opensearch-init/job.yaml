@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+
+  name: opensearch-init
+
+  namespace: search
+
+
+spec:
+
+  backoffLimit: 3
+
+
+  template:
+
+    spec:
+
+      restartPolicy: Never
+
+
+      containers:
+
+      - name: opensearch-init
+
+
+        image: python:3.11-slim
+
+
+        command:
+
+        - /bin/bash
+
+        - -c
+
+
+        args:
+
+        - |
+
+          pip install opensearch-py
+
+          python /scripts/init_index.py
+
+
+        volumeMounts:
+
+        - name: init-script
+
+          mountPath: /scripts
+
+
+
+      volumes:
+
+      - name: init-script
+
+        configMap:
+
+          name: opensearch-init-script
