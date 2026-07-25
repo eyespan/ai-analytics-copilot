@@ -3,6 +3,7 @@ kind: Job
 
 metadata:
   name: clickhouse-seed
+  namespace: data
 
 spec:
 
@@ -48,8 +49,7 @@ spec:
 
       volumes:
 
-        - name: seed-script
+      - name: seed-script
 
-          configMap:
-
-            name: clickhouse-seed-script
+        configMap:
+          name: clickhouse-seed-script
