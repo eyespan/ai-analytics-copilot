@@ -44,3 +44,8 @@ spec:
 
             - name: seed-script
               mountPath: /scripts
+
+
+      volumes:
+
+        - name: seed-script
