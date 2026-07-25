@@ -56,7 +56,8 @@ repositories = [
   "indexer-service",
   "rag-service",
   "orchestrator-service",
-  "frontend"
+  "frontend",
+  "clickhouse-seed"
 
 ]
 

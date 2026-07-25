@@ -163,8 +163,9 @@ jobs:
 
       namespace: data
 
+      image_tag: v1.0.0
+
       manifests: |
-        helm/jobs/clickhouse-seed/configmap.yaml
         helm/jobs/clickhouse-seed/job.yaml
 
     secrets: inherit

@@ -1,8 +1,11 @@
 apiVersion: batch/v1
 kind: Job
+
 metadata:
-  name: clickhouse-seed
+  generateName: clickhouse-seed-
+
 spec:
+
   backoffLimit: 3
 
   template:
@@ -15,43 +18,36 @@ spec:
 
         - name: clickhouse-seed
 
-          image: bitnamilegacy/clickhouse:25.7.5-debian-12-r0
+          image: ${ECR_REGISTRY}/clickhouse-seed:${IMAGE_TAG}
+
+          env:
+
+            - name: CLICKHOUSE_HOST
+              value: clickhouse
+
+            - name: CLICKHOUSE_USER
+              value: admin
+
+            - name: CLICKHOUSE_PASSWORD
+              value: admin123
 
           command:
-            - /bin/bash
-            - -c
+            - python
 
           args:
-            - |
-              apt-get update
-              apt-get install -y python3 python3-pip
+            - /scripts/ingest_clickhouse.py
 
-              pip3 install clickhouse-driver
-
-              echo "Waiting for ClickHouse..."
-
-              until clickhouse-client \
-                --host clickhouse \
-                --user admin \
-                --password admin123 \
-                --query "SELECT 1"
-              do
-                sleep 5
-              done
-
-              echo "Loading GitHub seed data"
-
-              python3 /scripts/ingest_clickhouse.py
-
-              echo "Seed complete"
 
           volumeMounts:
 
             - name: seed-script
               mountPath: /scripts
 
+
       volumes:
 
         - name: seed-script
+
           configMap:
+
             name: clickhouse-seed-script

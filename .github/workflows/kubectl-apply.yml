@@ -20,6 +20,14 @@ on:
 
         type: string
 
+      image_tag:
+
+        required: false
+
+        default: v1.0.0
+
+        type: string
+
 
 
 jobs:
@@ -27,6 +35,14 @@ jobs:
   apply:
 
     runs-on: ubuntu-latest
+
+    env:
+
+      AWS_REGION: us-east-1
+
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+      IMAGE_TAG: ${{ inputs.image_tag }}
 
 
     steps:
@@ -72,9 +88,8 @@ jobs:
 
             if [ -n "$manifest" ]; then
 
-              kubectl apply \
-                -f "$manifest" \
-                -n ${{ inputs.namespace }}
+              envsubst < $manifest | kubectl apply -f - \
+              -n ${{ inputs.namespace }}
 
             fi
 
