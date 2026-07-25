@@ -88,6 +88,19 @@ jobs:
 
             if [ -n "$manifest" ]; then
 
+              if grep -q "kind: Job" "$manifest"; then
+
+                JOB_NAME=$(grep "name:" "$manifest" | head -1 | awk '{print $2}')
+
+                echo "Cleaning previous job: ${JOB_NAME}"
+
+                kubectl delete job ${JOB_NAME} \
+                  -n ${{ inputs.namespace }} \
+                  --ignore-not-found=true
+
+              fi
+
+
               envsubst < $manifest | kubectl apply -f - \
               -n ${{ inputs.namespace }}
 

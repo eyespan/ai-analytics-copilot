@@ -2,10 +2,12 @@ apiVersion: batch/v1
 kind: Job
 
 metadata:
-  generateName: clickhouse-seed-
+  name: clickhouse-seed
 
 spec:
 
+  ttlSecondsAfterFinished: 300
+  
   backoffLimit: 3
 
   template:
