@@ -153,36 +153,34 @@ data:
         )
 
 
+    def create_index(client):
+
+        if client.indices.exists(index=INDEX_NAME):
+
+            print(
+                f"Index '{INDEX_NAME}' already exists. Skipping creation."
+            )
+
+            return
 
 
-   def create_index(client):
-
-      if client.indices.exists(index=INDEX_NAME):
-
-          print(
-              f"Index '{INDEX_NAME}' already exists. Skipping creation."
-          )
-
-          return
+        print(
+            f"Creating index '{INDEX_NAME}'..."
+        )
 
 
-      print(
-          f"Creating index '{INDEX_NAME}'..."
-      )
+        client.indices.create(
+
+            index=INDEX_NAME,
+
+            body=mapping
+
+        )
 
 
-      client.indices.create(
-
-          index=INDEX_NAME,
-
-          body=mapping
-
-      )
-
-
-      print(
-          "Index created successfully."
-      )
+        print(
+            "Index created successfully."
+        )
 
 
 
