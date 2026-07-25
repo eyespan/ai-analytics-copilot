@@ -29,7 +29,7 @@ data:
                     port=CLICKHOUSE_PORT,
                     database=CLICKHOUSE_DATABASE,
                     user=CLICKHOUSE_USER,
-                    password=CLICKHOUSE_PASSWORD,,
+                    password=CLICKHOUSE_PASSWORD,
                 )
                 client.execute("SELECT 1")
                 return client
