@@ -170,3 +170,31 @@ jobs:
         helm/jobs/clickhouse-seed/job.yaml
 
     secrets: inherit
+
+  deploy-opensearch:
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    needs:
+
+      - deploy-clickhouse
+
+
+    with:
+
+      service: opensearch
+
+      namespace: search
+
+      chart: opensearch
+
+      repository: https://opensearch-project.github.io/helm-charts/
+
+      repo_name: opensearch
+
+      values: helm/values/data/opensearch.yaml
+
+      wait_for_ready: "true"
+
+
+    secrets: inherit
