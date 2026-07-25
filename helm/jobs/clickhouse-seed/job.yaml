@@ -23,17 +23,6 @@ spec:
 
           image: ${ECR_REGISTRY}/clickhouse-seed:${IMAGE_TAG}
 
-          env:
-
-            - name: CH_HOST
-              value: clickhouse
-
-            - name: CH_PORT
-              value: admin
-
-            - name: CLICKHOUSE_PASSWORD
-              value: admin123
-
           command:
             - python
 
