@@ -38,6 +38,14 @@ client = get_clickhouse_client()
 
 def insert_sample_data():
 
+    print("Clearing existing GitHub events")
+
+    client.execute(
+        """
+        TRUNCATE TABLE github.github_events
+        """
+    )
+
     data = [
 
         (
