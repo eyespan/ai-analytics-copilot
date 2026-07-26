@@ -138,7 +138,9 @@ module "kubernetes_namespaces" {
 
     "ingress-nginx",
     
-    "data"
+    "data",
+    
+    "search"
 
   ]
 

@@ -66,7 +66,7 @@ node_groups = {
 
   general = {
 
-    desired_size = 4
+    desired_size = 6
 
     min_size = 2
 
