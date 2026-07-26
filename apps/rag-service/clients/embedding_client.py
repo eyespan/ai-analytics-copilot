@@ -1,6 +1,6 @@
 import requests
 
-EMBEDDING_SERVICE = "http://embedding-service:8000/embed"
+EMBEDDING_SERVICE = "http://embedding-service:80/embed"
 
 
 def get_embedding(text: str):
