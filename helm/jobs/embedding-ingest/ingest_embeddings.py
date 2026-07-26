@@ -91,7 +91,7 @@ def get_opensearch():
                     OPENSEARCH_USER,
                     OPENSEARCH_PASSWORD,
                 ),
-                use_ssl=False,
+                use_ssl=True,
                 verify_certs=False,
             )
 
@@ -116,14 +116,14 @@ def get_opensearch():
 # Embedding API
 # --------------------------------------------------
 
-def embedding(text: str):
+def embedding(text):
 
     response = requests.post(
         f"{EMBEDDING_SERVICE}/embed",
         json={
             "text": text
         },
-        timeout=60,
+        timeout=30,
     )
 
     response.raise_for_status()
@@ -203,7 +203,9 @@ def main():
 
         text = f"{description} {language}"
 
-        vector = embedding(text)
+        vector = embedding(
+            f"{description} {language}"
+        )
 
         actions.append(
             {
