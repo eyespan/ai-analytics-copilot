@@ -9,7 +9,10 @@ from opensearchpy.helpers import bulk
 # ClickHouse
 # --------------------------------------------------
 
-CLICKHOUSE_HOST = "clickhouse"
+#CLICKHOUSE_HOST = "clickhouse"
+CLICKHOUSE_HOST = (
+    "clickhouse.data.svc.cluster.local"
+)
 CLICKHOUSE_PORT = 9000
 CLICKHOUSE_DATABASE = "github"
 CLICKHOUSE_USER = "admin"
