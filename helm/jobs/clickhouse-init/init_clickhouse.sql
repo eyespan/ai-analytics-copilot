@@ -1,7 +1,7 @@
-CREATE DATABASE IF NOT EXISTS github;
+CREATE DATABASE IF NOT EXISTS github ON CLUSTER default;
 
 
-CREATE TABLE IF NOT EXISTS github.github_events
+CREATE TABLE IF NOT EXISTS github.github_events ON CLUSTER default
 (
     event_time DateTime,
     event_type String,
@@ -19,10 +19,10 @@ ORDER BY (event_time, repo_name);
 
 
 
-CREATE DATABASE IF NOT EXISTS ai_memory;
+CREATE DATABASE IF NOT EXISTS ai_memory ON CLUSTER default;
 
 
-CREATE TABLE IF NOT EXISTS ai_memory.ai_memory
+CREATE TABLE IF NOT EXISTS ai_memory.ai_memory ON CLUSTER default
 (
     event_id String,
     session_id String,

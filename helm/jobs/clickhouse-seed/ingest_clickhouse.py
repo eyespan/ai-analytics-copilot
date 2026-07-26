@@ -4,14 +4,11 @@ from datetime import datetime
 
 from clickhouse_driver import Client
 
-CLICKHOUSE_HOST = os.getenv(
-    "CH_HOST",
-    "clickhouse"
-)
-
-CLICKHOUSE_PORT = int(
-    os.getenv("CH_PORT", "9000")
-)
+CLICKHOUSE_HOST = "clickhouse.data.svc.cluster.local"
+CLICKHOUSE_PORT = 9000
+CLICKHOUSE_DATABASE = "github"
+CLICKHOUSE_USER = "admin"
+CLICKHOUSE_PASSWORD = "admin123"
 
 
 def get_clickhouse_client():
@@ -20,9 +17,9 @@ def get_clickhouse_client():
             client = Client(
                 host=CLICKHOUSE_HOST,
                 port=CLICKHOUSE_PORT,
-                database="github",
-                user="admin",
-                password="admin123",
+                database=CLICKHOUSE_DATABASE,
+                user=CLICKHOUSE_USER,
+                password=CLICKHOUSE_PASSWORD,
             )
             client.execute("SELECT 1")
             return client
