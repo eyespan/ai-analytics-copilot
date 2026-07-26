@@ -46,7 +46,7 @@ jobs:
 
           if [ "${{ inputs.service }}" = "all" ]; then
 
-            echo 'services=["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service","clickhouse-seed"]' >> $GITHUB_OUTPUT
+            echo 'services=["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service","clickhouse-seed","embedding-ingest"]' >> $GITHUB_OUTPUT
 
           else
 
@@ -127,6 +127,12 @@ jobs:
 
                 CONTEXT="helm/jobs/clickhouse-seed"
                 ;;
+
+            embedding-ingest)
+
+                CONTEXT="helm/jobs/embedding-ingest"
+                ;;
+
 
             *)
 
