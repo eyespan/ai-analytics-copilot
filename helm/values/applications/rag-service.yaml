@@ -11,6 +11,9 @@ replicaCount: 1
 
 containerPort: 8001
 
+env:
+  OPENSEARCH_HOST: opensearch-cluster-master.search.svc.cluster.local
+
 service:
   port: 80
   targetPort: 8001
@@ -24,6 +27,7 @@ resources:
   limits:
     cpu: 1
     memory: 1Gi
+
 
 ingress:
 
