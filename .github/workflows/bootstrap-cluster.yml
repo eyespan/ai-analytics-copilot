@@ -222,3 +222,24 @@ jobs:
 
 
     secrets: inherit
+
+
+  deploy-llm:
+
+    needs:
+    
+      - deploy-opensearch
+
+    uses: ./.github/workflows/helm-deploy.yml
+
+    with:
+
+      service: ollama
+
+      namespace: ai-analytics
+
+      chart: application
+
+      values: helm/values/llm/ollama.yaml
+
+    secrets: inherit

@@ -1,0 +1,50 @@
+namespace: ai-analytics
+
+name: ollama
+
+
+image:
+
+  repository: ollama
+
+  name: ollama
+
+  tag: latest
+
+  pullPolicy: IfNotPresent
+
+
+replicaCount: 1
+
+
+containerPort: 11434
+
+
+service:
+
+  port: 11434
+
+
+resources:
+
+  requests:
+
+    cpu: 1000m
+
+    memory: 2Gi
+
+  limits:
+
+    cpu: 2000m
+
+    memory: 4Gi
+
+
+env: {}
+
+
+persistence:
+
+  enabled: true
+
+  storage: 20Gi
