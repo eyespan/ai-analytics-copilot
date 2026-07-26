@@ -21,7 +21,7 @@ CLICKHOUSE_PASSWORD = "admin123"
 # Embedding Service
 # --------------------------------------------------
 
-EMBEDDING_SERVICE = "http://embedding-service:8002"
+EMBEDDING_SERVICE = "http://embedding-service:8000"
 
 # --------------------------------------------------
 # OpenSearch

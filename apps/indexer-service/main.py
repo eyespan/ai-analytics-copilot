@@ -14,7 +14,7 @@ CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "admin")
 CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD", "admin123")
 
 # IMPORTANT: docker internal DNS (NOT localhost)
-EMBEDDING_SERVICE = os.getenv("EMBEDDING_SERVICE", "http://embedding-service:8002")
+EMBEDDING_SERVICE = os.getenv("EMBEDDING_SERVICE", "http://embedding-service:8000")
 
 OPENSEARCH_HOST = "opensearch"
 OPENSEARCH_USER = "admin"
