@@ -40,6 +40,11 @@ resources:
     memory: 4Gi
 
 
+ingress:
+
+  enabled: false
+
+
 env: {}
 
 
@@ -48,3 +53,4 @@ persistence:
   enabled: true
 
   storage: 20Gi
+
