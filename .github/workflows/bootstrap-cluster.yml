@@ -248,7 +248,7 @@ jobs:
 
     needs: 
 
-      - deploy-ollama
+      - deploy-llm
 
     uses: ./.github/workflows/kubectl-apply.yml
 
