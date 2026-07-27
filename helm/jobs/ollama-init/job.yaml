@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: ollama-init
+  namespace: ai-analytics
+
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+      - name: ollama-init
+        image: ollama/ollama:latest
+
+        command:
+          - sh
+          - -c
+          - |
+            until curl -sf http://ollama:11434/api/tags; do
+              echo "Waiting for Ollama..."
+              sleep 5
+            done
+
+            ollama pull qwen2.5:3b
+
+            ollama list

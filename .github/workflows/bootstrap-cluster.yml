@@ -227,7 +227,7 @@ jobs:
   deploy-llm:
 
     needs:
-    
+
       - deploy-opensearch
 
     uses: ./.github/workflows/helm-deploy.yml
@@ -241,5 +241,21 @@ jobs:
       chart: application
 
       values: helm/values/llm/ollama.yaml
+
+    secrets: inherit
+
+  load-ollama-model:
+
+    needs: 
+
+      - deploy-ollama
+
+    uses: ./.github/workflows/kubectl-apply.yml
+
+    with:
+      namespace: ai-analytics
+
+      manifests: |
+        helm/jobs/ollama-init/job.yaml
 
     secrets: inherit

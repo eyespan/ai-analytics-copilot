@@ -27,8 +27,7 @@ on:
         default: v1.0.0
 
         type: string
-
-
+      
 
 jobs:
 
@@ -90,32 +89,40 @@ jobs:
 
               if grep -q "kind: Job" "$manifest"; then
 
-                JOB_NAME=$(grep "name:" "$manifest" | head -1 | awk '{print $2}')
+                  JOB_NAME=$(grep "name:" "$manifest" | head -1 | awk '{print $2}')
 
-                echo "Cleaning previous job: ${JOB_NAME}"
+                  echo "Processing job: ${JOB_NAME}"
 
-                kubectl delete job ${JOB_NAME} \
-                  -n ${{ inputs.namespace }} \
-                  --ignore-not-found=true
+                  kubectl delete job ${JOB_NAME} \
+                    -n ${{ inputs.namespace }} \
+                    --ignore-not-found=true
+
+                  echo "Applying ${manifest}"
+
+                  envsubst < "$manifest" | kubectl apply -f -
+
+                  echo "Waiting for job ${JOB_NAME} to complete"
+
+                  kubectl wait \
+                    --for=condition=complete \
+                    job/${JOB_NAME} \
+                    -n ${{ inputs.namespace }} \
+                    --timeout=1800s
+
+                  echo "Logs for ${JOB_NAME}"
+
+                  kubectl logs \
+                    job/${JOB_NAME} \
+                    -n ${{ inputs.namespace }}
+
+              else
+
+                  echo "Applying ${manifest}"
+
+                  envsubst < "$manifest" | kubectl apply -f -
 
               fi
-
-
-              envsubst < $manifest | kubectl apply -f - \
-              -n ${{ inputs.namespace }}
 
             fi
 
           done <<< "${{ inputs.manifests }}"
-
-
-
-      - name: Wait for job
-
-        run: |
-
-          kubectl wait \
-          --for=condition=complete \
-          job/clickhouse-init \
-          -n ${{ inputs.namespace }} \
-          --timeout=300s
