@@ -3,6 +3,7 @@ kind: Job
 
 metadata:
   name: embedding-ingest
+  namespace: ai-analytics
 
 spec:
 

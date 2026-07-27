@@ -89,7 +89,10 @@ jobs:
 
               if grep -q "kind: Job" "$manifest"; then
 
-                  JOB_NAME=$(grep "name:" "$manifest" | head -1 | awk '{print $2}')
+                  JOB_NAME=$(kubectl apply \
+                    --dry-run=client \
+                    -f "$manifest" \
+                    -o jsonpath='{.metadata.name}')
 
                   echo "Processing job: ${JOB_NAME}"
 
