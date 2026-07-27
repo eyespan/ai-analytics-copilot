@@ -14,8 +14,8 @@ spec:
       - name: ollama-init
         image: ollama/ollama:latest
 
-         env:
-         - name: OLLAMA_HOST
+        env:
+        - name: OLLAMA_HOST
             value: http://ollama:11434
 
         command:
