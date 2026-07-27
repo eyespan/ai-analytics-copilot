@@ -16,7 +16,7 @@ spec:
 
         env:
         - name: OLLAMA_HOST
-            value: http://ollama:11434
+          value: http://ollama:11434
 
         command:
           - sh
