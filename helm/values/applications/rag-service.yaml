@@ -13,6 +13,9 @@ containerPort: 8001
 
 env:
   OPENSEARCH_HOST: opensearch-cluster-master.search.svc.cluster.local
+  OLLAMA_URL: http://ollama:11434/api/generate
+  OLLAMA_MODEL: qwen2.5:3b
+
 
 service:
   port: 80
