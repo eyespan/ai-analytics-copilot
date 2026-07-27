@@ -44,10 +44,18 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
 
 
+        {{- if .Values.env }}
+
         env:
+
         {{- range $key, $value := .Values.env }}
+
         - name: {{ $key }}
+
           value: "{{ $value }}"
+
+        {{- end }}
+
         {{- end }}
 
 
@@ -61,7 +69,7 @@ spec:
           {{- toYaml .Values.resources | nindent 10 }}
 
 
-        {{- if .Values.persistence.enabled }}
+        {{- if and .Values.persistence .Values.persistence.enabled }}
 
         volumeMounts:
 
@@ -72,7 +80,7 @@ spec:
         {{- end }}
 
 
-      {{- if .Values.persistence.enabled }}
+      {{- if and .Values.persistence .Values.persistence.enabled }}
 
       volumes:
 
