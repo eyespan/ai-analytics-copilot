@@ -17,6 +17,15 @@ CREATE TABLE IF NOT EXISTS github.github_events ON CLUSTER default
 ENGINE = MergeTree
 ORDER BY (event_time, repo_name);
 
+CREATE TABLE IF NOT EXISTS github.github_events_all ON CLUSTER default
+AS github.github_events
+ENGINE = Distributed(
+    default,
+    github,
+    github_events,
+    cityHash64(repo_name)
+);
+
 
 
 CREATE DATABASE IF NOT EXISTS ai_memory ON CLUSTER default;

@@ -192,7 +192,7 @@ def insert_sample_data():
 
     client.execute(
         """
-        INSERT INTO github.github_events
+        INSERT INTO github.github_events_all
         (
             event_time,
             event_type,

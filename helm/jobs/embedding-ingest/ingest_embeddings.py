@@ -144,7 +144,7 @@ def load_documents(client):
             language,
             stars,
             forks
-        FROM github.github_events
+        FROM github.github_events_all
         """
     )
 
@@ -166,6 +166,12 @@ def main():
     rows = load_documents(ch)
 
     print(f"Loaded {len(rows)} repositories")
+
+    if not rows:
+        raise RuntimeError(
+            "No repositories found in ClickHouse. "
+            "Check github_events_all Distributed table."
+        )
 
     # -------------------------------
     # Idempotent indexing
