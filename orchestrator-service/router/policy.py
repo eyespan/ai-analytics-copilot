@@ -86,13 +86,13 @@ class RoutingPolicy:
 
         if complexity == QueryComplexity.MEDIUM:
 
-            if bedrock_available:
+            #if bedrock_available:
 
-                return RoutingDecision(
-                    provider=ModelProvider.BEDROCK,
-                    complexity=complexity,
-                    reason="medium_complexity",
-                )
+            #    return RoutingDecision(
+            #       provider=ModelProvider.BEDROCK,
+            #        complexity=complexity,
+            #        reason="medium_complexity",
+            #    )
 
             if ollama_available:
 
