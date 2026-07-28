@@ -4,6 +4,18 @@ from typing import Generator
 from clients.bedrock_client import BedrockClient
 from clients.ollama_client import OllamaClient
 
+from router.policy import (
+    ModelProvider,
+    QueryComplexity,
+    RoutingDecision,
+    RoutingPolicy,
+)
+
+
+# ==========================================================
+# Base Models
+# ==========================================================
+
 
 class BaseModel:
 
@@ -21,114 +33,183 @@ class BedrockModel(BaseModel):
 
     def __init__(self, client, model_id: str):
         super().__init__(f"bedrock:{model_id}")
-
         self.client = client
         self.model_id = model_id
 
     def generate(self, prompt: str) -> str:
-
         return self.client.generate(prompt)
+
+    def stream(self, prompt: str):
+        yield from self.client.stream_generate(prompt)
+
+
+class OpenAIModel(BaseModel):
+
+    def __init__(self, client, model="gpt-4o-mini"):
+        super().__init__(f"openai:{model}")
+        self.client = client
+        self.model = model
+
+    def generate(self, prompt: str) -> str:
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        return response.choices[0].message.content
+
+    def stream(self, prompt: str) -> Generator[str, None, None]:
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            stream=True,
+        )
+
+        for chunk in response:
+
+            text = chunk.choices[0].delta.content or ""
+
+            if text:
+                yield text
+
+
+class OllamaModel(BaseModel):
+
+    def __init__(self, client, model="qwen2.5:3b"):
+        super().__init__(f"ollama:{model}")
+        self.client = client
+        self.model = model
+
+    def generate(self, prompt: str) -> str:
+
+        response = self.client.generate(prompt)
+
+        if isinstance(response, dict):
+            return response.get("response", "")
+
+        return response
 
     def stream(self, prompt: str):
 
         yield from self.client.stream_generate(prompt)
 
 
-class OpenAIModel(BaseModel):
-    def __init__(self, client, model: str = "gpt-4o-mini"):
-        super().__init__(f"openai:{model}")
-        self.client = client
-        self.model = model
-
-    def generate(self, prompt: str) -> str:
-        resp = self.client.chat.completions.create(
-            model=self.model, messages=[{"role": "user", "content": prompt}]
-        )
-        return resp.choices[0].message.content
-
-    def stream(self, prompt: str) -> Generator[str, None, None]:
-        # OpenAI SDK stream returns delta objects — unwrap to strings here
-        resp = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            stream=True,
-        )
-        for chunk in resp:
-            if text := chunk.choices[0].delta.content or "":
-                yield text
-
-
-class OllamaModel(BaseModel):
-    def __init__(self, client, model: str = "qwen2.5:7b"):
-        super().__init__(f"ollama:{model}")
-        self.client = client
-        self.model = model
-
-    def generate(self, prompt: str) -> str:
-        response = self.client.generate(prompt=prompt)
-        if isinstance(response, dict):
-            return response.get("response", "")
-        return response
-
-    def stream(self, prompt: str) -> Generator[str, None, None]:
-        for chunk in self.client.stream_generate(prompt=prompt):
-            yield chunk
+# ==========================================================
+# Model Router
+# ==========================================================
 
 
 class ModelRouter:
+
     def __init__(self):
-        self.bedrock_client = None
-        self.openai_client = None
+
+        self.policy = RoutingPolicy()
+
+        self.last_decision: RoutingDecision | None = None
+
         self.ollama_client = OllamaClient(
             base_url=os.getenv("OLLAMA_HOST", "http://ollama:11434"),
-            model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b"),
+            model=os.getenv("OLLAMA_MODEL", "qwen2.5:3b"),
         )
 
         self.bedrock_client = None
 
-        if os.getenv("BEDROCK_ENABLED", "true") == "true":
+        if os.getenv("BEDROCK_ENABLED", "true").lower() == "true":
+
             self.bedrock_client = BedrockClient(
-                model_id=os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
+                model_id=os.getenv(
+                    "BEDROCK_MODEL_ID",
+                    "anthropic.claude-3-haiku-20240307-v1:0",
+                )
             )
+
+    # ---------------------------------------------------------
+    # Public API
+    # ---------------------------------------------------------
 
     def select_model(self, query: str, context: str = "") -> BaseModel:
 
         complexity = self._estimate_complexity(query, context)
 
-        print(f"[ROUTER] complexity={complexity} query={query[:60]}")
-
-        # ------------------------------
-        # 1. HIGH complexity → Bedrock FIRST
-        # ------------------------------
-        if complexity == "high" and self.bedrock_client:
-            return BedrockModel(self.bedrock_client, self.bedrock_client.model_id)
-
-        # 2. MEDIUM → optionally Bedrock or Ollama fallback
-        if complexity == "medium" and self.bedrock_client:
-            return BedrockModel(self.bedrock_client, self.bedrock_client.model_id)
-
-        # ------------------------------
-        # 3. LOW → Ollama
-        # ------------------------------
-        # ------------------------------
-        # Default -> Ollama fallback
-        # ------------------------------
-        if self.ollama_client:
-            return OllamaModel(self.ollama_client)
-            return OllamaModel(self.ollama_client)
-
-        raise RuntimeError("No LLM provider available")
-
-    def _estimate_complexity(self, query: str, context: str) -> str:
-        q = query.lower()
-        long_query = len(q.split()) > 12
-        has_reasoning_words = any(
-            w in q for w in ["explain", "compare", "why", "how", "architecture", "design"]
+        decision = self.policy.choose(
+            complexity=complexity,
+            bedrock_available=self.bedrock_client is not None,
+            ollama_available=self.ollama_client is not None,
+            prefer_local=os.getenv("PREFER_LOCAL_LLM", "false").lower() == "true",
         )
-        has_multiple_intents = " and " in q or " vs " in q
 
-        if long_query or has_multiple_intents or has_reasoning_words:
-            return "high"
+        self.last_decision = decision
+
+        print(
+            "[ROUTER]",
+            f"provider={decision.provider.value}",
+            f"complexity={decision.complexity.value}",
+            f"reason={decision.reason}",
+        )
+
+        if decision.provider == ModelProvider.BEDROCK:
+
+            return BedrockModel(
+                self.bedrock_client,
+                self.bedrock_client.model_id,
+            )
+
+        if decision.provider == ModelProvider.OLLAMA:
+
+            return OllamaModel(
+                self.ollama_client,
+                self.ollama_client.model,
+            )
+
+        raise RuntimeError(
+            f"Unsupported provider: {decision.provider}"
+        )
+
+    # ---------------------------------------------------------
+    # Complexity estimation
+    # ---------------------------------------------------------
+
+    def _estimate_complexity(
+        self,
+        query: str,
+        context: str = "",
+    ) -> QueryComplexity:
+
+        q = query.lower()
+
+        long_query = len(q.split()) > 12
+
+        reasoning = any(
+            word in q
+            for word in (
+                "why",
+                "how",
+                "compare",
+                "architecture",
+                "design",
+                "explain",
+            )
+        )
+
+        multiple_intents = (
+            " and " in q
+            or " vs " in q
+        )
+
+        if long_query or reasoning or multiple_intents:
+            return QueryComplexity.HIGH
+
         if len(q.split()) > 6:
-            return "medium"
-        return "low"
+            return QueryComplexity.MEDIUM
+
+        return QueryComplexity.LOW
+
+    # ---------------------------------------------------------
+    # Expose routing decision
+    # ---------------------------------------------------------
+
+    @property
+    def routing_decision(self) -> RoutingDecision | None:
+        return self.last_decision

@@ -21,7 +21,7 @@ BEDROCK_TIMEOUT = int(os.getenv("BEDROCK_TIMEOUT", "120"))
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://ollama:11434")
 
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 
 
 # -----------------------------------------------------

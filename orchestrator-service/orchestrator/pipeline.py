@@ -60,8 +60,23 @@ class OrchestrationPipeline:
         context = result["prompt"]
         prompt_type = result["type"]
         print(f"[PIPELINE] Prompt type received: {prompt_type}")
-        # model = self.router.select_model(query=query, context=context)
-        model = self.router.select_model(query=query, context=context)
+
+        decision = self.router.route(
+            query=query,
+            context=context,
+            prompt_type=prompt_type.name,
+            )
+
+        model = decision.model
+
+        print(
+            f"[PIPELINE] "
+            f"provider={decision.provider} "
+            f"model={decision.model_name} "
+            f"complexity={decision.complexity} "
+            f"reason={decision.reason}"
+        )
+                
 
         # =========================================================
         # 5. 🔥 NEW: AGENT BRANCHING (THIS IS THE ONLY ADDITION)
@@ -84,8 +99,12 @@ class OrchestrationPipeline:
                 session_id,
                 query,
                 answer,
-                metadata={"trace": trace, "model": model.name, "mode": "agent"},
-            )
+                metadata={
+                    "trace": trace,
+                    "mode": "agent",
+                    "routing": decision.to_dict(),
+                },
+            )     
 
             if stream:
                 return self._stream_response(model, query, context, session_id)
@@ -94,7 +113,8 @@ class OrchestrationPipeline:
                 "answer": answer,
                 "trace": trace,
                 "session_id": session_id,
-                "model_used": model.name,
+                "model_used": decision.model_name,
+                "routing": decision.to_dict(),
                 "mode": "agent",
                 "latency_ms": int((time.time() - start_time) * 1000),
             }
@@ -114,6 +134,7 @@ class OrchestrationPipeline:
                 "vector": len(retrieval["vector_results"]),
                 "hybrid": len(retrieval["hybrid_results"]),
             },
+            "routing": decision.to_dict(),
             "rerank_top": reranked[:3],
         }
 
@@ -121,14 +142,19 @@ class OrchestrationPipeline:
             session_id,
             query,
             answer,
-            metadata={"trace": trace, "model": model.name, "mode": "agent"},
+            metadata={
+                "trace": trace,
+                "routing": decision.to_dict(),
+                "mode": "rag",
+            },
         )
 
         return {
             "answer": answer,
             "trace": trace,
+            "routing": decision.to_dict(),
             "session_id": session_id,
-            "model_used": model.name,
+            "model_used": decision.model_name,
             "latency_ms": int((time.time() - start_time) * 1000),
         }
 
