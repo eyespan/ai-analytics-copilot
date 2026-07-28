@@ -61,19 +61,17 @@ class OrchestrationPipeline:
         prompt_type = result["type"]
         print(f"[PIPELINE] Prompt type received: {prompt_type}")
 
-        decision = self.router.route(
+        model = self.router.select_model(
             query=query,
             context=context,
-            prompt_type=prompt_type.name,
-            )
+        )
 
-        model = decision.model
+        decision = self.router.routing_decision
 
         print(
             f"[PIPELINE] "
-            f"provider={decision.provider} "
-            f"model={decision.model_name} "
-            f"complexity={decision.complexity} "
+            f"provider={decision.provider.value} "
+            f"complexity={decision.complexity.value} "
             f"reason={decision.reason}"
         )
                 
@@ -113,7 +111,7 @@ class OrchestrationPipeline:
                 "answer": answer,
                 "trace": trace,
                 "session_id": session_id,
-                "model_used": decision.model_name,
+                "model_used": model.name,
                 "routing": decision.to_dict(),
                 "mode": "agent",
                 "latency_ms": int((time.time() - start_time) * 1000),
@@ -154,7 +152,7 @@ class OrchestrationPipeline:
             "trace": trace,
             "routing": decision.to_dict(),
             "session_id": session_id,
-            "model_used": decision.model_name,
+            "model_used": model.name,
             "latency_ms": int((time.time() - start_time) * 1000),
         }
 

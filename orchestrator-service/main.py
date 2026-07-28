@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from orchestrator.multi_agent_orchestrator import MultiAgentOrchestrator
 from orchestrator.pipeline import OrchestrationPipeline
-from router.model_router import ModelRouter
+#from router.model_router import ModelRouter
 from schemas.tool_models import (
     GetTimeInput,
     GetTimeOutput,
@@ -37,9 +37,10 @@ app = FastAPI(title="Orchestrator Service", lifespan=lifespan)
 
 def build_eval_agent():
 
-    router = ModelRouter()
-
-    model = router.select_model(query="evaluation", context="")
+    model = pipeline.router.select_model(
+        query="evaluation",
+        context=""
+    )
 
     tool_registry = ToolRegistry()
 

@@ -20,6 +20,13 @@ class RoutingDecision:
     complexity: QueryComplexity
     reason: str
 
+    def to_dict(self):
+        return {
+            "provider": self.provider.value,
+            "complexity": self.complexity.value,
+            "reason": self.reason,
+        }
+
 
 class RoutingPolicy:
 
