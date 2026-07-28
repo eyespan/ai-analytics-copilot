@@ -45,10 +45,10 @@ RUN_ONCE = os.getenv("RUN_ONCE", "true").lower() == "true"
 # ------------------------
 
 clickhouse = Client(
-     host=CLICKHOUSE_HOST,
-     port=CLICKHOUSE_PORT,
-     database=CLICKHOUSE_DATABASE,
-     user=CLICKHOUSE_USER,
+    host=CLICKHOUSE_HOST,
+    port=CLICKHOUSE_PORT,
+    database=CLICKHOUSE_DATABASE,
+    user=CLICKHOUSE_USER,
     password=CLICKHOUSE_PASSWORD,
 )
 
