@@ -140,11 +140,12 @@ def load_documents(client):
         """
         SELECT
             repo_name,
-            description,
-            language,
-            stars,
-            forks
+            any(description) AS description,
+            any(language) AS language,
+            max(stars) AS stars,
+            max(forks) AS forks
         FROM github.github_events_all
+        GROUP BY repo_name
         """
     )
 

@@ -5,20 +5,35 @@ import requests
 from clickhouse_driver import Client
 from opensearchpy import OpenSearch
 
-# ------------------------
-# ENV CONFIG
-# ------------------------
 
-CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "clickhouse")
-CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "admin")
-CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD", "admin123")
+# --------------------------------------------------
+# ClickHouse
+# --------------------------------------------------
 
-# IMPORTANT: docker internal DNS (NOT localhost)
-EMBEDDING_SERVICE = os.getenv("EMBEDDING_SERVICE", "http://embedding-service:80")
+#CLICKHOUSE_HOST = "clickhouse"
+CLICKHOUSE_HOST = "clickhouse.data.svc.cluster.local"
 
-OPENSEARCH_HOST = "opensearch"
+CLICKHOUSE_PORT = 9000
+CLICKHOUSE_DATABASE = "github"
+CLICKHOUSE_USER = "admin"
+CLICKHOUSE_PASSWORD = "admin123"
+
+# --------------------------------------------------
+# Embedding Service
+# --------------------------------------------------
+
+EMBEDDING_SERVICE = "http://embedding-service:80"
+
+# --------------------------------------------------
+# OpenSearch
+# --------------------------------------------------
+
+OPENSEARCH_HOST = "opensearch-cluster-master.search.svc.cluster.local"
+OPENSEARCH_PORT = 9200
+
 OPENSEARCH_USER = "admin"
 OPENSEARCH_PASSWORD = "Opensearch2026!Aa"
+
 
 INDEX_NAME = "github-repos"
 
@@ -30,10 +45,11 @@ RUN_ONCE = os.getenv("RUN_ONCE", "true").lower() == "true"
 # ------------------------
 
 clickhouse = Client(
-    host=CLICKHOUSE_HOST,
-    user=CLICKHOUSE_USER,
+     host=CLICKHOUSE_HOST,
+     port=CLICKHOUSE_PORT,
+     database=CLICKHOUSE_DATABASE,
+     user=CLICKHOUSE_USER,
     password=CLICKHOUSE_PASSWORD,
-    database="github",
 )
 
 
@@ -131,8 +147,14 @@ def main():
     wait_for_opensearch(opensearch)
 
     query = """
-    SELECT repo_name, description, language, stars, forks
-    FROM github.github_events
+    SELECT
+            repo_name,
+            any(description) AS description,
+            any(language) AS language,
+            max(stars) AS stars,
+            max(forks) AS forks
+        FROM github.github_events_all
+        GROUP BY repo_name
     """
 
     rows = clickhouse.execute(query)
