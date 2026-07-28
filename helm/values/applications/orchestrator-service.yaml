@@ -12,8 +12,7 @@ replicaCount: 2
 containerPort: 8000
 
 env:
-  - name: RAG_SERVICE_URL
-    value: http://rag-service
+  RAG_SERVICE_URL: http://rag-service
 
 service:
   port: 80
