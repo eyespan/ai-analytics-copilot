@@ -37,6 +37,13 @@ class OrchestrationPipeline:
 
     def run(self, query: str, session_id: str, stream: bool = False) -> Dict[str, Any]:
         start_time = time.time()
+        
+        retrieval_start = time.time()
+
+        retrieval_raw = self._retrieve(query)
+
+        retrieval_ms = int((time.time() - retrieval_start) * 1000)
+
         # -------------------------------------------------
         # PROMPT GUARDRAIL
         # -------------------------------------------------
@@ -61,10 +68,14 @@ class OrchestrationPipeline:
         prompt_type = result["type"]
         print(f"[PIPELINE] Prompt type received: {prompt_type}")
 
+        routing_start = time.time()
+
         model = self.router.select_model(
             query=query,
             context=context,
         )
+
+        routing_ms = int((time.time() - routing_start) * 1000)
 
         decision = self.router.routing_decision
 
@@ -125,14 +136,34 @@ class OrchestrationPipeline:
             }
 
         if stream:
-            # return generator directly — StreamingResponse consumes it
+
+            trace = {
+                "steps": [
+                    {
+                        "step": "Retrieval",
+                        "tool": "rag_search",
+                        "event_type": "retrieval",
+                        "success": True,
+                        "latency_ms": retrieval_ms,
+                    },
+                    {
+                        "step": "Model Routing",
+                        "tool": "model_router",
+                        "event_type": "routing",
+                        "success": True,
+                        "latency_ms": routing_ms,
+                    },
+                ]
+            }
+
+
             return self._stream_response(
                 model=model,
                 query=query,
                 context=context,
                 session_id=session_id,
                 decision=decision,
-                trace=None,
+                trace=trace,
             )
 
         answer = model.generate(prompt=context)
