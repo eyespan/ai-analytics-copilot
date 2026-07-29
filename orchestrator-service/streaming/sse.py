@@ -3,39 +3,20 @@ import json
 
 class StreamEmitter:
 
+    def metadata(self, metadata: dict):
+        return f"data: {json.dumps(metadata)}\n\n"
 
-    def emit_token(self, chunk: str):
+    def trace(self, step: dict):
+        return f"data: {json.dumps(step)}\n\n"
 
-        return (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "token",
-                    "token": chunk,
-                }
-            )
-            + "\n\n"
-        )
+    def token(self, token: str):
+        return f"data: {json.dumps({
+            'type': 'token',
+            'token': token
+        })}\n\n"
 
-
-    def emit_metadata(
-        self,
-        provider: str,
-        model: str,
-        route: str,
-        latency_ms: int = 0,
-    ):
-
-        return (
-            "data: "
-            + json.dumps(
-                {
-                    "type": "metadata",
-                    "provider": provider,
-                    "model": model,
-                    "route": route,
-                    "latency_ms": latency_ms,
-                }
-            )
-            + "\n\n"
-        )
+    def done(self, latency_ms: int):
+        return f"data: {json.dumps({
+            'type': 'done',
+            'latency_ms': latency_ms
+        })}\n\n"

@@ -105,7 +105,14 @@ class OrchestrationPipeline:
             )     
 
             if stream:
-                return self._stream_response(model, query, context, session_id)
+                return self._stream_response(
+                    model=model,
+                    query=query,
+                    context=context,
+                    session_id=session_id,
+                    decision=decision,
+                    trace=trace,   # None for normal RAG
+                )
 
             return {
                 "answer": answer,
@@ -119,7 +126,14 @@ class OrchestrationPipeline:
 
         if stream:
             # return generator directly — StreamingResponse consumes it
-            return self._stream_response(model, query, context, session_id)
+            return self._stream_response(
+                model=model,
+                query=query,
+                context=context,
+                session_id=session_id,
+                decision=decision,
+                trace=None,
+            )
 
         answer = model.generate(prompt=context)
         if not answer or answer.strip() == "":
@@ -192,18 +206,13 @@ class OrchestrationPipeline:
 
     def _stream_response(
         self,
-        model: BaseModel,
-        query: str,
-        context: str,
-        session_id: str
+        model,
+        query,
+        context,
+        session_id,
+        decision,
+        trace=None,
     ) -> Generator[str, None, None]:
-        """
-        SSE streaming response.
-
-        First emits metadata event,
-        then token events,
-        then completion event.
-        """
 
         start_time = time.time()
 
@@ -211,51 +220,62 @@ class OrchestrationPipeline:
 
 
         # -----------------------------
-        # Metadata event
+        # Metadata
         # -----------------------------
 
-        decision = self.router.routing_decision
+        yield self.sse.metadata({
 
-
-        metadata = {
             "type": "metadata",
+
             "provider": decision.provider.value,
+
             "model": model.name,
-            "route": decision.complexity.value,
+
+            "complexity": decision.complexity.value,
+
             "reason": decision.reason,
-        }
 
-
-        yield (
-            f"data: {json.dumps(metadata)}\n\n"
-        )
+        })
 
 
         # -----------------------------
-        # Token stream
+        # Trace events
+        # -----------------------------
+
+        if trace:
+
+            for step in trace.get("steps", []):
+
+                yield self.sse.trace({
+
+                    "type": "trace",
+
+                    "step": step["step"],
+
+                    "tool": step["tool"],
+
+                    "event_type": step["event_type"],
+
+                    "success": step["success"],
+
+                    "latency_ms": step["latency_ms"],
+
+                })
+
+
+        # -----------------------------
+        # Tokens
         # -----------------------------
 
         for token in model.stream(prompt=context):
 
             full_response += token
 
-
-            yield (
-                "data: "
-                +
-                json.dumps(
-                    {
-                        "type": "token",
-                        "token": token,
-                    }
-                )
-                +
-                "\n\n"
-            )
+            yield self.sse.token(token)
 
 
         # -----------------------------
-        # Completion event
+        # Done
         # -----------------------------
 
         latency_ms = int(
@@ -263,17 +283,8 @@ class OrchestrationPipeline:
         )
 
 
-        yield (
-            "data: "
-            +
-            json.dumps(
-                {
-                    "type": "done",
-                    "latency_ms": latency_ms,
-                }
-            )
-            +
-            "\n\n"
+        yield self.sse.done(
+            latency_ms
         )
 
 
@@ -287,7 +298,7 @@ class OrchestrationPipeline:
                 "routing": decision.to_dict(),
             },
         )
-
+    
     def _normalize_retrieval(self, retrieval: dict) -> dict:
 
         return {
