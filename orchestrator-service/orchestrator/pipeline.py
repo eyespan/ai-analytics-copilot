@@ -191,22 +191,102 @@ class OrchestrationPipeline:
     #    return f"{SYSTEM_PROMPT}\n\n{prompt}"
 
     def _stream_response(
-        self, model: BaseModel, query: str, context: str, session_id: str
+        self,
+        model: BaseModel,
+        query: str,
+        context: str,
+        session_id: str
     ) -> Generator[str, None, None]:
         """
-        Yields SSE-formatted strings.
-        model.stream() is contractually guaranteed to yield plain strings (see BaseModel).
-        SSE formatting lives here and nowhere else.
+        SSE streaming response.
+
+        First emits metadata event,
+        then token events,
+        then completion event.
         """
+
+        start_time = time.time()
+
         full_response = ""
 
+
+        # -----------------------------
+        # Metadata event
+        # -----------------------------
+
+        decision = self.router.routing_decision
+
+
+        metadata = {
+            "type": "metadata",
+            "provider": decision.provider.value,
+            "model": model.name,
+            "route": decision.complexity.value,
+            "reason": decision.reason,
+        }
+
+
+        yield (
+            f"data: {json.dumps(metadata)}\n\n"
+        )
+
+
+        # -----------------------------
+        # Token stream
+        # -----------------------------
+
         for token in model.stream(prompt=context):
+
             full_response += token
-            yield f"data: {json.dumps({'token': token})}\n\n"
 
-        yield f"data: {json.dumps({'token': '[DONE]'})}\n\n"
 
-        self.memory.append(session_id, query, full_response)
+            yield (
+                "data: "
+                +
+                json.dumps(
+                    {
+                        "type": "token",
+                        "token": token,
+                    }
+                )
+                +
+                "\n\n"
+            )
+
+
+        # -----------------------------
+        # Completion event
+        # -----------------------------
+
+        latency_ms = int(
+            (time.time() - start_time) * 1000
+        )
+
+
+        yield (
+            "data: "
+            +
+            json.dumps(
+                {
+                    "type": "done",
+                    "latency_ms": latency_ms,
+                }
+            )
+            +
+            "\n\n"
+        )
+
+
+        self.memory.append(
+            session_id,
+            query,
+            full_response,
+            metadata={
+                "stream": True,
+                "latency_ms": latency_ms,
+                "routing": decision.to_dict(),
+            },
+        )
 
     def _normalize_retrieval(self, retrieval: dict) -> dict:
 

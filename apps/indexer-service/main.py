@@ -44,14 +44,33 @@ RUN_ONCE = os.getenv("RUN_ONCE", "true").lower() == "true"
 # CLICKHOUSE
 # ------------------------
 
-clickhouse = Client(
-    host=CLICKHOUSE_HOST,
-    port=CLICKHOUSE_PORT,
-    database=CLICKHOUSE_DATABASE,
-    user=CLICKHOUSE_USER,
-    password=CLICKHOUSE_PASSWORD,
-)
+def wait_for_clickhouse(retries=20):
 
+    print("Waiting for ClickHouse...")
+
+    for i in range(retries):
+        try:
+            client = Client(
+                host=CLICKHOUSE_HOST,
+                port=CLICKHOUSE_PORT,
+                database=CLICKHOUSE_DATABASE,
+                user=CLICKHOUSE_USER,
+                password=CLICKHOUSE_PASSWORD,
+            )
+
+            client.execute("SELECT 1")
+
+            print("ClickHouse is ready")
+            return client
+
+        except Exception as e:
+            print(f"ClickHouse not ready ({i}): {e}")
+
+        time.sleep(3)
+
+    raise RuntimeError("ClickHouse never became ready")
+
+clickhouse = wait_for_clickhouse()
 
 # ------------------------
 # OPENSEARCH
@@ -181,13 +200,14 @@ def main():
                 "embedding": embedding,
             }
 
-            opensearch.index(index=INDEX_NAME, id=repo_name, body=doc)
+            opensearch.index(index=INDEX_NAME, id=repo_name, body=doc, refresh=True)
 
             print(f"Indexed: {repo_name}")
 
         print("Finished indexing")
     except Exception as e:
         print(f"Failed indexing {repo_name}: {e}")
+        
 
 
 if __name__ == "__main__":

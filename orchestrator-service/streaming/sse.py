@@ -1,14 +1,41 @@
-# from fastapi.responses import StreamingResponse
 import json
 
 
 class StreamEmitter:
 
-    def emit(self, chunk: str):
-        return f"data: {json.dumps({'token': chunk})}\n\n"
 
-    # def emit(self, chunk: str):
-    # return f"data: {json.dumps({'token': chunk})}\n\n"
+    def emit_token(self, chunk: str):
 
-    # def sse_response(generator):
-    # return StreamingResponse(generator, media_type="text/event-stream")
+        return (
+            "data: "
+            + json.dumps(
+                {
+                    "type": "token",
+                    "token": chunk,
+                }
+            )
+            + "\n\n"
+        )
+
+
+    def emit_metadata(
+        self,
+        provider: str,
+        model: str,
+        route: str,
+        latency_ms: int = 0,
+    ):
+
+        return (
+            "data: "
+            + json.dumps(
+                {
+                    "type": "metadata",
+                    "provider": provider,
+                    "model": model,
+                    "route": route,
+                    "latency_ms": latency_ms,
+                }
+            )
+            + "\n\n"
+        )
