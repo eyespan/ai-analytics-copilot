@@ -61,13 +61,31 @@ class DiffEngine:
         # 6. FINAL SCORE (SAFE VERSION)
         # --------------------------------------------------------
         if len(expected_steps) == 0:
+            coverage = 0.0
             final_score = 0.0
+
         else:
             avg_score = total_score / max(len(alignment_result["matches"]), 1)
-            coverage = len(alignment_result["matches"]) / len(expected_steps)
+
+            coverage = (
+                len(alignment_result["matches"])
+                /
+                len(expected_steps)
+            )
+
             penalty = 0.05 * len(extra)
 
-            final_score = max(0.0, min(1.0, 0.7 * avg_score + 0.3 * coverage - penalty))
+            final_score = max(
+                0.0,
+                min(
+                    1.0,
+                    0.7 * avg_score
+                    +
+                    0.3 * coverage
+                    -
+                    penalty
+                )
+            )
 
         passed = final_score >= 0.85 and len(missing) == 0
 
