@@ -1,13 +1,15 @@
 from typing import Any, Dict, List
 
 from evaluation.diff_engine import DiffEngine
+from evaluation.store import EvaluationStore
 
 
 class EvaluationRunner:
 
-    def __init__(self, agent):
+    def __init__(self, agent, clickhouse):
         self.agent = agent
         self.diff_engine = DiffEngine()
+        self.store = EvaluationStore()
 
     # ------------------------------------------------------------
     # MAIN ENTRY
@@ -24,6 +26,8 @@ class EvaluationRunner:
             print(f"[EVAL] Running: {item['id']}")
 
             result = self.evaluate(item)
+
+            self.store.append(result)
 
             results.append(result)
 
@@ -91,11 +95,11 @@ class EvaluationRunner:
             if s.get("event_type") in ("tool_execution", "tool_failed")
         ]
 
-        print("EXPECTED STEPS")
-        print(expected_steps)
+        #print("EXPECTED STEPS")
+        #print(expected_steps)
 
-        print("ACTUAL STEPS")
-        print(execution_steps)
+        #print("ACTUAL STEPS")
+        #print(execution_steps)
 
         diff_result = self.diff_engine.diff(
             expected_steps=expected_steps, actual_trace=execution_steps

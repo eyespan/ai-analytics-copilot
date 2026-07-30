@@ -53,3 +53,52 @@ data:
     )
     ENGINE = MergeTree()
     ORDER BY (session_id, timestamp);
+
+    
+    CREATE DATABASE IF NOT EXISTS ai_evaluation ON CLUSTER default;
+
+
+    CREATE TABLE IF NOT EXISTS ai_evaluation.evaluation_runs ON CLUSTER default
+    (
+        evaluation_id String,
+
+        dataset_id String,
+
+        query String,
+
+        passed UInt8,
+
+        score Float32,
+
+        alignment_score Float32,
+
+        coverage_score Float32,
+
+        ordering_score Float32,
+
+        penalty_score Float32,
+
+        latency_ms UInt32,
+
+        diff String,
+
+        replay String,
+
+        trace String,
+
+        created_at DateTime DEFAULT now()
+
+    )
+    ENGINE = MergeTree()
+    ORDER BY (created_at, evaluation_id);
+
+
+    CREATE TABLE IF NOT EXISTS ai_evaluation.evaluation_runs_all
+    ON CLUSTER default
+    AS ai_evaluation.evaluation_runs
+    ENGINE = Distributed(
+        default,
+        ai_evaluation,
+        evaluation_runs,
+        cityHash64(evaluation_id)
+    );
