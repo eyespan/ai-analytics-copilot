@@ -48,7 +48,21 @@ class EvaluationRunner:
     def evaluate(self, item: Dict[str, Any]) -> Dict[str, Any]:
 
         query = item["query"]
-        expected_steps = item.get("expected_steps", [])
+        expected_steps = item.get("expected_steps")
+
+        if expected_steps is None:
+
+            expected_tool = item.get("expected_tool")
+
+            expected_steps = []
+
+            if expected_tool:
+                expected_steps.append(
+                    {
+                        "tool": expected_tool,
+                        "args": {}
+                    }
+                )
 
         print("[EVAL] Running evaluation")
 
@@ -76,6 +90,12 @@ class EvaluationRunner:
             for s in trace["steps"]
             if s.get("event_type") in ("tool_execution", "tool_failed")
         ]
+
+        print("EXPECTED STEPS")
+        print(expected_steps)
+
+        print("ACTUAL STEPS")
+        print(execution_steps)
 
         diff_result = self.diff_engine.diff(
             expected_steps=expected_steps, actual_trace=execution_steps
