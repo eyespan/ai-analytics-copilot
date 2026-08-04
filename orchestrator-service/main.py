@@ -115,8 +115,7 @@ def evaluate(payload: dict):
 def evaluations(limit: int = 100):
 
     runner = EvaluationRunner(
-        build_eval_agent(),
-        None,
+        build_eval_agent()
     )
 
     return runner.list_runs(limit)
