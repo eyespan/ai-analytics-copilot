@@ -6,7 +6,7 @@ from evaluation.store import EvaluationStore
 
 class EvaluationRunner:
 
-    def __init__(self, agent, clickhouse):
+    def __init__(self, agent):
         self.agent = agent
         self.diff_engine = DiffEngine()
         self.store = EvaluationStore()
