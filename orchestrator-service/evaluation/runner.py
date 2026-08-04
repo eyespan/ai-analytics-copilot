@@ -204,3 +204,8 @@ class EvaluationRunner:
             "penalties": penalty,
             "final_score": final_score,
         }
+    
+    
+    def list_runs(self, limit: int = 100):
+
+        return self.store.list_runs(limit)

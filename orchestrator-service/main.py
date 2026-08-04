@@ -109,3 +109,14 @@ def evaluate(payload: dict):
     result = runner.run_dataset(dataset)
 
     return result
+
+
+@app.get("/evaluations")
+def evaluations(limit: int = 100):
+
+    runner = EvaluationRunner(
+        build_eval_agent(),
+        None,
+    )
+
+    return runner.list_runs(limit)
