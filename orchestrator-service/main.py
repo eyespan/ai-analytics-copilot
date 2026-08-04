@@ -112,10 +112,18 @@ def evaluate(payload: dict):
 
 
 @app.get("/evaluations")
-def evaluations(limit: int = 100):
+def evaluations(limit:int=100):
 
-    runner = EvaluationRunner(
-        build_eval_agent()
-    )
+    store = EvaluationStore()
 
-    return runner.list_runs(limit)
+    results = store.list_runs(limit)
+
+    return {
+        "summary":{
+            "total":len(results),
+            "passed":len([r for r in results if r["passed"]]),
+            "failed":len([r for r in results if not r["passed"]]),
+            "score":sum(r["score"] for r in results)/len(results)
+        },
+        "results":results
+    }
