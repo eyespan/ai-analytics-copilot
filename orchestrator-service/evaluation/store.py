@@ -112,9 +112,9 @@ class EvaluationStore:
                 "ordering_score": r[7],
                 "penalty_score": r[8],
                 "latency_ms": r[9],
-                "diff": r[10],
-                "replay": r[11],
-                "trace": r[12],
+                "diff": json.loads(r[10]),
+                "replay": json.loads(r[11]),
+                "trace": json.loads(r[12]),
                 "created_at": str(r[13]),
             }
             for r in rows
