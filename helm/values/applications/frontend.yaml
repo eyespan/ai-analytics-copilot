@@ -9,10 +9,13 @@ image:
 
 replicaCount: 2
 
-containerPort: 80
+containerPort: 3000
 
 service:
   port: 80
+
+env:
+   ORCHESTRATOR_URL: http://orchestrator-service.ai-analytics.svc.cluster.local
 
 resources:
 
@@ -35,13 +38,13 @@ ingress:
 readinessProbe:
   httpGet:
     path: /
-    port: 80
+    port: 3000
   initialDelaySeconds: 5
   periodSeconds: 10
 
 livenessProbe:
   httpGet:
     path: /
-    port: 80
+    port: 3000
   initialDelaySeconds: 15
   periodSeconds: 20
