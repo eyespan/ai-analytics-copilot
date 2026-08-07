@@ -15,7 +15,7 @@ service:
   port: 80
 
 env:
-   ORCHESTRATOR_URL: http://orchestrator-service.ai-analytics.svc.cluster.local
+   ORCHESTRATOR_URL: http://orchestrator-service
 
 resources:
 
