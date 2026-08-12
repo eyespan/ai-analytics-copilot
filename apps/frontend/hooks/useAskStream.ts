@@ -19,7 +19,13 @@ export type StreamDone = {
 
 export type StreamTrace = {
     type: "trace";
-    trace: TraceStep;
+    step: number | string;
+    tool: string;
+    event_type: string;
+    success: boolean;
+    latency_ms: number;
+    args?: unknown;
+    output?: unknown;
 };
 
 
@@ -158,10 +164,19 @@ export function useAskStream(){
 
                     if (json.type === "trace") {
 
-                        onTrace(json.trace);
+                        const trace: TraceStep = {
+                            step: json.step,
+                            tool: json.tool,
+                            event_type: json.event_type,
+                            success: json.success,
+                            latency_ms: json.latency_ms,
+                            args: json.args,
+                            output: json.output,
+                        };
+                    
+                        onTrace(trace);
                     
                         continue;
-                    
                     }
 
 
