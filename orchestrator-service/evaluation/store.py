@@ -119,3 +119,56 @@ class EvaluationStore:
             }
             for r in rows
         ]
+    
+
+    def append_trace(self, trace):
+
+        self.client.execute(
+            """
+            INSERT INTO execution_traces_all
+            (
+                trace_id,
+                query,
+                steps,
+                latency_ms,
+                created_at
+            )
+            VALUES
+            """,
+            [(
+                trace["trace_id"],
+                trace["query"],
+                json.dumps(trace.get("steps", [])),
+                trace.get("latency_ms", 0),
+                datetime.now(timezone.utc),
+            )],
+        )
+
+
+    def list_traces(self, limit: int = 50):
+
+        rows = self.client.execute(
+            """
+            SELECT
+                trace_id,
+                query,
+                steps,
+                latency_ms,
+                created_at
+            FROM execution_traces_all
+            ORDER BY created_at DESC
+            LIMIT %(limit)s
+            """,
+            {"limit": limit},
+        )
+
+        return [
+            {
+                "trace_id": r[0],
+                "query": r[1],
+                "steps": json.loads(r[2]),
+                "latency_ms": r[3],
+                "created_at": str(r[4]),
+            }
+            for r in rows
+        ]

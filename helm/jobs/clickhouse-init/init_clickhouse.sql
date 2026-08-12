@@ -91,3 +91,27 @@ ENGINE = Distributed(
     evaluation_runs,
     cityHash64(evaluation_id)
 );
+
+
+CREATE TABLE IF NOT EXISTS ai_evaluation.execution_traces
+ON CLUSTER default
+(
+    trace_id String,
+    query String,
+    steps String,
+    latency_ms UInt32,
+    created_at DateTime DEFAULT now()
+)
+ENGINE = MergeTree()
+ORDER BY (created_at, trace_id);
+
+
+CREATE TABLE IF NOT EXISTS ai_evaluation.execution_traces_all
+ON CLUSTER default
+AS ai_evaluation.execution_traces
+ENGINE = Distributed(
+    default,
+    ai_evaluation,
+    execution_traces,
+    cityHash64(trace_id)
+);
