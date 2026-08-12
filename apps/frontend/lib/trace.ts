@@ -1,6 +1,6 @@
 export type TraceStep = {
 
-    step:number;
+    step: number | string;
 
     tool:string;
 
