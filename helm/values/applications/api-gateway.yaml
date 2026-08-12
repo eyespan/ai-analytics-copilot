@@ -14,6 +14,9 @@ containerPort: 8000
 service:
   port: 80
 
+env:
+  ORCHESTRATOR_URL: http://orchestrator-service
+
 resources:
 
   requests:
@@ -26,6 +29,10 @@ resources:
 
 ingress:
 
-  enabled: false
+  enabled: true
+
+  path: /api
+  
+  rewrite: true
 
   
