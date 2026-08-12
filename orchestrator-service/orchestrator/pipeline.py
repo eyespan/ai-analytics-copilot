@@ -1,4 +1,5 @@
 import json
+import uuid
 import time
 from typing import Any, Dict, Generator
 
@@ -18,6 +19,7 @@ from prompts.prompt_router import PromptType
 from rag_client import RagClient
 from router.model_router import BaseModel, ModelRouter
 from streaming.sse import StreamEmitter
+from evaluation.store import EvaluationStore
 
 
 class OrchestrationPipeline:
@@ -249,10 +251,17 @@ class OrchestrationPipeline:
 
         full_response = ""
 
+        # -------------------------------------------------
+        # Create a trace ID for this streaming request
+        # -------------------------------------------------
 
-        # -----------------------------
+        trace_id = str(uuid.uuid4())
+
+        trace_steps = []
+
+        # -------------------------------------------------
         # Metadata
-        # -----------------------------
+        # -------------------------------------------------
 
         yield self.sse.metadata({
 
@@ -268,15 +277,27 @@ class OrchestrationPipeline:
 
         })
 
-
-        # -----------------------------
+        # -------------------------------------------------
         # Trace events
-        # -----------------------------
+        # -------------------------------------------------
 
         if trace:
 
             for step in trace.get("steps", []):
 
+                trace_step = {
+                    "step": step["step"],
+                    "tool": step["tool"],
+                    "event_type": step["event_type"],
+                    "success": step["success"],
+                    "latency_ms": step["latency_ms"],
+                }
+
+                # Keep a copy for database persistence
+                trace_steps.append(trace_step)
+
+                # Continue sending the same SSE event
+                # that the frontend already expects
                 yield self.sse.trace({
 
                     "type": "trace",
@@ -293,10 +314,9 @@ class OrchestrationPipeline:
 
                 })
 
-
-        # -----------------------------
+        # -------------------------------------------------
         # Tokens
-        # -----------------------------
+        # -------------------------------------------------
 
         for token in model.stream(prompt=context):
 
@@ -304,20 +324,50 @@ class OrchestrationPipeline:
 
             yield self.sse.token(token)
 
-
-        # -----------------------------
-        # Done
-        # -----------------------------
+        # -------------------------------------------------
+        # Final latency
+        # -------------------------------------------------
 
         latency_ms = int(
             (time.time() - start_time) * 1000
         )
 
+        # -------------------------------------------------
+        # Persist execution trace
+        # -------------------------------------------------
+
+        execution_trace = {
+            "trace_id": trace_id,
+            "query": query,
+            "steps": trace_steps,
+            "latency_ms": latency_ms,
+        }
+
+        try:
+
+            store = EvaluationStore()
+
+            store.append_trace(execution_trace)
+
+        except Exception as error:
+
+            # Do not break the user's streaming response
+            # if trace persistence fails.
+            print(
+                f"[TRACE] Failed to persist execution trace: {error}"
+            )
+
+        # -------------------------------------------------
+        # Done
+        # -------------------------------------------------
 
         yield self.sse.done(
             latency_ms
         )
 
+        # -------------------------------------------------
+        # Conversation memory
+        # -------------------------------------------------
 
         self.memory.append(
             session_id,
@@ -327,9 +377,11 @@ class OrchestrationPipeline:
                 "stream": True,
                 "latency_ms": latency_ms,
                 "routing": decision.to_dict(),
+                "trace_id": trace_id,
             },
         )
-    
+
+
     def _normalize_retrieval(self, retrieval: dict) -> dict:
 
         return {

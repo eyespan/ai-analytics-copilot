@@ -156,32 +156,6 @@ def traces(limit: int = 50):
 
     store = EvaluationStore()
 
-    runs = store.list_runs(limit)
-
-    traces = []
-
-    for run in runs:
-
-        traces.append(
-            {
-                "trace_id": run["trace"]["trace_id"]
-                    if isinstance(run["trace"], dict)
-                    else None,
-
-                "query": run["query"],
-
-                "steps":
-                    run["trace"]["steps"]
-                    if isinstance(run["trace"], dict)
-                    else [],
-
-                "latency_ms": run["latency_ms"],
-
-                "created_at": run["created_at"]
-            }
-        )
-
-
     return {
-        "traces": traces
+        "traces": store.list_traces(limit)
     }
