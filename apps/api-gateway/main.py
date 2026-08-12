@@ -39,9 +39,7 @@ def ask_stream(payload: dict):
         )
 
     return StreamingResponse(
-        response.iter_content(
-            chunk_size=None
-        ),
+        response.iter_content(chunk_size=None),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -49,3 +47,54 @@ def ask_stream(payload: dict):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@app.post("/evaluate")
+def evaluate(payload: dict):
+
+    response = requests.post(
+        f"{ORCHESTRATOR_URL}/evaluate",
+        json=payload,
+    )
+
+    if not response.ok:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail="Orchestrator evaluation request failed",
+        )
+
+    return response.json()
+
+
+@app.get("/evaluations")
+def evaluations(limit: int = 100):
+
+    response = requests.get(
+        f"{ORCHESTRATOR_URL}/evaluations",
+        params={"limit": limit},
+    )
+
+    if not response.ok:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail="Orchestrator evaluations request failed",
+        )
+
+    return response.json()
+
+
+@app.get("/traces")
+def traces(limit: int = 50):
+
+    response = requests.get(
+        f"{ORCHESTRATOR_URL}/traces",
+        params={"limit": limit},
+    )
+
+    if not response.ok:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail="Orchestrator traces request failed",
+        )
+
+    return response.json()
