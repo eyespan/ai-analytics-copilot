@@ -29,6 +29,8 @@ class EvaluationRunner:
 
             self.store.append(result)
 
+            self.store.append_trace(result["trace"])
+
             results.append(result)
 
             total_score += result.get("score", 0.0)
@@ -77,7 +79,7 @@ class EvaluationRunner:
 
         trace = agent_result["trace"]
 
-        #self.store.append_trace(trace)
+        
 
         workflow = agent_result.get("workflow")
 
