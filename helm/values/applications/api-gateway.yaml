@@ -35,4 +35,8 @@ ingress:
   
   rewrite: true
 
+  proxyReadTimeout: 120
+  
+  proxySendTimeout: 120
+
   
