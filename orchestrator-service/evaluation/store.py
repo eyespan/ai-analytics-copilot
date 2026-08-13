@@ -93,7 +93,7 @@ class EvaluationStore:
                 replay,
                 trace,
                 created_at
-            FROM evaluation_runs
+            FROM evaluation_runs_all
             ORDER BY created_at DESC
             LIMIT %(limit)s
             """,
