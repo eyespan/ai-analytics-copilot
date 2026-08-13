@@ -54,7 +54,6 @@ class OpenAIModel(BaseModel):
         self.client = client
         self.model = model
 
-
     def generate(self, prompt: str) -> str:
 
         response = self.client.chat.completions.create(
@@ -62,13 +61,12 @@ class OpenAIModel(BaseModel):
             messages=[
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": prompt,
                 }
             ],
         )
 
         return response.choices[0].message.content
-
 
     def stream(self, prompt: str) -> Generator[str, None, None]:
 
@@ -77,7 +75,7 @@ class OpenAIModel(BaseModel):
             messages=[
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": prompt,
                 }
             ],
             stream=True,
@@ -100,7 +98,6 @@ class OllamaModel(BaseModel):
         self.client = client
         self.model = model
 
-
     def generate(self, prompt: str) -> str:
 
         response = self.client.generate(prompt)
@@ -109,7 +106,6 @@ class OllamaModel(BaseModel):
             return response.get("response", "")
 
         return response
-
 
     def stream(self, prompt: str):
 
@@ -129,32 +125,43 @@ class ModelRouter:
 
         self.last_decision: RoutingDecision | None = None
 
+        # --------------------------------------------------
+        # Provider configuration
+        # --------------------------------------------------
 
-        # ----------------------------
+        self.default_provider = os.getenv(
+            "DEFAULT_PROVIDER",
+            "ollama",
+        ).lower()
+
+        self.preferred_provider = self._parse_provider(
+            self.default_provider
+        )
+
+        # --------------------------------------------------
         # Ollama
-        # ----------------------------
+        # --------------------------------------------------
 
         self.ollama_client = OllamaClient(
             base_url=os.getenv(
                 "OLLAMA_HOST",
-                "http://ollama:11434"
+                "http://ollama:11434",
             ),
             model=os.getenv(
                 "OLLAMA_MODEL",
-                "qwen2.5:3b"
+                "qwen2.5:3b",
             ),
         )
 
-
-        # ----------------------------
+        # --------------------------------------------------
         # Bedrock
-        # ----------------------------
+        # --------------------------------------------------
 
         self.bedrock_client = None
 
         if os.getenv(
             "BEDROCK_ENABLED",
-            "true"
+            "true",
         ).lower() == "true":
 
             self.bedrock_client = BedrockClient(
@@ -164,6 +171,28 @@ class ModelRouter:
                 )
             )
 
+    # ======================================================
+    # Provider Parsing
+    # ======================================================
+
+    @staticmethod
+    def _parse_provider(
+        provider: str,
+    ) -> ModelProvider | None:
+
+        try:
+
+            return ModelProvider(provider)
+
+        except ValueError:
+
+            print(
+                "[ROUTER]",
+                f"Unsupported DEFAULT_PROVIDER='{provider}'. "
+                "Falling back to normal routing policy.",
+            )
+
+            return None
 
     # ======================================================
     # NEW PRODUCTION ROUTING ENTRY POINT
@@ -175,26 +204,31 @@ class ModelRouter:
         context: str = "",
     ) -> RoutingDecision:
 
-
         complexity = self._estimate_complexity(
             query,
-            context
+            context,
         )
-
 
         decision = self.policy.choose(
             complexity=complexity,
-            bedrock_available=self.bedrock_client is not None,
-            ollama_available=self.ollama_client is not None,
+
+            bedrock_available=(
+                self.bedrock_client is not None
+            ),
+
+            ollama_available=(
+                self.ollama_client is not None
+            ),
+
             prefer_local=os.getenv(
                 "PREFER_LOCAL_LLM",
-                "false"
+                "false",
             ).lower() == "true",
+
+            preferred_provider=self.preferred_provider,
         )
 
-
         self.last_decision = decision
-
 
         print(
             "[ROUTER]",
@@ -203,10 +237,7 @@ class ModelRouter:
             f"reason={decision.reason}",
         )
 
-
         return decision
-
-
 
     # ======================================================
     # Decision -> Executable Model
@@ -217,35 +248,29 @@ class ModelRouter:
         decision: RoutingDecision,
     ) -> BaseModel:
 
-
         if decision.provider == ModelProvider.BEDROCK:
 
             if not self.bedrock_client:
+
                 raise RuntimeError(
                     "Bedrock selected but unavailable"
                 )
-
 
             return BedrockModel(
                 self.bedrock_client,
                 self.bedrock_client.model_id,
             )
 
-
         if decision.provider == ModelProvider.OLLAMA:
-
 
             return OllamaModel(
                 self.ollama_client,
                 self.ollama_client.model,
             )
 
-
         raise RuntimeError(
             f"Unsupported provider: {decision.provider}"
         )
-
-
 
     # ======================================================
     # Backward Compatibility
@@ -257,16 +282,12 @@ class ModelRouter:
         context: str = "",
     ) -> BaseModel:
 
-
         decision = self.route(
             query=query,
             context=context,
         )
 
-
         return self.get_model(decision)
-
-
 
     # ======================================================
     # Complexity Estimation
@@ -278,12 +299,9 @@ class ModelRouter:
         context: str = "",
     ) -> QueryComplexity:
 
-
         q = query.lower()
 
-
         long_query = len(q.split()) > 12
-
 
         reasoning = any(
             word in q
@@ -297,12 +315,10 @@ class ModelRouter:
             )
         )
 
-
         multiple_intents = (
             " and " in q
             or " vs " in q
         )
-
 
         if (
             long_query
@@ -312,21 +328,19 @@ class ModelRouter:
 
             return QueryComplexity.HIGH
 
-
         if len(q.split()) > 6:
 
             return QueryComplexity.MEDIUM
 
-
         return QueryComplexity.LOW
-
-
 
     # ======================================================
     # Observability
     # ======================================================
 
     @property
-    def routing_decision(self) -> RoutingDecision | None:
+    def routing_decision(
+        self,
+    ) -> RoutingDecision | None:
 
         return self.last_decision
