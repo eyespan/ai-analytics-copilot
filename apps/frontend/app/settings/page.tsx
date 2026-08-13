@@ -1,278 +1,296 @@
 "use client";
 
-
 import { useState } from "react";
 
-import type {
-    Settings
-} from "@/lib/settings";
+import type { Settings } from "@/lib/settings";
 
-
-const defaultSettings:Settings = {
-
-    model:{
-        provider:"ollama",
-        model:"qwen2.5:3b",
-        fallback:false
+const defaultSettings: Settings = {
+    model: {
+        provider: "ollama",
+        model: "qwen2.5:3b",
+        fallback: false,
     },
 
-
-    agent:{
-        max_steps:5,
-        planner_enabled:true,
-        repair_enabled:true
+    agent: {
+        max_steps: 5,
+        planner_enabled: true,
+        repair_enabled: true,
     },
 
-
-    guardrails:{
-        prompt_injection:true,
-        tool_validation:true,
-        output_validation:true
+    guardrails: {
+        prompt_injection: true,
+        tool_validation: true,
+        output_validation: true,
     },
 
-
-    evaluation:{
-        auto_run:true,
-        store_traces:true,
-        retention_days:30
-    }
-
+    evaluation: {
+        auto_run: true,
+        store_traces: true,
+        retention_days: 30,
+    },
 };
 
 
+function loadSettings(): Settings {
+    if (typeof window === "undefined") {
+        return defaultSettings;
+    }
 
-export default function SettingsPage(){
+    try {
+        const stored = localStorage.getItem("ai-analytics-settings");
 
-
-const [settings,setSettings] =
-    useState(defaultSettings);
-
-
-
-function update(
-    section:keyof Settings,
-    key:string,
-    value:any
-){
-
-    setSettings({
-
-        ...settings,
-
-        [section]:{
-
-            ...settings[section],
-
-            [key]:value
-
+        if (!stored) {
+            return defaultSettings;
         }
 
-    });
+        const parsed = JSON.parse(stored) as Partial<Settings>;
 
+        return {
+            ...defaultSettings,
+            ...parsed,
+
+            model: {
+                ...defaultSettings.model,
+                ...(parsed.model ?? {}),
+            },
+
+            agent: {
+                ...defaultSettings.agent,
+                ...(parsed.agent ?? {}),
+            },
+
+            guardrails: {
+                ...defaultSettings.guardrails,
+                ...(parsed.guardrails ?? {}),
+            },
+
+            evaluation: {
+                ...defaultSettings.evaluation,
+                ...(parsed.evaluation ?? {}),
+            },
+        };
+    } catch (error) {
+        console.error("Failed to load settings:", error);
+        return defaultSettings;
+    }
 }
 
 
+export default function SettingsPage() {
+    const [settings, setSettings] = useState<Settings>(loadSettings);
 
-return (
+    const [saved, setSaved] = useState(false);
 
-<main className="p-6">
 
+    function update(
+        section: keyof Settings,
+        key: string,
+        value: string | number | boolean
+    ) {
+        setSettings((current) => ({
+            ...current,
 
-<h1 className="text-3xl font-bold mb-8">
-Settings
-</h1>
+            [section]: {
+                ...current[section],
 
+                [key]: value,
+            },
+        }));
 
+        setSaved(false);
+    }
 
-<section className="space-y-6">
 
+    function saveSettings() {
+        try {
+            localStorage.setItem(
+                "ai-analytics-settings",
+                JSON.stringify(settings)
+            );
 
-<div className="border rounded p-5">
+            setSaved(true);
 
-<h2 className="font-semibold mb-4">
-Model Configuration
-</h2>
+            console.log("[SETTINGS] Saved:", settings);
+        } catch (error) {
+            console.error("[SETTINGS] Failed to save:", error);
+            setSaved(false);
+        }
+    }
 
 
-<p>
-Provider:
-<b className="ml-2">
-{settings.model.provider}
-</b>
-</p>
+    return (
+        <main className="p-6">
 
+            <h1 className="text-3xl font-bold mb-8">
+                Settings
+            </h1>
 
-<p>
-Model:
-<b className="ml-2">
-{settings.model.model}
-</b>
-</p>
 
+            <section className="space-y-6">
 
-</div>
 
+                {/* Model Configuration */}
 
+                <div className="border rounded p-5">
 
-<div className="border rounded p-5">
+                    <h2 className="font-semibold mb-4">
+                        Model Configuration
+                    </h2>
 
-<h2 className="font-semibold mb-4">
-Agent Configuration
-</h2>
+                    <p>
+                        Provider:
+                        <b className="ml-2">
+                            {settings.model.provider}
+                        </b>
+                    </p>
 
+                    <p>
+                        Model:
+                        <b className="ml-2">
+                            {settings.model.model}
+                        </b>
+                    </p>
 
-<label>
+                </div>
 
-Max Steps
 
-<input
+                {/* Agent Configuration */}
 
-className="ml-3 border p-1"
+                <div className="border rounded p-5">
 
-type="number"
+                    <h2 className="font-semibold mb-4">
+                        Agent Configuration
+                    </h2>
 
-value={
-settings.agent.max_steps
-}
+                    <label>
 
-onChange={
-e =>
-update(
-"agent",
-"max_steps",
-Number(e.target.value)
-)
-}
+                        Max Steps
 
-/>
+                        <input
+                            className="ml-3 border p-1"
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={settings.agent.max_steps}
+                            onChange={(e) =>
+                                update(
+                                    "agent",
+                                    "max_steps",
+                                    Number(e.target.value)
+                                )
+                            }
+                        />
 
-</label>
+                    </label>
 
+                </div>
 
-</div>
 
+                {/* Guardrails */}
 
+                <div className="border rounded p-5">
 
-<div className="border rounded p-5">
+                    <h2 className="font-semibold mb-4">
+                        Guardrails
+                    </h2>
 
+                    {Object.entries(settings.guardrails).map(
+                        ([key, value]) => (
 
-<h2 className="font-semibold mb-4">
-Guardrails
-</h2>
+                            <label
+                                key={key}
+                                className="block"
+                            >
 
+                                <input
+                                    type="checkbox"
+                                    checked={value}
+                                    onChange={(e) =>
+                                        update(
+                                            "guardrails",
+                                            key,
+                                            e.target.checked
+                                        )
+                                    }
+                                />
 
-{
-Object.entries(
-settings.guardrails
-)
-.map(
-([key,value])=>(
+                                <span className="ml-2">
+                                    {key}
+                                </span>
 
-<label
-key={key}
-className="block"
->
+                            </label>
 
-<input
+                        )
+                    )}
 
-type="checkbox"
+                </div>
 
-checked={value}
 
-onChange={
-e =>
-update(
-"guardrails",
-key,
-e.target.checked
-)
-}
+                {/* Evaluation */}
 
-/>
+                <div className="border rounded p-5">
 
-<span className="ml-2">
-{key}
-</span>
+                    <h2 className="font-semibold mb-4">
+                        Evaluation
+                    </h2>
 
+                    <label>
 
-</label>
+                        Retention Days
 
-))
-}
+                        <input
+                            className="ml-3 border p-1"
+                            type="number"
+                            min="1"
+                            max="3650"
+                            value={
+                                settings.evaluation.retention_days
+                            }
+                            onChange={(e) =>
+                                update(
+                                    "evaluation",
+                                    "retention_days",
+                                    Number(e.target.value)
+                                )
+                            }
+                        />
 
+                    </label>
 
-</div>
+                </div>
 
 
+                {/* Save */}
 
-<div className="border rounded p-5">
+                <div className="flex items-center gap-4">
 
-<h2 className="font-semibold mb-4">
-Evaluation
-</h2>
+                    <button
+                        className="
+                            mt-6
+                            px-4
+                            py-2
+                            rounded
+                            bg-blue-600
+                            text-white
+                            hover:bg-blue-700
+                        "
+                        onClick={saveSettings}
+                    >
+                        Save Changes
+                    </button>
 
 
-<label>
+                    {saved && (
+                        <span className="mt-6 text-green-600">
+                            Settings saved
+                        </span>
+                    )}
 
-Retention Days
+                </div>
 
-<input
 
-className="ml-3 border p-1"
+            </section>
 
-type="number"
-
-value={
-settings.evaluation.retention_days
-}
-
-onChange={
-e =>
-update(
-"evaluation",
-"retention_days",
-Number(e.target.value)
-)
-}
-
-/>
-
-</label>
-
-
-</div>
-
-
-
-<button
-
-className="
-mt-6
-px-4
-py-2
-rounded
-bg-blue-600
-text-white
-"
-
-onClick={()=>{
-
-console.log(settings)
-
-}}
-
->
-
-Save Changes
-
-</button>
-
-
-</section>
-
-
-</main>
-
-);
-
+        </main>
+    );
 }
