@@ -77,6 +77,8 @@ class EvaluationRunner:
 
         trace = agent_result["trace"]
 
+        #self.store.append_trace(trace)
+
         workflow = agent_result.get("workflow")
 
         # -----------------------------
