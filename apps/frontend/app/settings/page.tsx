@@ -77,9 +77,12 @@ function loadSettings(): Settings {
 
 
 export default function SettingsPage() {
-    const [settings, setSettings] = useState<Settings>(loadSettings);
 
-    const [saved, setSaved] = useState(false);
+    const [settings, setSettings] =
+        useState<Settings>(loadSettings);
+
+    const [saved, setSaved] =
+        useState(false);
 
 
     function update(
@@ -87,12 +90,12 @@ export default function SettingsPage() {
         key: string,
         value: string | number | boolean
     ) {
+
         setSettings((current) => ({
             ...current,
 
             [section]: {
                 ...current[section],
-
                 [key]: value,
             },
         }));
@@ -101,8 +104,42 @@ export default function SettingsPage() {
     }
 
 
+    function changeProvider(provider: string) {
+
+        setSettings((current) => {
+
+            let model = current.model.model;
+
+            if (provider === "ollama") {
+
+                model = "qwen2.5:3b";
+
+            } else if (provider === "bedrock") {
+
+                model =
+                    "anthropic.claude-3-haiku-20240307-v1:0";
+
+            }
+
+            return {
+                ...current,
+
+                model: {
+                    ...current.model,
+                    provider,
+                    model,
+                },
+            };
+        });
+
+        setSaved(false);
+    }
+
+
     function saveSettings() {
+
         try {
+
             localStorage.setItem(
                 "ai-analytics-settings",
                 JSON.stringify(settings)
@@ -110,9 +147,18 @@ export default function SettingsPage() {
 
             setSaved(true);
 
-            console.log("[SETTINGS] Saved:", settings);
+            console.log(
+                "[SETTINGS] Saved:",
+                settings
+            );
+
         } catch (error) {
-            console.error("[SETTINGS] Failed to save:", error);
+
+            console.error(
+                "[SETTINGS] Failed to save:",
+                error
+            );
+
             setSaved(false);
         }
     }
@@ -129,7 +175,9 @@ export default function SettingsPage() {
             <section className="space-y-6">
 
 
+                {/* ================================================= */}
                 {/* Model Configuration */}
+                {/* ================================================= */}
 
                 <div className="border rounded p-5">
 
@@ -137,30 +185,129 @@ export default function SettingsPage() {
                         Model Configuration
                     </h2>
 
-                    <p>
-                        Provider:
-                        <b className="ml-2">
-                            {settings.model.provider}
-                        </b>
-                    </p>
 
-                    <p>
-                        Model:
-                        <b className="ml-2">
-                            {settings.model.model}
-                        </b>
-                    </p>
+                    <div className="space-y-4">
+
+
+                        {/* Provider */}
+
+                        <label className="block">
+
+                            <span className="block mb-1">
+                                Provider
+                            </span>
+
+                            <select
+                                className="border rounded p-2"
+                                value={
+                                    settings.model.provider
+                                }
+                                onChange={(e) =>
+                                    changeProvider(
+                                        e.target.value
+                                    )
+                                }
+                            >
+
+                                <option value="ollama">
+                                    Ollama
+                                </option>
+
+                                <option value="bedrock">
+                                    AWS Bedrock
+                                </option>
+
+                            </select>
+
+                        </label>
+
+
+                        {/* Model */}
+
+                        <label className="block">
+
+                            <span className="block mb-1">
+                                Model
+                            </span>
+
+                            <select
+                                className="border rounded p-2"
+                                value={
+                                    settings.model.model
+                                }
+                                onChange={(e) =>
+                                    update(
+                                        "model",
+                                        "model",
+                                        e.target.value
+                                    )
+                                }
+                            >
+
+                                {settings.model.provider ===
+                                    "ollama" && (
+
+                                    <option value="qwen2.5:3b">
+                                        qwen2.5:3b
+                                    </option>
+
+                                )}
+
+
+                                {settings.model.provider ===
+                                    "bedrock" && (
+
+                                    <option value="anthropic.claude-3-haiku-20240307-v1:0">
+                                        Claude 3 Haiku
+                                    </option>
+
+                                )}
+
+                            </select>
+
+                        </label>
+
+
+                        {/* Fallback */}
+
+                        <label className="block">
+
+                            <input
+                                type="checkbox"
+                                checked={
+                                    settings.model.fallback
+                                }
+                                onChange={(e) =>
+                                    update(
+                                        "model",
+                                        "fallback",
+                                        e.target.checked
+                                    )
+                                }
+                            />
+
+                            <span className="ml-2">
+                                Enable fallback
+                            </span>
+
+                        </label>
+
+
+                    </div>
 
                 </div>
 
 
+                {/* ================================================= */}
                 {/* Agent Configuration */}
+                {/* ================================================= */}
 
                 <div className="border rounded p-5">
 
                     <h2 className="font-semibold mb-4">
                         Agent Configuration
                     </h2>
+
 
                     <label>
 
@@ -171,12 +318,16 @@ export default function SettingsPage() {
                             type="number"
                             min="1"
                             max="100"
-                            value={settings.agent.max_steps}
+                            value={
+                                settings.agent.max_steps
+                            }
                             onChange={(e) =>
                                 update(
                                     "agent",
                                     "max_steps",
-                                    Number(e.target.value)
+                                    Number(
+                                        e.target.value
+                                    )
                                 )
                             }
                         />
@@ -186,7 +337,9 @@ export default function SettingsPage() {
                 </div>
 
 
+                {/* ================================================= */}
                 {/* Guardrails */}
+                {/* ================================================= */}
 
                 <div className="border rounded p-5">
 
@@ -194,45 +347,49 @@ export default function SettingsPage() {
                         Guardrails
                     </h2>
 
-                    {Object.entries(settings.guardrails).map(
-                        ([key, value]) => (
 
-                            <label
-                                key={key}
-                                className="block"
-                            >
+                    {Object.entries(
+                        settings.guardrails
+                    ).map(([key, value]) => (
 
-                                <input
-                                    type="checkbox"
-                                    checked={value}
-                                    onChange={(e) =>
-                                        update(
-                                            "guardrails",
-                                            key,
-                                            e.target.checked
-                                        )
-                                    }
-                                />
+                        <label
+                            key={key}
+                            className="block"
+                        >
 
-                                <span className="ml-2">
-                                    {key}
-                                </span>
+                            <input
+                                type="checkbox"
+                                checked={value}
+                                onChange={(e) =>
+                                    update(
+                                        "guardrails",
+                                        key,
+                                        e.target.checked
+                                    )
+                                }
+                            />
 
-                            </label>
+                            <span className="ml-2">
+                                {key}
+                            </span>
 
-                        )
-                    )}
+                        </label>
+
+                    ))}
 
                 </div>
 
 
+                {/* ================================================= */}
                 {/* Evaluation */}
+                {/* ================================================= */}
 
                 <div className="border rounded p-5">
 
                     <h2 className="font-semibold mb-4">
                         Evaluation
                     </h2>
+
 
                     <label>
 
@@ -244,13 +401,16 @@ export default function SettingsPage() {
                             min="1"
                             max="3650"
                             value={
-                                settings.evaluation.retention_days
+                                settings.evaluation
+                                    .retention_days
                             }
                             onChange={(e) =>
                                 update(
                                     "evaluation",
                                     "retention_days",
-                                    Number(e.target.value)
+                                    Number(
+                                        e.target.value
+                                    )
                                 )
                             }
                         />
@@ -260,7 +420,9 @@ export default function SettingsPage() {
                 </div>
 
 
+                {/* ================================================= */}
                 {/* Save */}
+                {/* ================================================= */}
 
                 <div className="flex items-center gap-4">
 
@@ -281,9 +443,11 @@ export default function SettingsPage() {
 
 
                     {saved && (
+
                         <span className="mt-6 text-green-600">
                             Settings saved
                         </span>
+
                     )}
 
                 </div>
