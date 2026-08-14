@@ -861,7 +861,7 @@ The architecture and implementation have been developed progressively through th
 
 **Yohannes Measho**
 
-Cloud / AI / ML Platform Engineer
+Cloud / DevOps / AI Platform Engineer
 
 GitHub: [https://github.com/eyespan](https://github.com/eyespan)
 
