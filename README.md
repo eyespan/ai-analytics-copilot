@@ -480,7 +480,7 @@ Frontend Pod
 
 The frontend then communicates with the application API through the configured API Gateway.
 
-> Note: ```text kubectl port-forward ``` is useful for local troubleshooting, but the ALB Ingress URL is the normal way to access the deployed application in the AWS/EKS environment.
+> Note: ```kubectl port-forward ``` is useful for local troubleshooting, but the ALB Ingress URL is the normal way to access the deployed application in the AWS/EKS environment.
 
 
 ### Detailed deployment documentation
