@@ -1,548 +1,728 @@
 # AI Analytics Copilot
 
-## Building a Production-Grade AI Analytics Platform — One Level at a Time
+> A production-oriented, cloud-native AI analytics platform built progressively from data ingestion and retrieval through RAG, agentic orchestration, production controls, and AWS deployment.
 
-**AI Analytics Copilot** is a progressive engineering project that demonstrates how to evolve an AI-powered analytics system from an initial prototype into a production-oriented platform with retrieval, model routing, agent orchestration, guardrails, observability, evaluation, and controlled AI execution.
-
-The project is deliberately developed in **levels**.
-
-Each level represents a significant architectural capability and is documented independently so that the evolution of the platform can be understood, reproduced, tested, and extended.
+**Repository:** https://github.com/eyespan/ai-analytics-copilot
 
 ---
 
-## 🎯 Project Objective
+## Project Objective
 
-The objective of this project is to build an **AI Analytics Copilot** capable of answering questions about software repositories and analytics data while demonstrating the engineering disciplines required for production AI systems.
+The **AI Analytics Copilot** is a progressive engineering project that demonstrates how an AI-powered analytics platform can evolve from a local prototype into a production-oriented, cloud-native system.
 
-The project explores the progression from:
+The project is intentionally developed through a sequence of architectural levels. Each level introduces a clearly defined capability while preserving and extending the work completed previously.
 
-**Data → Retrieval → RAG → Model Routing → Agents → Control → Evaluation → Production Intelligence**
+The overall journey is:
 
-Rather than presenting AI as a single application or a single model call, the project demonstrates how the surrounding engineering architecture evolves to provide:
+```text
+Data & Embeddings
+        ↓
+Keyword Retrieval
+        ↓
+Hybrid RAG
+        ↓
+Advanced Retrieval & Ranking
+        ↓
+Memory, Agents & Orchestration
+        ↓
+Production Intelligence & Control
+        ↓
+Cloud-Native AWS Platform
+```
 
-- Reliable retrieval
-- Multiple LLM providers
-- Model routing
-- Agent-based execution
-- Tool integration
+The result is a platform combining:
+
+- Data ingestion and indexing
+- Embeddings and semantic search
+- BM25 and hybrid retrieval
+- Reranking
+- Retrieval-augmented generation
+- LLM model routing
+- Agent planning and execution
+- Tool use
+- Memory and workflow state
 - Guardrails
 - Structured outputs
+- Evaluation and trace replay
+- Deterministic execution traces
+- Kubernetes deployment
+- Terraform infrastructure as code
+- GitHub Actions CI/CD
+- Amazon EKS and Amazon ECR
+- AWS Bedrock and local Ollama model support
+- Prometheus and Grafana observability
+- Production-oriented operational controls
+
+---
+
+# Project Roadmap
+
+The repository is organised around seven architectural levels.
+
+| Level | Focus | Primary Objective |
+|---|---|---|
+| Level 1 | Embedding & Data Ingestion | Establish the data and embedding foundation |
+| Level 2 | BM25 Retrieval | Introduce keyword-based retrieval |
+| Level 3 | Hybrid RAG | Combine semantic and keyword retrieval |
+| Level 4 | Advanced RAG + Ranking Intelligence | Improve retrieval quality and ranking |
+| Level 5 | Memory, Agents & Orchestration | Introduce agents, tools, memory and orchestration |
+| Level 6 | Production Intelligence & Control | Add guardrails, evaluation, tracing and controlled execution |
+| **Level 7** | **Cloud-Native AWS Platform** | Move the platform to production-oriented AWS/EKS infrastructure |
+
+## Level Design Documentation
+
+Each level has its own detailed design document.
+
+- [`DESIGN_LEVEL1.md`](DESIGN_LEVEL1.md)
+- [`DESIGN_LEVEL2.md`](DESIGN_LEVEL2.md)
+- [`DESIGN_LEVEL3.md`](DESIGN_LEVEL3.md)
+- [`DESIGN_LEVEL4.md`](DESIGN_LEVEL4.md)
+- [`DESIGN_LEVEL5.md`](DESIGN_LEVEL5.md)
+- [`DESIGN_LEVEL6.md`](DESIGN_LEVEL6.md)
+- [`DESIGN_LEVEL7.md`](DESIGN_LEVEL7.md)
+
+The design documents explain the architectural objectives, implementation decisions, components, constraints, and success criteria for each stage.
+
+---
+
+# Level 7 — Cloud-Native AWS Platform
+
+Level 7 does not introduce a new AI capability. Instead, it transforms the production-oriented platform developed through Levels 1–6 into a cloud-native AWS deployment.
+
+The Level 7 objectives are:
+
+- Cloud-native deployment
+- Infrastructure as Code
+- Kubernetes orchestration
+- Automated CI/CD
+- Enterprise-oriented operations
+
+Amazon EKS becomes the primary production runtime while Docker Compose remains the local development environment.
+
+The Level 7 architecture incorporates:
+
+```text
+Developer
+   │
+   ▼
+GitHub
+   │
+   ▼
+GitHub Actions
+   │
+   ├── Terraform
+   │
+   ├── Docker Builds
+   │
+   └── Helm
+   │
+   ▼
+AWS
+ ├── EKS
+ ├── ECR
+ ├── Bedrock
+ ├── OpenSearch
+ ├── CloudWatch
+ └── supporting infrastructure
+```
+
+Level 7 also retains Ollama as a useful local/development model provider while allowing AWS Bedrock to be selected through the model-routing layer where the AWS environment permits Bedrock access.
+
+See [`DESIGN_LEVEL7.md`](DESIGN_LEVEL7.md) for the complete architecture.
+
+---
+
+# Architecture
+
+At a high level, the platform is composed of:
+
+```text
+                         ┌──────────────────┐
+                         │     Frontend     │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │   API Gateway    │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                    ┌──────────────────────────┐
+                    │    Orchestrator Service  │
+                    │                          │
+                    │ Planning / Agents        │
+                    │ Tool Execution            │
+                    │ Guardrails                 │
+                    │ Evaluation                 │
+                    │ Trace Management           │
+                    │ Model Routing              │
+                    └────────────┬─────────────┘
+                                 │
+              ┌──────────────────┼──────────────────┐
+              │                  │                  │
+              ▼                  ▼                  ▼
+        ┌───────────┐      ┌────────────┐     ┌─────────────┐
+        │   RAG     │      │ LLM Router │     │   Tools     │
+        │  Service  │      │            │     │             │
+        └─────┬─────┘      └─────┬──────┘     └─────────────┘
+              │                  │
+              ▼                  ▼
+        ┌───────────┐       ┌──────────────┐
+        │ OpenSearch│       │ Ollama       │
+        │           │       │ AWS Bedrock  │
+        └───────────┘       └──────────────┘
+
+              Data / Evaluation / Observability
+                         │
+          ┌──────────────┼───────────────┐
+          ▼              ▼               ▼
+     ClickHouse      Prometheus       Grafana
+```
+
+The exact implementation is documented in the component READMEs and Level design documents.
+
+---
+
+# Documentation Map
+
+The repository contains documentation at both the architectural and component level.
+
+## Core Architecture
+
+| Area | Documentation |
+|---|---|
+| Project overview | [`README.md`](README.md) |
+| Level 1 | [`DESIGN_LEVEL1.md`](DESIGN_LEVEL1.md) |
+| Level 2 | [`DESIGN_LEVEL2.md`](DESIGN_LEVEL2.md) |
+| Level 3 | [`DESIGN_LEVEL3.md`](DESIGN_LEVEL3.md) |
+| Level 4 | [`DESIGN_LEVEL4.md`](DESIGN_LEVEL4.md) |
+| Level 5 | [`DESIGN_LEVEL5.md`](DESIGN_LEVEL5.md) |
+| Level 6 | [`DESIGN_LEVEL6.md`](DESIGN_LEVEL6.md) |
+| Level 7 | [`DESIGN_LEVEL7.md`](DESIGN_LEVEL7.md) |
+
+## Application Components
+
+| Component | Documentation |
+|---|---|
+| API Gateway | [`apps/api-gateway/README.md`](apps/api-gateway/README.md) |
+| Orchestrator | [`orchestrator-service/README.md`](orchestrator-service/README.md) |
+| LLM Service | [`llm-service/README.md`](llm-service/README.md) |
+| Providers | [`providers/README.md`](providers/README.md) |
+| RAG Service | [`apps/rag-service/README.md`](apps/rag-service/README.md) |
+| Indexer Service | [`apps/indexer-service/README.md`](apps/indexer-service/README.md) |
+| Embedding Service | [`apps/embedding-service/README.md`](apps/embedding-service/README.md) |
+| Frontend | [`apps/frontend/README.md`](apps/frontend/README.md) |
+
+## Infrastructure and Operations
+
+| Area | Documentation |
+|---|---|
+| Infrastructure | [`infra/README.md`](infra/README.md) |
+| GitHub Actions / CI/CD | [`.github/workflows/README.md`](.github/workflows/README.md) |
+| Terraform | [`infra/`](infra/) |
+| Kubernetes / Helm | [`helm/`](helm/) |
+| Monitoring | See infrastructure and monitoring documentation |
+| EKS / EKS add-ons | See [`infra/README.md`](infra/README.md) |
+
+---
+
+# Deploy the Project
+
+The project can be deployed to AWS using the repository's GitHub Actions workflows.
+
+The deployment process is deliberately staged because the later workflows depend on infrastructure and container images created by earlier workflows.
+
+The overall deployment sequence is:
+
+```text
+GitHub Repository Secrets
+          │
+          ▼
+Bootstrap AWS OIDC
+          │
+          ▼
+Terraform Plan
+          │
+          ▼
+Terraform Apply
+          │
+          ▼
+EKS + ECR
+          │
+          ▼
+Build ML Base Image
+          │
+          ▼
+Docker Image Builder
+          │
+          ▼
+Bootstrap Kubernetes Platform
+          │
+          ▼
+Deploy Dev
+```
+
+## Prerequisites
+
+You need:
+
+- An AWS account with the permissions required by the project's Terraform and deployment configuration
+- A fork or clone of the repository
+- A GitHub repository with Actions enabled
+- AWS credentials suitable for bootstrapping the initial OIDC configuration
+
+## 1. Configure GitHub Repository Secrets
+
+In the GitHub repository:
+
+**Settings → Secrets and variables → Actions → Repository secrets**
+
+Create:
+
+```text
+AWS_ACCOUNT_ID
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+```
+
+These are used by the initial GitHub Actions bootstrap process.
+
+> Do not commit AWS credentials to the repository.
+
+## 2. Bootstrap AWS OIDC
+
+Run the:
+
+**Bootstrap AWS OIDC** workflow.
+
+This establishes the IAM role used by Terraform and subsequent GitHub Actions workflows to authenticate to AWS.
+
+After this workflow completes successfully, the deployment pipeline can use the configured AWS IAM role rather than relying on long-lived credentials for normal deployment operations.
+
+## 3. Run Terraform Plan
+
+Run:
+
+**Terraform Plan**
+
+Review the proposed infrastructure changes.
+
+Do not proceed to Terraform Apply until the plan completes successfully and the proposed changes are understood.
+
+## 4. Run Terraform Apply
+
+Run:
+
+**Terraform Apply**
+
+Wait for the workflow to complete successfully.
+
+This provisions the AWS infrastructure required by the platform, including the EKS cluster and ECR repositories.
+
+The later container and Kubernetes workflows depend on this infrastructure existing.
+
+## 5. Build the ML Base Image
+
+Once Terraform Apply has completed successfully, run:
+
+**Build ML Base Image**
+
+This creates the ML base image and publishes it to Amazon ECR.
+
+The image provides the common machine-learning runtime used by the relevant services.
+
+## 6. Build Application Container Images
+
+Run:
+
+**Docker Image Builder**
+
+The workflow builds the project's application and supporting images, including:
+
+```text
+api-gateway
+embedding-service
+indexer-service
+rag-service
+orchestrator-service
+frontend
+clickhouse-seed
+embedding-ingest
+```
+
+The resulting images are uploaded to Amazon ECR.
+
+## 7. Bootstrap the Kubernetes Platform
+
+After the required infrastructure and images are available, run:
+
+**Bootstrap Kubernetes Platform**
+
+This prepares the EKS cluster and installs/configures the Kubernetes platform components required by the application deployment.
+
+This stage includes the platform-level Kubernetes and AWS integrations required by the workloads.
+
+## 8. Deploy Dev
+
+Finally run:
+
+**Deploy Dev**
+
+This deploys the application workloads into the EKS environment.
+
+At this point the deployment flow is:
+
+```text
+AWS Infrastructure
+       ↓
+EKS / ECR
+       ↓
+Container Images
+       ↓
+Kubernetes Platform
+       ↓
+AI Analytics Copilot
+```
+
+### Detailed deployment documentation
+
+For the full operational procedure, workflow dependencies, troubleshooting guidance and infrastructure details, see:
+
+- [`infra/README.md`](infra/README.md)
+- [`.github/workflows/README.md`](.github/workflows/README.md)
+
+---
+
+# Local Development
+
+Docker Compose remains the local development environment.
+
+This allows the platform to be developed and tested without requiring the complete AWS/EKS deployment.
+
+The local environment is particularly useful for:
+
+- Application development
+- RAG testing
+- Model-routing development
+- Agent and tool testing
+- Evaluation development
+- Trace testing
+- Local Ollama execution
+
+The AWS/EKS environment is the cloud deployment target.
+
+---
+
+# Model Providers
+
+The platform uses a model-routing abstraction so that the orchestration layer is not tightly coupled to a single LLM provider.
+
+Current provider choices include:
+
+```text
+Ollama
+AWS Bedrock
+OpenAI
+```
+
+The Level 7 deployment configuration supports selecting the provider/model through the platform settings and routing configuration.
+
+## Ollama
+
+Ollama provides a local model runtime and is particularly useful for development and testing.
+
+Example model:
+
+```text
+qwen2.5:3b
+```
+
+## AWS Bedrock
+
+AWS Bedrock provides the cloud-hosted model path.
+
+The current configuration includes support for Anthropic Claude models through Bedrock.
+
+Example:
+
+```text
+anthropic.claude-3-haiku-20240307-v1:0
+```
+
+Bedrock availability is dependent on the AWS account, region, IAM permissions and applicable AWS organizational policies.
+
+The model-routing layer can therefore support Bedrock even when a particular development AWS account does not permit Bedrock invocation.
+
+---
+
+# Evaluation and Observability
+
+Production-oriented controls introduced in Level 6 remain part of the platform as it moves into Level 7.
+
+The system includes:
+
 - Execution traces
-- Evaluation and replay
-- Observability
-- Controlled multi-step workflows
-- Production-oriented AWS integration
+- Tool execution traces
+- Model-routing traces
+- Retrieval traces
+- Evaluation results
+- Evaluation replay
+- Deterministic trace comparison
+- Guardrail validation
+- Structured output validation
+- Prometheus metrics
+- Grafana dashboards
+- CloudWatch integration
 
-The goal is not simply to make an AI application work.
-
-The goal is to demonstrate **how to engineer an AI system that can be understood, evaluated, observed, controlled, and progressively hardened for production**.
-
----
-
-## 🏗️ Project Repository
-
-The complete project is available on GitHub:
-
-**https://github.com/eyespan/ai-analytics-copilot/**
-
-The repository contains the implementation, infrastructure, deployment configuration, tests, and detailed design documentation for each development level.
+The objective is that cloud deployment does not remove the control and evaluation discipline established in Level 6.
 
 ---
 
-# 📚 Development Levels
+# Infrastructure
 
-The project is intentionally structured as a sequence of levels.
+Level 7 uses Infrastructure as Code and Kubernetes.
 
-Each level builds on the capabilities established previously.
+The AWS infrastructure includes the platform required for:
 
-The detailed design documents in the repository explain the architecture, objectives, implementation decisions, components, testing approach, and progression for each level.
+- Amazon VPC
+- Public and private networking
+- IAM
+- Amazon EKS
+- Amazon ECR
+- Load balancing
+- DNS
+- TLS certificates
+- Persistent storage
+- CloudWatch
+- Kubernetes platform components
 
-> **Important:** The level design documents are the authoritative guide to the architecture and objectives of each stage.
+Terraform provides the infrastructure provisioning layer.
 
-A typical progression is:
+Helm provides Kubernetes application deployment.
+
+GitHub Actions provides the workflow orchestration.
+
+See [`infra/README.md`](infra/README.md) for the detailed infrastructure documentation.
+
+---
+
+# CI/CD
+
+The repository uses GitHub Actions for infrastructure and application delivery.
+
+The deployment process is intentionally separated into stages:
+
+```text
+AWS Bootstrap
+     ↓
+Infrastructure
+     ↓
+Container Images
+     ↓
+Kubernetes Platform
+     ↓
+Application Deployment
+```
+
+This separation makes infrastructure failures, image build failures and Kubernetes deployment failures easier to identify and recover from.
+
+See [`.github/workflows/README.md`](.github/workflows/README.md) for the workflow documentation.
+
+---
+
+# Forking the Project
+
+The repository is designed so that each architectural level can be studied independently.
+
+To create your own version:
+
+1. Fork the repository.
+2. Clone your fork locally.
+3. Select the level you want to study or extend.
+4. Read the corresponding `DESIGN_LEVEL*.md` document.
+5. Review the component README files relevant to that level.
+6. Use Docker Compose for local development where appropriate.
+7. Progress through the levels incrementally.
+8. For Level 7 AWS deployment, configure your own AWS account and GitHub Actions secrets.
+
+A fork does not need to reproduce the entire platform immediately.
+
+A useful learning path is:
 
 ```text
 Level 1
-   ↓
+  ↓
 Level 2
-   ↓
+  ↓
 Level 3
-   ↓
+  ↓
 Level 4
-   ↓
+  ↓
 Level 5
-   ↓
+  ↓
 Level 6
-   ↓
+  ↓
 Level 7
 ```
 
-The exact implementation and scope of each level can be found in its corresponding design document in the repository.
+Each level provides a foundation for the next.
 
 ---
 
-# 🔎 Exploring the Levels
+# Recommended Way to Explore the Repository
 
-Visit the repository:
+If you are new to the project, the recommended order is:
 
-**https://github.com/eyespan/ai-analytics-copilot/**
+### 1. Read this README
 
-Then explore the level-specific design documentation.
+Understand the overall objective and progression.
 
-Look for the corresponding:
+### 2. Read the Level Design Documents
 
-```text
-DESIGN_LEVEL1.md
-DESIGN_LEVEL2.md
-DESIGN_LEVEL3.md
-...
-DESIGN_LEVEL7.md
-```
+Start with the level that interests you and work forward through the architecture.
 
-and the associated README documentation where provided.
+### 3. Read the Component Documentation
 
-These documents describe **why** each level exists, **what** is introduced, and **how** the architecture evolves.
+Once the architecture is understood, inspect the component-level READMEs.
 
----
+### 4. Run the Local Platform
 
-# 🧭 How the Project Evolves
+Use Docker Compose to understand the application without requiring AWS.
 
-The project follows a progressive architecture rather than attempting to implement every capability from the beginning.
+### 5. Explore Level 6
 
-The broad progression is:
+Level 6 introduces the production intelligence and control layer:
 
-### Early Levels — Foundation
-
-The early stages establish the application and data foundations required by the platform.
-
-Typical concerns include:
-
-- Application structure
-- Data ingestion
-- Data storage
-- Repository data
-- Initial APIs
-- Initial user interaction
-
-### Retrieval and RAG
-
-The retrieval stages introduce the knowledge retrieval layer.
-
-The architecture evolves towards:
-
-```text
-User Query
-    ↓
-API
-    ↓
-Retrieval
-    ↓
-Ranking / Reranking
-    ↓
-LLM
-    ↓
-Answer
-```
-
-### Model Routing
-
-The routing stages introduce the ability to select an LLM provider/model according to the request and configured policy.
-
-The architecture becomes:
-
-```text
-Query
-  ↓
-Model Router
-  ↓
-Routing Policy
-  ├── Ollama
-  ├── AWS Bedrock
-  └── Other supported providers
-```
-
-AWS Bedrock is integrated as a supported provider while preserving the existing routing architecture.
-
-The project can therefore demonstrate local development using Ollama while also supporting a production-oriented AWS Bedrock path when the AWS environment permits it.
-
-### Agent Orchestration
-
-The later levels introduce controlled agent execution.
-
-A simplified flow becomes:
-
-```text
-User Request
-     ↓
-Planner
-     ↓
-Execution Plan
-     ↓
-Tool Execution
-     ↓
-Verification / Repair
-     ↓
-Final Answer
-```
-
-The objective is to move from simple LLM responses towards controlled execution workflows.
-
-### Level 6 — Production Intelligence & Control
-
-Level 6 focuses on the production control layer.
-
-The architecture introduces capabilities such as:
-
+- Agent orchestration
 - Guardrails
 - Structured outputs
-- Tool validation
-- Tool permissions
-- Execution tracing
-- Evaluation pipelines
-- Replay
-- Deterministic evaluation
-- Production-oriented model execution
-- Controlled agent workflows
-
-The emphasis is on making AI execution **observable, testable, and controlled**.
-
-### Level 7 — Production Configuration and Provider Choice
-
-Level 7 builds on the Level 6 control architecture without replacing it.
-
-One of the important capabilities introduced in the Level 7 evolution is the ability to configure the preferred LLM provider while retaining the existing routing and orchestration architecture.
-
-The platform can support configuration such as:
-
-```text
-LLM Provider
-├── Ollama
-└── AWS Bedrock
-
-Fallback
-└── Enabled / Disabled
-```
-
-The intention is to separate **provider configuration** from the core orchestration, evaluation, tracing, and control mechanisms.
-
----
-
-# 🧪 Testing Each Level
-
-Each level should be treated as an independently understandable milestone.
-
-When exploring a level:
-
-1. Read the design document.
-2. Read the level README.
-3. Check out the relevant code/state.
-4. Deploy the required infrastructure.
-5. Run the documented tests.
-6. Inspect application behaviour.
-7. Inspect traces and evaluation results where applicable.
-8. Compare the implementation with the corresponding design document.
-
-This makes the repository useful both as a working project and as an architectural learning resource.
-
----
-
-# 🍴 Forking the Project
-
-You are encouraged to fork the repository and experiment with the different levels.
-
-Fork it from GitHub, then clone your fork:
-
-```bash
-git clone https://github.com/<your-github-user>/ai-analytics-copilot.git
-cd ai-analytics-copilot
-```
-
-You can then work through the levels progressively.
-
----
-
-# 🧩 Working With a Specific Level
-
-If you want to study or extend a particular level, the recommended approach is:
-
-```text
-1. Read DESIGN_LEVELX.md
-          ↓
-2. Read the corresponding README
-          ↓
-3. Check out the relevant project state
-          ↓
-4. Deploy / run the level
-          ↓
-5. Execute the documented tests
-          ↓
-6. Modify and experiment
-```
-
-Replace `X` with the level you want to investigate.
-
-For example:
-
-```text
-Level 4
-Level 5
-Level 6
-Level 7
-```
-
-This allows you to understand how the platform changed rather than seeing only the final implementation.
-
----
-
-# 🌿 Experimenting Safely
-
-A useful way to experiment is to create your own branch:
-
-```bash
-git checkout -b my-experiment
-```
-
-Make your changes, test them, and compare the result with the corresponding level design.
-
-For example:
-
-```bash
-git diff
-```
-
-This makes it possible to understand exactly how your implementation differs from the documented architecture.
-
----
-
-# 🏛️ Architecture Philosophy
-
-The project follows several principles throughout its evolution.
-
-### Progressive Complexity
-
-Capabilities are introduced when they become architecturally useful rather than attempting to build the entire platform at once.
-
-### Separation of Concerns
-
-The system separates major responsibilities such as:
-
-- Retrieval
-- Model routing
-- Model execution
-- Agent orchestration
-- Tool execution
-- Guardrails
 - Evaluation
-- Observability
-- Storage
+- Trace replay
+- Deterministic execution
+- Model routing
 
-### Provider Independence
+### 6. Explore Level 7
 
-The orchestration layer should not be tightly coupled to one LLM provider.
+Level 7 moves the platform into AWS/EKS and introduces:
 
-The routing layer determines which provider/model is appropriate, while the orchestration system continues to operate around that decision.
+- Terraform
+- EKS
+- ECR
+- Helm
+- GitHub Actions
+- Kubernetes platform components
+- Cloud-native observability
+- AWS model-provider integration
 
-### Observability
+---
 
-AI execution should produce evidence of what happened.
+# Architectural Philosophy
 
-Where implemented, traces record events such as:
+The project deliberately separates concerns.
 
 ```text
-Retrieval
+Application Logic
+       │
+       ▼
+Orchestration
+       │
+       ▼
 Model Routing
-Planning
-Tool Execution
-Repair
-Final Answer
+       │
+       ├── Ollama
+       ├── AWS Bedrock
+       └── Other Providers
+
+Retrieval
+       │
+       ├── ClickHouse
+       └── OpenSearch
+
+Infrastructure
+       │
+       ├── Terraform
+       ├── Kubernetes
+       └── Helm
+
+Delivery
+       │
+       └── GitHub Actions
+
+Observability
+       │
+       ├── Traces
+       ├── Prometheus
+       ├── Grafana
+       └── CloudWatch
 ```
 
-### Evaluation
-
-The system should not rely solely on subjective inspection of model output.
-
-Evaluation capabilities are introduced to compare expected and actual execution behaviour.
-
-### Controlled Autonomy
-
-Agents should operate within explicit boundaries.
-
-The project therefore emphasizes:
-
-- Maximum execution steps
-- Tool validation
-- Guardrails
-- Structured execution plans
-- Validation
-- Repair
-- Traceability
-- Deterministic evaluation
+This separation allows individual components to evolve without requiring the entire platform to be redesigned.
 
 ---
 
-# ☁️ AWS and Production-Oriented Development
+# Current Level 7 Outcome
 
-AWS technologies are progressively introduced as the project moves towards production-oriented architecture.
+The Level 7 target is a cloud-native enterprise-oriented AI platform built around:
 
-AWS Bedrock is supported as an LLM provider in the model-routing architecture.
+- Amazon EKS
+- Amazon ECR
+- Terraform
+- GitHub Actions
+- Helm
+- AWS Bedrock
+- OpenSearch
+- ClickHouse
+- CloudWatch
+- Prometheus
+- Grafana
+- Kubernetes
+- Production-oriented security and operational controls
 
-The ability to use Bedrock depends on the AWS environment in which the project is deployed.
+The architectural intent is to preserve the AI capabilities developed in Levels 1–6 while providing the infrastructure, deployment automation and operational foundation required for running the platform in AWS.
 
-An AWS organization may restrict Bedrock through permissions or Service Control Policies.
+Docker Compose remains the local developer environment, while Amazon EKS becomes the production deployment platform.
 
-That does not prevent the architecture from supporting Bedrock; it means the provider cannot be invoked in an environment where the required permissions are unavailable.
+---
 
-This distinction is important:
+# Contributing
+
+Contributions are welcome.
+
+When making changes:
+
+1. Understand which architectural level the change belongs to.
+2. Review the relevant design document.
+3. Review the component README.
+4. Keep existing contracts and interfaces stable where possible.
+5. Add or update tests.
+6. Update documentation when behaviour or architecture changes.
+7. Keep infrastructure changes isolated and reviewable.
+8. Do not commit credentials, secrets or environment-specific sensitive data.
+
+For architectural changes, update the relevant `DESIGN_LEVEL*.md` document so that the implementation and documented architecture remain aligned.
+
+---
+
+# Project Status
+
+The project has progressed through seven architectural levels:
 
 ```text
-Architecture supports Bedrock
-             ≠
-Every AWS account permits Bedrock execution
+Level 1  ── Embedding & Data Ingestion
+Level 2  ── BM25 Retrieval
+Level 3  ── Hybrid RAG
+Level 4  ── Advanced RAG + Ranking Intelligence
+Level 5  ── Memory, Agents & Orchestration
+Level 6  ── Production Intelligence & Control
+Level 7  ── Cloud-Native AWS Platform
 ```
 
-The project therefore retains Ollama as a useful local/testing provider while providing an AWS Bedrock integration path for suitable environments.
+Level 7 represents the transition from a production-oriented AI application into a cloud-native AWS platform.
 
 ---
 
-# 🔬 What You Can Learn From the Project
+# Repository
 
-This project is intended to demonstrate more than the final application.
+**GitHub:** https://github.com/eyespan/ai-analytics-copilot
 
-By following the levels, you can explore questions such as:
-
-- How should repository data be indexed for AI retrieval?
-- How does a RAG system evolve?
-- How should multiple LLM providers be abstracted?
-- How can model routing be separated from orchestration?
-- How should an agent create and execute a plan?
-- How can tool execution be validated?
-- How can AI execution be traced?
-- How can an agent workflow be evaluated?
-- How can evaluation results be replayed?
-- How should guardrails fit around an agent system?
-- How can local models and managed cloud models coexist?
-- What changes when moving an AI prototype towards production?
-
----
-
-# 🚀 Getting Started
-
-Start with the repository:
-
-**https://github.com/eyespan/ai-analytics-copilot/**
-
-Then:
-
-```text
-Clone / Fork
-    ↓
-Choose a Level
-    ↓
-Read its Design Document
-    ↓
-Read its README
-    ↓
-Deploy
-    ↓
-Test
-    ↓
-Inspect
-    ↓
-Experiment
-```
-
-Do not jump directly to the final level if your objective is to understand the architecture.
-
-The value of the project is in seeing **how the system evolves**.
-
----
-
-# 🤝 Contributing and Experimenting
-
-The repository is intended to be useful for experimentation and learning.
-
-You can:
-
-- Fork the repository
-- Create feature branches
-- Experiment with individual levels
-- Replace components
-- Add new model providers
-- Extend routing policies
-- Add evaluation datasets
-- Improve observability
-- Experiment with different retrieval strategies
-- Extend agent tools
-- Compare local and cloud LLM execution
-
-When making substantial architectural changes, compare them against the relevant level design document so that the architectural intent remains clear.
-
----
-
-# 📖 Documentation
-
-The detailed documentation lives in the GitHub repository:
-
-**https://github.com/eyespan/ai-analytics-copilot/**
-
-Start with the level-specific design documents:
-
-```text
-DESIGN_LEVEL1.md
-DESIGN_LEVEL2.md
-DESIGN_LEVEL3.md
-DESIGN_LEVEL4.md
-DESIGN_LEVEL5.md
-DESIGN_LEVEL6.md
-DESIGN_LEVEL7.md
-```
-
-Where available, also review:
-
-```text
-README_LEVEL1.md
-README_LEVEL2.md
-README_LEVEL3.md
-README_LEVEL4.md
-README_LEVEL5.md
-README_LEVEL6.md
-README_LEVEL7.md
-```
-
-The documentation is deliberately separated by level so that each architectural milestone can be studied independently.
-
----
-
-# ⭐ Project
-
-If you find the project useful, consider starring the repository:
-
-**https://github.com/eyespan/ai-analytics-copilot/**
-
----
-
-## Final Perspective
-
-AI systems become significantly more interesting when the challenge moves beyond:
-
-> "Can the model answer the question?"
-
-and becomes:
-
-> "Can we build a system around the model that is reliable, observable, controllable, testable, evaluable, and capable of evolving towards production?"
-
-**AI Analytics Copilot** is an exploration of that journey.
-
-The individual levels provide the roadmap.
-
-The design documents explain the architecture.
-
-The repository contains the implementation.
-
-And the ability to fork the project allows you to build your own version of the journey.
-
----
-
-**Repository:** https://github.com/eyespan/ai-analytics-copilot/
-
-**Start here:** Fork the repository → choose a level → read its design document → deploy → test → experiment.
+The repository contains the implementation, architectural design documents, component documentation, infrastructure code, Kubernetes/Helm configuration and GitHub Actions deployment workflows.
