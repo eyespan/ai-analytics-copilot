@@ -384,6 +384,105 @@ Kubernetes Platform
 AI Analytics Copilot
 ```
 
+## 9. Access the Frontend
+
+Once the **Deploy Dev** workflow has completed successfully, the application can be accessed through the AWS Application Load Balancer (ALB) created for the Kubernetes Ingress.
+
+### 9.1 Get the ALB URL
+
+Run:
+
+```bash
+kubectl get ingress -n ai-analytics
+```
+
+You should see output similar to:
+
+```bash
+NAME        CLASS   HOSTS   ADDRESS
+frontend    nginx   *       k8s-frontend-xxxxxxxx.eu-west-1.elb.amazonaws.com
+```
+
+The value in the ADDRESS column is the ALB endpoint.
+
+You can also query the frontend ingress directly:
+
+```bash
+kubectl get ingress frontend -n ai-analytics
+```
+
+### 9.2 Open the Frontend
+
+Copy the ADDRESS value and open it in a web browser:
+
+```bash
+http://<ALB-ADDRESS>
+```
+
+For example:
+
+```bash
+http://k8s-frontend-xxxxxxxx.eu-west-1.elb.amazonaws.com
+```
+
+The AI Analytics Copilot frontend should then be displayed.
+
+### 9.3 Verify the Frontend Deployment
+
+Before accessing the application, verify that the frontend pods are running:
+```bash
+kubectl get pods -n ai-analytics
+```
+
+Verify the frontend service:
+```bash
+kubectl get svc -n ai-analytics
+```
+
+Verify the ingress:
+```bash
+kubectl get ingress -n ai-analytics
+```
+
+For additional troubleshooting information:
+```bash
+kubectl describe ingress frontend -n ai-analytics
+```
+
+### 9.4 If the ALB Address Is Pending
+
+The AWS load balancer may take several minutes to be provisioned after the ingress is created.
+
+Monitor the ingress until an address appears:
+```bash
+kubectl get ingress -n ai-analytics -w
+```
+Wait until the ADDRESS column contains the AWS load balancer hostname.
+
+###    9.5 Application Request Path
+
+The deployed frontend request path is:
+```text
+Internet
+    │
+    ▼
+AWS Application Load Balancer
+    │
+    ▼
+Kubernetes Ingress
+    │
+    ▼
+Frontend Service
+    │
+    ▼
+Frontend Pod
+```
+
+The frontend then communicates with the application API through the configured API Gateway.
+
+> Note: ```text kubectl port-forward ``` is useful for local troubleshooting, but the ALB Ingress URL is the normal way to access the deployed application in the AWS/EKS environment.
+
+
 ### Detailed deployment documentation
 
 For the full operational procedure, workflow dependencies, troubleshooting guidance and infrastructure details, see:
