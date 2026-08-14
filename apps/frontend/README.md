@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend
 
-## Getting Started
+## Purpose
+The Frontend is the user-facing Next.js application.
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+Browser -> Next.js Frontend -> API Gateway -> Orchestrator
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Responsibilities
+- User interaction.
+- Display AI responses.
+- Display streaming output.
+- Provide configuration UI.
+- Send requests through the API boundary.
+- Present application state.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The frontend does not implement AI orchestration.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Settings
+The settings model contains:
+```text
+model
+agent
+guardrails
+evaluation
+```
 
-## Learn More
+Model configuration includes:
+```text
+provider
+model
+fallback
+```
 
-To learn more about Next.js, take a look at the following resources:
+Agent configuration includes:
+```text
+max_steps
+planner_enabled
+repair_enabled
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Guardrail configuration includes:
+```text
+prompt_injection
+tool_validation
+output_validation
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Evaluation configuration includes:
+```text
+auto_run
+store_traces
+retention_days
+```
 
-## Deploy on Vercel
+## Provider Selection
+Level 7 exposes provider/model configuration including Ollama and AWS Bedrock. The frontend configures the backend; it does not directly invoke either provider.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```text
+Frontend setting -> Backend configuration -> Model Router -> Provider
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Settings Persistence
+The current settings page persists browser settings using local storage under:
+```text
+ai-analytics-settings
+```
+
+Stored settings are merged with defaults so missing fields can receive current defaults.
+
+## Streaming
+The backend streaming path exposes events such as:
+```text
+metadata
+trace
+token
+done
+```
+The frontend can use these to present progressive execution/output.
+
+## React
+The settings page is client-side because it uses browser storage and interactive state. State changes should be driven by user actions rather than unnecessary synchronous state updates inside effects.
+
+## Kubernetes
+The frontend runs in namespace `ai-analytics` and is exposed through the project's Ingress/service architecture.
+
+Useful checks:
+```bash
+kubectl get pods -n ai-analytics
+kubectl get svc -n ai-analytics
+kubectl get ingress -n ai-analytics
+```
+
+## Level 6 / Level 7
+Level 7 adds provider/configuration controls without moving planner, guardrails, tools, evaluation or tracing into the browser.
+
+## Design Principle
+The frontend is a presentation and configuration layer; AI control remains server-side.
