@@ -1,5 +1,9 @@
 # AI Analytics Copilot
 
+> **Engineering Portfolio Project**
+>
+> AI Analytics Copilot is an independently designed and developed cloud-native AI platform demonstrating production-oriented AWS, Kubernetes, MLOps, LLM orchestration, RAG, evaluation, observability, and infrastructure engineering.
+
 > A production-oriented, cloud-native AI analytics platform built progressively from data ingestion and retrieval through RAG, agentic orchestration, production controls, and AWS deployment.
 
 **Repository:** https://github.com/eyespan/ai-analytics-copilot
@@ -825,3 +829,151 @@ Level 7 represents the transition from a production-oriented AI application into
 **GitHub:** https://github.com/eyespan/ai-analytics-copilot
 
 The repository contains the implementation, architectural design documents, component documentation, infrastructure code, Kubernetes/Helm configuration and GitHub Actions deployment workflows.
+
+
+
+## Credits & Attribution
+
+**AI Analytics Copilot** is an independent engineering project designed, developed, and maintained by **Yohannes Measho**
+
+The project demonstrates the design and implementation of a production-oriented AI/ML platform covering:
+
+- AWS cloud infrastructure and infrastructure-as-code
+- Amazon EKS and Kubernetes
+- Terraform and Helm
+- GitHub Actions CI/CD
+- LLM model routing and provider abstraction
+- AWS Bedrock and local Ollama inference
+- Retrieval-Augmented Generation (RAG)
+- Embeddings and vector search
+- OpenSearch and ClickHouse
+- Agentic orchestration
+- Tool execution and guardrails
+- Structured outputs
+- Evaluation and replay
+- Distributed tracing and observability
+- Prometheus and Grafana
+- Production deployment patterns
+
+The architecture and implementation have been developed progressively through the project's **Level 1 → Level 7** engineering roadmap. Each level documents the architectural decisions, implementation changes, testing, and progression toward a production-oriented AI platform.
+
+### Author
+
+**Yohannes Measho**
+
+Cloud / AI / ML Platform Engineer
+
+GitHub: [https://github.com/eyespan](https://github.com/eyespan)
+
+Project: [https://github.com/eyespan/ai-analytics-copilot](https://github.com/eyespan/ai-analytics-copilot)
+
+---
+
+## Open Source & Third-Party Technologies
+
+This project makes use of a number of open-source technologies and third-party services, including but not limited to:
+
+- Kubernetes
+- Amazon EKS
+- Terraform
+- Helm
+- Docker
+- GitHub Actions
+- Prometheus
+- Grafana
+- OpenSearch
+- ClickHouse
+- FastAPI
+- Next.js
+- Ollama
+- Sentence Transformers
+- boto3
+- AWS SDKs
+
+Each third-party project remains subject to its own licence and terms of use.
+
+Where applicable, the project documentation identifies the technologies and services used within the relevant component or infrastructure documentation.
+
+---
+
+## AWS Services
+
+The project is designed to run on Amazon Web Services and uses AWS services including, where enabled:
+
+- Amazon EKS
+- Amazon ECR
+- AWS IAM
+- AWS VPC
+- AWS Load Balancer Controller
+- AWS Certificate Manager (ACM)
+- Amazon Bedrock
+
+AWS services are subject to the applicable **AWS Customer Agreement**, service terms, pricing, quotas, and regional availability.
+
+Amazon Bedrock is implemented as a supported LLM provider. Access to individual foundation models depends on AWS account configuration, model availability, permissions, and applicable AWS policies.
+
+---
+
+## Project Status
+
+This repository represents an **engineering portfolio and reference implementation** rather than a commercial product.
+
+The platform has been intentionally developed through incremental architectural levels to demonstrate how an AI system can evolve from an initial prototype into a more controlled, observable, evaluated, and production-oriented platform.
+
+The Level 7 implementation represents the current architectural baseline.
+
+The project should not be interpreted as a guarantee that every component is production-ready for every workload. Production deployments should be independently assessed for security, reliability, scalability, cost, compliance, data protection, and operational requirements.
+
+---
+
+## Licence
+
+Copyright © 2026 Eyespan Limited
+
+Unless otherwise stated, the original source code and documentation in this repository are made available under the **MIT License**.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, subject to the conditions of the MIT License.
+
+The software is provided **"as is"**, without warranty of any kind, express or implied.
+
+See the [`LICENSE`](LICENSE) file for the complete licence text.
+
+### Third-Party Licences
+
+The MIT License applies only to original project material covered by this repository's licence.
+
+Third-party libraries, frameworks, models, datasets, images, documentation, and services remain subject to their respective licences and terms.
+
+Users of this project are responsible for reviewing and complying with those licences and terms.
+
+---
+
+## Disclaimer
+
+This project is provided for educational, demonstration, research, and engineering portfolio purposes.
+
+No guarantee is made regarding:
+
+- production suitability
+- security or compliance
+- availability
+- performance
+- scalability
+- AWS costs
+- third-party service availability
+- model behaviour
+- accuracy of generated responses
+
+Always review and adapt the implementation to the requirements of your own environment before deploying it to production.
+
+---
+
+## Why This Project Exists
+
+AI Analytics Copilot was created to demonstrate the engineering challenges involved in moving beyond a simple LLM application toward a **controlled AI platform**.
+
+The project focuses not only on getting an LLM to generate an answer, but on the surrounding engineering disciplines required to operate AI systems responsibly:
+
+**Infrastructure → Deployment → Routing → Retrieval → Agents → Guardrails → Evaluation → Observability → Production Control**
+
+The repository therefore serves as both a working reference implementation and a record of the engineering decisions made throughout the Level 1–Level 7 progression.
