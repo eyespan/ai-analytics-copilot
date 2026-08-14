@@ -1,61 +1,172 @@
-# Model Providers
+# Providers
 
-## Purpose
-The provider layer isolates external LLM APIs from routing and orchestration.
+## Current Status
+
+The `providers` directory currently contains documentation only.
 
 ```text
-Model Router
- +--> Ollama
- +--> AWS Bedrock
- +--> OpenAI
+providers/
+└── README.md
 ```
+
+There are no provider implementation modules in this directory in the supplied Level 7 source tree.
+
+## Actual Provider Implementations
+
+The active provider implementations live under:
+
+```text
+orchestrator-service/
+├── router/
+│   ├── model_router.py
+│   └── policy.py
+└── clients/
+    ├── bedrock_client.py
+    └── ollama_client.py
+```
+
+This distinction is important when navigating or extending the project.
+
+## Current Runtime Provider Architecture
+
+```text
+OrchestrationPipeline
+        |
+        v
+    ModelRouter
+        |
+        +--> RoutingPolicy
+        |
+        +--> OllamaModel
+        |       |
+        |       v
+        |   OllamaClient
+        |
+        +--> BedrockModel
+                |
+                v
+           BedrockClient
+```
+
+## Provider Enumeration
+
+`router/policy.py` defines:
+
+```python
+class ModelProvider(str, Enum):
+    BEDROCK = "bedrock"
+    OLLAMA = "ollama"
+    OPENAI = "openai"
+```
+
+The enumeration therefore represents three provider names, but current executable model selection supports Bedrock and Ollama.
 
 ## Ollama
-Local/testing provider.
 
-Configuration:
+Client:
+
 ```text
-OLLAMA_HOST
-OLLAMA_MODEL
+orchestrator-service/clients/ollama_client.py
 ```
 
-Current default:
+Uses:
+
 ```text
-http://ollama:11434
+POST <OLLAMA_HOST>/api/generate
+```
+
+with the configured model.
+
+Default:
+
+```text
 qwen2.5:3b
 ```
 
-## AWS Bedrock
-Managed AWS model provider.
+Supports normal and streaming generation.
 
-Configuration:
+## AWS Bedrock
+
+Client:
+
 ```text
-AWS_REGION
-BEDROCK_ENABLED
-BEDROCK_MODEL_ID
-BEDROCK_TIMEOUT
+orchestrator-service/clients/bedrock_client.py
 ```
 
-Current default model:
+Uses the AWS Bedrock Runtime client.
+
+Supported operations:
+
+```text
+InvokeModel
+InvokeModelWithResponseStream
+```
+
+The current default model is:
+
 ```text
 anthropic.claude-3-haiku-20240307-v1:0
 ```
 
-The implementation uses Bedrock Runtime normal and streaming invocation.
+## Provider Selection
 
-An AWS organization may block Bedrock through IAM/SCP. Such a denial is an environment authorization issue, not evidence that the provider adapter is absent.
+`DEFAULT_PROVIDER` controls the preferred provider.
 
-## OpenAI
-The routing layer defines an OpenAI provider and model wrapper. The configured default model is `gpt-4o-mini`; actual execution requires the corresponding client/configuration.
+Example:
 
-## Routing vs Provider
-Provider means where/how the model executes. Routing means which provider/model should handle a request. Keeping these separate allows provider implementations to evolve without rewriting the orchestration system.
+```text
+DEFAULT_PROVIDER=ollama
+```
 
-## Fallback
-Fallback must remain inside the routing/provider boundary and must never bypass normal guardrails, tracing or evaluation.
+results in:
+
+```text
+ModelProvider.OLLAMA
+```
+
+when Ollama is available.
+
+Likewise:
+
+```text
+DEFAULT_PROVIDER=bedrock
+```
+
+selects Bedrock when the Bedrock client is enabled.
+
+The routing policy falls back to its normal routing logic if the preferred provider is unavailable.
+
+## Important Level 7 Detail
+
+The frontend currently lets the user select:
+
+```text
+Ollama
+AWS Bedrock
+```
+
+and stores that selection in browser local storage.
+
+The backend runtime provider selection is controlled by the backend environment variable:
+
+```text
+DEFAULT_PROVIDER
+```
+
+The current source does not contain a frontend-to-orchestrator API that directly applies the browser's saved provider selection to the backend environment.
+
+Therefore:
+
+> **Frontend provider selection and backend provider selection are currently separate configuration mechanisms.**
+
+This is important when modifying the system.
 
 ## Security
-Credentials must not be committed. Use the deployment environment's secure identity/configuration mechanisms.
 
-## Design Principle
-Adding a provider should not require rewriting retrieval, agents, guardrails, evaluation or tracing.
+Provider credentials/configuration belong to the server-side runtime.
+
+Do not put AWS credentials, API keys or other provider secrets into frontend local storage or committed source files.
+
+## Future Extraction
+
+If provider implementations are eventually moved into this directory, preserve the existing `BaseModel`/provider boundary so the orchestration layer remains independent of provider-specific APIs.

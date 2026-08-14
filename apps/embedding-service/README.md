@@ -1,59 +1,174 @@
 # Embedding Service
 
 ## Purpose
-The Embedding Service generates vector representations used by the retrieval/indexing architecture.
+
+`apps/embedding-service` is a small FastAPI service that converts text into vector embeddings.
+
+It is used by the indexer when creating searchable repository documents.
+
+## Source
 
 ```text
-Text -> Embedding Service -> Vector -> OpenSearch
-```
-
-## Responsibilities
-- Accept text for embedding.
-- Run the configured embedding model.
-- Return vector representations.
-- Support the indexing pipeline.
-
-It does not own repository ingestion, search ranking, LLM routing or agent execution.
-
-## Indexing Flow
-```text
-ClickHouse -> Indexer
-                  |
-                  v
-          Embedding Service
-                  |
-                  v
-              Embedding
-                  |
-                  v
-             OpenSearch
+apps/embedding-service/
+├── main.py
+├── embeddings.py
+├── Dockerfile
+├── requirements.txt
+└── README.md
 ```
 
 ## Model
-The project uses a sentence-transformers-based embedding approach. The exact model and vector dimension are deployment configuration and must remain compatible with the OpenSearch mapping.
 
-## Data Contract
-Conceptually:
-```json
-{"text":"text to embed"}
+Both `main.py` and `embeddings.py` load:
+
+```text
+sentence-transformers
+model: all-MiniLM-L6-v2
 ```
-returns an embedding vector. The exact HTTP schema should follow the deployed implementation.
 
-## Operations
-Embedding generation can be CPU/memory intensive. Production considerations include model warm-up, concurrency, batching, caching and scaling.
+The model is loaded once at module initialisation.
 
-## Failure Handling
-The indexer should distinguish successful embedding generation from failed generation before indexing a record.
+## HTTP API
 
-## Testing
-Validate:
-1. Known text produces an embedding.
-2. Vector dimensionality is correct.
-3. The vector can be indexed.
-4. Vector retrieval can find the record.
+### `GET /health`
 
-## Level 6 / Level 7
-Embedding generation is independent from the selected LLM provider.
+Returns:
 
-## Design Principle
-Embedding inference for search is a separate responsibility from LLM generation for answers.
+```json
+{"status":"ok"}
+```
+
+### `GET /`
+
+Returns:
+
+```json
+{"message":"Embedding Service Running"}
+```
+
+### `POST /embed`
+
+Request model:
+
+```python
+class EmbeddingRequest(BaseModel):
+    text: str
+```
+
+Example:
+
+```json
+{
+  "text": "tensorflow deep learning Python"
+}
+```
+
+The endpoint executes:
+
+```python
+model.encode(request.text).tolist()
+```
+
+and returns:
+
+```json
+{
+  "embedding": [...]
+}
+```
+
+## Python Helper
+
+`embeddings.py` provides:
+
+```python
+def embed_text(text: str):
+    return model.encode(text).tolist()
+```
+
+This is a direct Python helper separate from the FastAPI endpoint.
+
+## Runtime Flow
+
+```text
+Repository Record
+      |
+      v
+Indexer
+      |
+      v
+POST /embed
+      |
+      v
+SentenceTransformer
+      |
+      v
+Vector
+      |
+      v
+OpenSearch
+```
+
+## Consumer
+
+The current indexer calls:
+
+```text
+http://embedding-service:80/embed
+```
+
+and expects the JSON field:
+
+```text
+embedding
+```
+
+## Startup Characteristics
+
+Because the transformer model is loaded during module import, application startup includes model initialisation.
+
+This means pod startup time and memory requirements are influenced by the embedding model.
+
+## Failure Modes
+
+Potential runtime failures include:
+
+- model loading failure
+- invalid input
+- insufficient CPU/memory
+- service connectivity failure from the indexer
+
+The indexer performs retry logic for calls to `/embed`.
+
+## Design Boundary
+
+The embedding service does not perform:
+
+- LLM generation
+- model-provider routing
+- BM25 search
+- OpenSearch querying
+- repository ingestion
+- agent execution
+
+Its responsibility is embedding generation.
+
+## Level 7
+
+The service remains independent of the selected answer-generation provider.
+
+Choosing:
+
+```text
+Ollama
+```
+
+or:
+
+```text
+AWS Bedrock
+```
+
+for the LLM does not change the embedding service.
+
+This separation allows retrieval embeddings and answer-generation models to evolve independently.
