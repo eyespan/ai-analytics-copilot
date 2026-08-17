@@ -78,7 +78,7 @@ Example output:
 ```text
 [ CLI OUTPUT: aws sts get-caller-identity --profile <profile-name> ]
 ```
-![Screenshot](images/aws-get-caller=identity.jpg)
+![Screenshot](images/aws-get-caller-identity.jpg)
 
 > **Security:** Do not publish access keys, secret keys, session tokens, or other sensitive credentials in screenshots or command output.
 
@@ -195,14 +195,19 @@ The environment creates the IAM/IRSA roles required by the platform and workload
 
 ```text
 [ SCREENSHOT: Terraform Apply → successful workflow ]
+```
 ![Screenshot](images/terraform-apply-run.jpg)
 ![Screenshot](images/terraform-apply-approval.jpg)
 ![Screenshot](images/terraform-apply-approved.jpg)
 
+```text
 [ SCREENSHOT: AWS Console → EKS cluster ]
+```
 
+```text
 [ SCREENSHOT: AWS Console → ECR repositories ]
-
+```
+```text
 [ SCREENSHOT: AWS Console → IAM roles / relevant deployment roles ]
 ```
 
