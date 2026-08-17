@@ -78,6 +78,7 @@ Example output:
 ```text
 [ CLI OUTPUT: aws sts get-caller-identity --profile <profile-name> ]
 ```
+![Screenshot](images/aws-get-caller=identity.jpg)
 
 > **Security:** Do not publish access keys, secret keys, session tokens, or other sensitive credentials in screenshots or command output.
 
@@ -103,6 +104,9 @@ Bootstrap AWS OIDC
 AWS IAM OIDC provider / deployment role
       │
       ▼
+Bootstrap S3 bucket for Terraform state file
+      │
+      ▼
 Terraform / deployment workflows
 ```
 
@@ -113,14 +117,21 @@ Wait for the workflow to complete successfully before continuing.
 ```text
 [ SCREENSHOT: GitHub Actions → Bootstrap AWS OIDC → successful workflow run ]
 ```
+![Screenshot](images/bootstrap-oicd.jpg)
+![Screenshot](images/bootstrap-oicd-workflow-run.jpg)
+
 
 ### Command-line output placeholder
 
 If the workflow output contains useful IAM/OIDC information, record the relevant non-sensitive output here.
 
 ```text
-[ CLI OUTPUT: Bootstrap AWS OIDC verification ]
+[ CLI OUTPUT: Bootstrap AWS OIDC IAM role & Terrform S3 bucket verification ]
 ```
+
+![Screenshot](images/iam-role-oicd.jpg)
+![Screenshot](images/terraform-state-s3.jpg)
+
 
 ---
 
@@ -139,6 +150,9 @@ workflow and review the proposed changes.
 ```text
 [ SCREENSHOT: Terraform Plan → successful workflow / plan summary ]
 ```
+![Screenshot](images/terraform-plan.jpg)
+![Screenshot](images/terraform-plan-run.jpg)
+![Screenshot](images/terraform-plan-output.jpg)
 
 ## Terraform Apply
 
@@ -181,6 +195,9 @@ The environment creates the IAM/IRSA roles required by the platform and workload
 
 ```text
 [ SCREENSHOT: Terraform Apply → successful workflow ]
+![Screenshot](images/terraform-apply-run.jpg)
+![Screenshot](images/terraform-apply-approval.jpg)
+![Screenshot](images/terraform-apply-approved.jpg)
 
 [ SCREENSHOT: AWS Console → EKS cluster ]
 
