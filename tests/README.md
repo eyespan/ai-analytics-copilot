@@ -45,6 +45,7 @@ These credentials are used by the initial AWS bootstrap workflow.
 ```text
 [ SCREENSHOT: GitHub → Settings → Secrets and variables → Actions → Repository secrets ]
 ```
+![Screenshot](images/repo_secretes.jpg)
 
 ### Optional local AWS verification
 
