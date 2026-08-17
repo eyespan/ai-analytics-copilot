@@ -246,9 +246,11 @@ aws ecr describe-repositories \
 ```text
 [ CLI OUTPUT: aws eks describe-cluster ... ]
 
+[Screenshot](images/eks-cluster-active.jpg)
+
 [ CLI OUTPUT: aws ecr describe-repositories ... ]
 ```
-
+[Screenshot](images/ecr-describe.jpg)
 ---
 
 # 2. Build the ML Base Image
