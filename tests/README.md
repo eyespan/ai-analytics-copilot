@@ -266,6 +266,7 @@ This workflow builds the ML base image and uploads it to Amazon ECR.
 ```text
 [ SCREENSHOT: GitHub Actions → Build ML Base Image → successful workflow ]
 ```
+[Screenshot](images/build-ml-base.jpg)
 
 ### ECR validation
 
@@ -285,6 +286,7 @@ aws ecr describe-images \
 ```text
 [ CLI OUTPUT: AWS ECR ML base image ]
 ```
+[Screenshot](images/base-ml-image.jpg)
 
 ---
 
@@ -312,6 +314,9 @@ embedding-ingest
 ```text
 [ SCREENSHOT: GitHub Actions → Docker Image Builder → successful workflow ]
 ```
+[Screenshot](images/docker-images-build-run.jpg)
+[Screenshot](images/docker-images-build.jpg)
+[Screenshot](images/docker-images-build-completed.jpg)
 
 ### ECR verification
 
@@ -339,10 +344,14 @@ Repeat for the application repositories as required.
 
 ```text
 [ CLI OUTPUT: ECR repository list ]
+```
+[Screenshot](images/ecr-repo-verification.jpg)
 
+```text
 [ CLI OUTPUT: ECR image list / tags ]
 ```
 
+[Screenshot](images/ecr-image-describe-frontend.jpg)
 ---
 
 # 4. Bootstrap the Kubernetes Platform
@@ -376,9 +385,23 @@ The exact components should be validated against the workflow output for the spe
 [ SCREENSHOT: GitHub Actions → Bootstrap Kubernetes Platform → successful workflow ]
 ```
 
+[Screenshot](images/bootstrap-kubernets-cluster.jpg)
+
+[Screenshot](images/bootstrap-kubernets-cluster-completed.jpg)
+
 ### Local verification
 
 After the workflow succeeds, configure your kubeconfig as described in Section 6, then run:
+
+```bash
+aws eks update-kubeconfig --name <cluser-name> --region us-east-1 --profile <profile-name>
+```
+
+Expected nodes should be:
+
+```text
+Added new context arn:aws:eks:us-east-1:<aws-account-id>:cluster/<cluster-name> to /Users/<user>/.kube/config
+```
 
 ```bash
 kubectl get nodes
@@ -405,12 +428,26 @@ kubectl get svc -A
 ### Output placeholders
 
 ```text
+[ CLI OUTPUT: update kube config ]
+```
+[Screenshot](images/aws-eks-update-config.jpg)
+
+``text
 [ CLI OUTPUT: kubectl get nodes ]
+```
+[Screenshot](images/kube-get-pods.jpg)
 
+```text
 [ CLI OUTPUT: kubectl get pods -A ]
+```
+[Screenshot](images/kube-get-pods-A.jpg)
 
+```text
 [ CLI OUTPUT: kubectl get svc -A ]
 ```
+
+[Screenshot](images/kube-get-svc-A.jpg)
+
 
 ---
 
@@ -440,6 +477,10 @@ and supporting Jobs/services required by the environment.
 ```text
 [ SCREENSHOT: GitHub Actions → Deploy Dev → successful workflow ]
 ```
+
+[Screenshot](images/deploy-dev.jpg)
+
+[Screenshot](images/deploy-dev-completed.jpg)
 
 ### Validate application workloads
 
@@ -475,11 +516,19 @@ frontend-...                          1/1     Running   0
 
 ```text
 [ CLI OUTPUT: kubectl get pods -n ai-analytics ]
+```
+[Screenshot](images/kubectl-get-pods-n-ai-analytics.jpg)
 
+```text
 [ CLI OUTPUT: kubectl get svc -n ai-analytics ]
+```
+[Screenshot](images/kubectl-get-svc-n-ai-analytics.jpg)
 
+```text
 [ CLI OUTPUT: kubectl get ingress -n ai-analytics ]
 ```
+[Screenshot](images/kubectl-get-ingress-n-ai-analytics.jpg)
+
 
 ---
 
@@ -535,13 +584,23 @@ aws sts get-caller-identity --profile <profile-name>
 
 ```text
 [ CLI OUTPUT: aws configure list --profile <profile-name> ]
+```
+[Screenshot](images/aws-configure-list.jpg)
 
+```tex
 [ CLI OUTPUT: aws sts get-caller-identity --profile <profile-name> ]
+```
 
+```tex
 [ CLI OUTPUT: aws eks update-kubeconfig ... ]
+```
 
+```tex
 [ CLI OUTPUT: kubectl config current-context ]
+```
+[Screenshot](images/kubectl-config-current-context.jpg)
 
+```tex
 [ CLI OUTPUT: kubectl get nodes ]
 ```
 
@@ -583,6 +642,8 @@ http://<ALB-ADDRESS>
 ```text
 [ SCREENSHOT: Browser showing AI Analytics Copilot frontend ]
 ```
+[Screenshot](images/frontend.jpg)
+
 
 ### Ingress validation
 
@@ -612,9 +673,17 @@ Capture:
 
 ```text
 [ SCREENSHOT: Chat response ]
+```
 
+[Screenshot](images/forntend-chat-stream.jpg)
+
+
+```text
 [ SCREENSHOT: Browser developer tools / streaming request ]
 ```
+
+[Screenshot](images/forntend-developer-tools.jpg)
+
 
 ## 8.2 Streaming endpoint
 
@@ -648,6 +717,7 @@ done
 ```text
 [ CLI OUTPUT: /ask-stream SSE response ]
 ```
+[Screenshot](images/ask-stream-SSE.jpg)
 
 ## 8.3 Evaluation
 
@@ -675,6 +745,8 @@ replay.trace_match: true
 [ CLI OUTPUT: /evaluate result ]
 ```
 
+[Screenshot](images/evaluate-result.jpg)
+
 ## 8.4 Evaluation history
 
 ```bash
@@ -686,6 +758,13 @@ wget -qO- http://orchestrator-service/evaluations
 ```text
 [ CLI OUTPUT: /evaluations ]
 ```
+[Screenshot](images/evaluations-response.jpg)
+
+```text
+[ Frontend: /evaluations ]
+```
+
+[Screenshot](images/forntend-evalution.jpg)
 
 ## 8.5 Execution traces
 
@@ -698,6 +777,13 @@ wget -qO- http://orchestrator-service/traces
 ```text
 [ CLI OUTPUT: /traces ]
 ```
+[Screenshot](images/orchestrator-traces.jpg)
+
+```text
+[ Frontend: /traces ]
+```
+[Screenshot](images/forntend-traces.jpg)
+
 
 ---
 
@@ -734,6 +820,8 @@ print('execution_traces_all:', c.execute(
 [ CLI OUTPUT: ClickHouse evaluation_runs_all / execution_traces_all counts ]
 ```
 
+[Screenshot](images/Validate-ClickHouse-Persistence.jpg)
+
 ---
 
 # 10. Validate Observability
@@ -745,12 +833,14 @@ Check the monitoring components:
 ```bash
 kubectl get pods -A | grep -Ei 'prometheus|grafana'
 ```
+[Screenshot](images/kubectl-get-pods-prometheus-grafana.jpg)
 
 Check services:
 
 ```bash
 kubectl get svc -A | grep -Ei 'prometheus|grafana'
 ```
+[Screenshot](images/kubectl-get-svc-prometheus-grafana.jpg)
 
 For local dashboard access, use Kubernetes port forwarding according to the monitoring README.
 
@@ -760,19 +850,45 @@ Example:
 kubectl port-forward -n monitoring svc/grafana 3000:80
 ```
 
+[Screenshot](images/kubectl-port-forward-monitoring.jpg)
+
 Then open:
 
 ```text
 http://localhost:3000
 ```
 
+Inspect the secret keys: Grafana Secret
+```bash
+kubectl get secret prometheus-grafana -n monitoring -o json
+```
+
+[Screenshot](images/kubectl-get-secret-prometheus-grafana.jpg)
+
+Retrieve the password
+
+```bash
+kubectl get secret prometheus-grafana \
+  -n monitoring \
+  -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+```
+
+[Screenshot](images/kubectl-get-secret-prometheus-grafana-password.jpg)
+
 ### Screenshot
 
 ```text
 [ SCREENSHOT: Grafana dashboard ]
+```
+[Screenshot](images/grafana-dashboard.jpg)
 
+
+```text
 [ SCREENSHOT: Prometheus targets / monitoring status ]
 ```
+[Screenshot](images/grafana-dashboard-pods.jpg)
+
+[Screenshot](images/grafana-dashboard-ai-analytics.jpg)
 
 ## Application observability
 
