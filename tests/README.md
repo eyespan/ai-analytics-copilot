@@ -199,14 +199,18 @@ The environment creates the IAM/IRSA roles required by the platform and workload
 ![Screenshot](images/terraform-apply-run.jpg)
 ![Screenshot](images/terraform-apply-approval.jpg)
 ![Screenshot](images/terraform-apply-approved.jpg)
+![Screenshot](images/terraform-apply.jpg)
 
 ```text
 [ SCREENSHOT: AWS Console → EKS cluster ]
 ```
+![Screenshot](images/eks_cluster.jpg)
 
 ```text
 [ SCREENSHOT: AWS Console → ECR repositories ]
 ```
+![Screenshot](images/ecr-repos.jpg)
+
 ```text
 [ SCREENSHOT: AWS Console → IAM roles / relevant deployment roles ]
 ```
