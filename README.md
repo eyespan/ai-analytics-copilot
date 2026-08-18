@@ -155,11 +155,11 @@ At a high level, the platform is composed of:
                     │    Orchestrator Service  │
                     │                          │
                     │ Planning / Agents        │
-                    │ Tool Execution            │
-                    │ Guardrails                 │
-                    │ Evaluation                 │
-                    │ Trace Management           │
-                    │ Model Routing              │
+                    │ Tool Execution           │
+                    │ Guardrails               │
+                    │ Evaluation               │
+                    │ Trace Management         │
+                    │ Model Routing            │
                     └────────────┬─────────────┘
                                  │
               ┌──────────────────┼──────────────────┐
