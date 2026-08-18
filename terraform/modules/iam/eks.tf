@@ -71,6 +71,62 @@ data "aws_iam_policy_document" "eks_node_assume_role" {
 
 }
 
+# -------------------------------------
+# Bedrock Node Runtime Policy
+# -------------------------------------
+
+resource "aws_iam_policy" "bedrock" {
+
+
+  name = "${var.name}-bedrock-node-runtime"
+
+
+  description = "Permissions for AI workloads to invoke Bedrock models"
+
+
+  policy = jsonencode({
+
+    Version = "2012-10-17"
+
+
+    Statement = [
+
+      {
+
+        Sid = "BedrockInvoke"
+
+
+        Effect = "Allow"
+
+
+        Action = [
+
+          "bedrock:InvokeModel",
+
+          "bedrock:InvokeModelWithResponseStream"
+
+        ]
+
+
+        Resource = "*"
+
+      }
+
+    ]
+
+  })
+
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${var.name}-bedrock-policy"
+    }
+  )
+
+}
+
+
 #Node Role
 resource "aws_iam_role" "eks_node_group" {
 
@@ -109,6 +165,17 @@ resource "aws_iam_role_policy_attachment" "ecr" {
   role = aws_iam_role.eks_node_group.name
 
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+
+}
+
+#Attach bedrock policy
+resource "aws_iam_role_policy_attachment" "bedrock" {
+
+
+  role = aws_iam_role.eks_node_group.name
+
+
+  policy_arn = aws_iam_policy.bedrock.arn
 
 }
 

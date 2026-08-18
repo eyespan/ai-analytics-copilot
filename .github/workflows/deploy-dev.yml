@@ -123,6 +123,27 @@ jobs:
     secrets: inherit
 
 
+  deploy-embedding-ingest:
+
+    needs:
+
+      - deploy-embedding-service
+
+
+    uses: ./.github/workflows/kubectl-apply.yml
+
+
+    with:
+
+      namespace: ai-analytics
+
+      manifests: |
+        helm/jobs/embedding-ingest/job.yaml
+
+
+    secrets: inherit
+
+
 
   deploy-indexer-service:
 

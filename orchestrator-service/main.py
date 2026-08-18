@@ -6,11 +6,12 @@ from agents.planner import Planner
 from agents.tool_registry import ToolRegistry
 from agents.tools import echo_tool, get_time, search_docs_tool
 from evaluation.runner import EvaluationRunner
+from evaluation.store import EvaluationStore
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from orchestrator.multi_agent_orchestrator import MultiAgentOrchestrator
 from orchestrator.pipeline import OrchestrationPipeline
-from router.model_router import ModelRouter
+#from router.model_router import ModelRouter
 from schemas.tool_models import (
     GetTimeInput,
     GetTimeOutput,
@@ -37,9 +38,10 @@ app = FastAPI(title="Orchestrator Service", lifespan=lifespan)
 
 def build_eval_agent():
 
-    router = ModelRouter()
-
-    model = router.select_model(query="evaluation", context="")
+    model = pipeline.router.select_model(
+        query="evaluation",
+        context=""
+    )
 
     tool_registry = ToolRegistry()
 
@@ -101,9 +103,59 @@ def evaluate(payload: dict):
     agent = build_eval_agent()
 
     runner = EvaluationRunner(agent)
+    
 
     dataset = payload["dataset"]
 
     result = runner.run_dataset(dataset)
 
     return result
+
+
+@app.get("/evaluations")
+def evaluations(limit: int = 100):
+
+    store = EvaluationStore()
+
+    results = store.list_runs(limit)
+
+
+    return {
+
+        "summary": {
+
+            "total": len(results),
+
+            "passed": sum(
+                1 for r in results
+                if r["passed"]
+            ),
+
+            "failed": sum(
+                1 for r in results
+                if not r["passed"]
+            ),
+
+            "score":
+                sum(
+                    r["score"]
+                    for r in results
+                ) / len(results)
+                if results
+                else 0
+
+        },
+
+        "results": results
+
+    }
+
+
+@app.get("/traces")
+def traces(limit: int = 50):
+
+    store = EvaluationStore()
+
+    return {
+        "traces": store.list_traces(limit)
+    }

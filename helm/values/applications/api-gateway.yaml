@@ -14,20 +14,29 @@ containerPort: 8000
 service:
   port: 80
 
+env:
+  ORCHESTRATOR_URL: http://orchestrator-service
+
 resources:
 
   requests:
-    cpu: 250m
-    memory: 512Mi
+    cpu: 100m
+    memory: 128Mi
 
   limits:
-    cpu: 1
-    memory: 2Gi
+    cpu: 500m
+    memory: 512Mi
 
 ingress:
 
   enabled: true
 
   path: /api
-
+  
   rewrite: true
+
+  proxyReadTimeout: 120
+  
+  proxySendTimeout: 120
+
+  

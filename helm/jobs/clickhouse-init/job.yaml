@@ -20,7 +20,7 @@ spec:
 
       - name: clickhouse-init
 
-        image: clickhouse/clickhouse-client:25.3
+        image: bitnamilegacy/clickhouse:25.7.5-debian-12-r0
 
         command:
           - /bin/sh

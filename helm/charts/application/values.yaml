@@ -21,6 +21,10 @@ service:
 
   port: 80
 
+persistence:
+  enabled: false
+
+env: {}
 
 resources:
 

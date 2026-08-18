@@ -44,6 +44,21 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
 
 
+        {{- if .Values.env }}
+
+        env:
+
+        {{- range $key, $value := .Values.env }}
+
+        - name: {{ $key }}
+
+          value: "{{ $value }}"
+
+        {{- end }}
+
+        {{- end }}
+
+
         ports:
 
         - containerPort: {{ .Values.containerPort }}
@@ -52,3 +67,27 @@ spec:
         resources:
 
           {{- toYaml .Values.resources | nindent 10 }}
+
+
+        {{- if and .Values.persistence .Values.persistence.enabled }}
+
+        volumeMounts:
+
+        - name: {{ .Values.name }}-storage
+
+          mountPath: /root/.ollama
+
+        {{- end }}
+
+
+      {{- if and .Values.persistence .Values.persistence.enabled }}
+
+      volumes:
+
+      - name: {{ .Values.name }}-storage
+
+        persistentVolumeClaim:
+
+          claimName: {{ .Values.name }}
+
+      {{- end }}

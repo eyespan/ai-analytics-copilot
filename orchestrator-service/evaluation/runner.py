@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from evaluation.diff_engine import DiffEngine
+from evaluation.store import EvaluationStore
 
 
 class EvaluationRunner:
@@ -8,6 +9,7 @@ class EvaluationRunner:
     def __init__(self, agent):
         self.agent = agent
         self.diff_engine = DiffEngine()
+        self.store = EvaluationStore()
 
     # ------------------------------------------------------------
     # MAIN ENTRY
@@ -24,6 +26,10 @@ class EvaluationRunner:
             print(f"[EVAL] Running: {item['id']}")
 
             result = self.evaluate(item)
+
+            self.store.append(result)
+
+            self.store.append_trace(result["trace"])
 
             results.append(result)
 
@@ -48,7 +54,21 @@ class EvaluationRunner:
     def evaluate(self, item: Dict[str, Any]) -> Dict[str, Any]:
 
         query = item["query"]
-        expected_steps = item.get("expected_steps", [])
+        expected_steps = item.get("expected_steps")
+
+        if expected_steps is None:
+
+            expected_tool = item.get("expected_tool")
+
+            expected_steps = []
+
+            if expected_tool:
+                expected_steps.append(
+                    {
+                        "tool": expected_tool,
+                        "args": {}
+                    }
+                )
 
         print("[EVAL] Running evaluation")
 
@@ -58,6 +78,8 @@ class EvaluationRunner:
         agent_result = self.agent.run(query)
 
         trace = agent_result["trace"]
+
+        
 
         workflow = agent_result.get("workflow")
 
@@ -76,6 +98,12 @@ class EvaluationRunner:
             for s in trace["steps"]
             if s.get("event_type") in ("tool_execution", "tool_failed")
         ]
+
+        #print("EXPECTED STEPS")
+        #print(expected_steps)
+
+        #print("ACTUAL STEPS")
+        #print(execution_steps)
 
         diff_result = self.diff_engine.diff(
             expected_steps=expected_steps, actual_trace=execution_steps
@@ -180,3 +208,8 @@ class EvaluationRunner:
             "penalties": penalty,
             "final_score": final_score,
         }
+    
+    
+    def list_runs(self, limit: int = 100):
+
+        return self.store.list_runs(limit)

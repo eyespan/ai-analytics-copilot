@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: ollama-init
+  namespace: ai-analytics
+
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+      - name: ollama-init
+        image: ollama/ollama:latest
+
+        env:
+        - name: OLLAMA_HOST
+          value: http://ollama:11434
+
+        command:
+          - sh
+          - -c
+          - |
+            until ollama list >/dev/null 2>&1
+            do
+              echo "Waiting for Ollama..."
+              sleep 5
+            done
+
+            echo "Pulling qwen2.5:3b..."
+            ollama pull qwen2.5:3b
+
+            echo "Installed models:"
+            ollama list

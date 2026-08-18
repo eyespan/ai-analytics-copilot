@@ -1,7 +1,7 @@
-CREATE DATABASE IF NOT EXISTS github;
+CREATE DATABASE IF NOT EXISTS github ON CLUSTER default;
 
 
-CREATE TABLE IF NOT EXISTS github.github_events
+CREATE TABLE IF NOT EXISTS github.github_events ON CLUSTER default
 (
     event_time DateTime,
     event_type String,
@@ -17,12 +17,21 @@ CREATE TABLE IF NOT EXISTS github.github_events
 ENGINE = MergeTree
 ORDER BY (event_time, repo_name);
 
+CREATE TABLE IF NOT EXISTS github.github_events_all ON CLUSTER default
+AS github.github_events
+ENGINE = Distributed(
+    default,
+    github,
+    github_events,
+    cityHash64(repo_name)
+);
 
 
-CREATE DATABASE IF NOT EXISTS ai_memory;
+
+CREATE DATABASE IF NOT EXISTS ai_memory ON CLUSTER default;
 
 
-CREATE TABLE IF NOT EXISTS ai_memory.ai_memory
+CREATE TABLE IF NOT EXISTS ai_memory.ai_memory ON CLUSTER default
 (
     event_id String,
     session_id String,
@@ -33,3 +42,76 @@ CREATE TABLE IF NOT EXISTS ai_memory.ai_memory
 )
 ENGINE = MergeTree()
 ORDER BY (session_id, timestamp);
+
+
+CREATE DATABASE IF NOT EXISTS ai_evaluation ON CLUSTER default;
+
+
+CREATE TABLE IF NOT EXISTS ai_evaluation.evaluation_runs ON CLUSTER default
+(
+    evaluation_id String,
+
+    dataset_id String,
+
+    query String,
+
+    passed UInt8,
+
+    score Float32,
+
+    alignment_score Float32,
+
+    coverage_score Float32,
+
+    ordering_score Float32,
+
+    penalty_score Float32,
+
+    latency_ms UInt32,
+
+    diff String,
+
+    replay String,
+
+    trace String,
+
+    created_at DateTime DEFAULT now()
+
+)
+ENGINE = MergeTree()
+ORDER BY (created_at, evaluation_id);
+
+
+CREATE TABLE IF NOT EXISTS ai_evaluation.evaluation_runs_all
+ON CLUSTER default
+AS ai_evaluation.evaluation_runs
+ENGINE = Distributed(
+    default,
+    ai_evaluation,
+    evaluation_runs,
+    cityHash64(evaluation_id)
+);
+
+
+CREATE TABLE IF NOT EXISTS ai_evaluation.execution_traces
+ON CLUSTER default
+(
+    trace_id String,
+    query String,
+    steps String,
+    latency_ms UInt32,
+    created_at DateTime DEFAULT now()
+)
+ENGINE = MergeTree()
+ORDER BY (created_at, trace_id);
+
+
+CREATE TABLE IF NOT EXISTS ai_evaluation.execution_traces_all
+ON CLUSTER default
+AS ai_evaluation.execution_traces
+ENGINE = Distributed(
+    default,
+    ai_evaluation,
+    execution_traces,
+    cityHash64(trace_id)
+);

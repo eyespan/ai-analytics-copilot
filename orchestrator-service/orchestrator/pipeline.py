@@ -1,4 +1,5 @@
 import json
+import uuid
 import time
 from typing import Any, Dict, Generator
 
@@ -18,6 +19,7 @@ from prompts.prompt_router import PromptType
 from rag_client import RagClient
 from router.model_router import BaseModel, ModelRouter
 from streaming.sse import StreamEmitter
+from evaluation.store import EvaluationStore
 
 
 class OrchestrationPipeline:
@@ -34,9 +36,17 @@ class OrchestrationPipeline:
         self.tool_registry.register("search_docs", search_docs_tool)
         self.plan_repair = PlanRepairEngine()
         self.guardrails = Guardrails()
+        self.evaluation_store = EvaluationStore()
 
     def run(self, query: str, session_id: str, stream: bool = False) -> Dict[str, Any]:
         start_time = time.time()
+        
+        retrieval_start = time.time()
+
+        retrieval_raw = self._retrieve(query)
+
+        retrieval_ms = int((time.time() - retrieval_start) * 1000)
+
         # -------------------------------------------------
         # PROMPT GUARDRAIL
         # -------------------------------------------------
@@ -60,8 +70,25 @@ class OrchestrationPipeline:
         context = result["prompt"]
         prompt_type = result["type"]
         print(f"[PIPELINE] Prompt type received: {prompt_type}")
-        # model = self.router.select_model(query=query, context=context)
-        model = self.router.select_model(query=query, context=context)
+
+        routing_start = time.time()
+
+        model = self.router.select_model(
+            query=query,
+            context=context,
+        )
+
+        routing_ms = int((time.time() - routing_start) * 1000)
+
+        decision = self.router.routing_decision
+
+        print(
+            f"[PIPELINE] "
+            f"provider={decision.provider.value} "
+            f"complexity={decision.complexity.value} "
+            f"reason={decision.reason}"
+        )
+                
 
         # =========================================================
         # 5. 🔥 NEW: AGENT BRANCHING (THIS IS THE ONLY ADDITION)
@@ -84,24 +111,63 @@ class OrchestrationPipeline:
                 session_id,
                 query,
                 answer,
-                metadata={"trace": trace, "model": model.name, "mode": "agent"},
-            )
+                metadata={
+                    "trace": trace,
+                    "mode": "agent",
+                    "routing": decision.to_dict(),
+                },
+            )     
 
             if stream:
-                return self._stream_response(model, query, context, session_id)
+                return self._stream_response(
+                    model=model,
+                    query=query,
+                    context=context,
+                    session_id=session_id,
+                    decision=decision,
+                    trace=trace,   # None for normal RAG
+                )
 
             return {
                 "answer": answer,
                 "trace": trace,
                 "session_id": session_id,
                 "model_used": model.name,
+                "routing": decision.to_dict(),
                 "mode": "agent",
                 "latency_ms": int((time.time() - start_time) * 1000),
             }
 
         if stream:
-            # return generator directly — StreamingResponse consumes it
-            return self._stream_response(model, query, context, session_id)
+
+            trace = {
+                "steps": [
+                    {
+                        "step": "Retrieval",
+                        "tool": "rag_search",
+                        "event_type": "retrieval",
+                        "success": True,
+                        "latency_ms": retrieval_ms,
+                    },
+                    {
+                        "step": "Model Routing",
+                        "tool": "model_router",
+                        "event_type": "routing",
+                        "success": True,
+                        "latency_ms": routing_ms,
+                    },
+                ]
+            }
+
+
+            return self._stream_response(
+                model=model,
+                query=query,
+                context=context,
+                session_id=session_id,
+                decision=decision,
+                trace=trace,
+            )
 
         answer = model.generate(prompt=context)
         if not answer or answer.strip() == "":
@@ -114,6 +180,7 @@ class OrchestrationPipeline:
                 "vector": len(retrieval["vector_results"]),
                 "hybrid": len(retrieval["hybrid_results"]),
             },
+            "routing": decision.to_dict(),
             "rerank_top": reranked[:3],
         }
 
@@ -121,12 +188,17 @@ class OrchestrationPipeline:
             session_id,
             query,
             answer,
-            metadata={"trace": trace, "model": model.name, "mode": "agent"},
+            metadata={
+                "trace": trace,
+                "routing": decision.to_dict(),
+                "mode": "rag",
+            },
         )
 
         return {
             "answer": answer,
             "trace": trace,
+            "routing": decision.to_dict(),
             "session_id": session_id,
             "model_used": model.name,
             "latency_ms": int((time.time() - start_time) * 1000),
@@ -167,22 +239,165 @@ class OrchestrationPipeline:
     #    return f"{SYSTEM_PROMPT}\n\n{prompt}"
 
     def _stream_response(
-        self, model: BaseModel, query: str, context: str, session_id: str
+        self,
+        model,
+        query,
+        context,
+        session_id,
+        decision,
+        trace=None,
     ) -> Generator[str, None, None]:
-        """
-        Yields SSE-formatted strings.
-        model.stream() is contractually guaranteed to yield plain strings (see BaseModel).
-        SSE formatting lives here and nowhere else.
-        """
+
+        start_time = time.time()
+
         full_response = ""
 
+        # -------------------------------------------------
+        # Create/preserve trace ID
+        # -------------------------------------------------
+        #
+        # Agent traces already have a trace_id generated by
+        # the agent execution layer. Preserve it.
+        #
+        # Normal RAG streaming traces do not currently have
+        # one, so generate a new ID.
+        #
+        trace_id = (
+            trace.get("trace_id")
+            if trace and trace.get("trace_id")
+            else str(uuid.uuid4())
+        )
+
+        trace_steps = []
+
+        # -------------------------------------------------
+        # Metadata
+        # -------------------------------------------------
+
+        yield self.sse.metadata({
+
+            "type": "metadata",
+
+            "provider": decision.provider.value,
+
+            "model": model.name,
+
+            "complexity": decision.complexity.value,
+
+            "reason": decision.reason,
+
+        })
+
+        # -------------------------------------------------
+        # Trace events
+        # -------------------------------------------------
+
+        if trace:
+
+            for step in trace.get("steps", []):
+
+                trace_step = {
+                    "step": step.get("step"),
+                    "tool": step.get("tool"),
+                    "event_type": step.get("event_type"),
+                    "success": step.get("success", True),
+                    "latency_ms": step.get("latency_ms", 0),
+                }
+
+                # Keep a copy for database persistence
+                trace_steps.append(trace_step)
+
+                # Continue sending the same SSE event
+                # that the frontend already expects
+                yield self.sse.trace({
+
+                    "type": "trace",
+
+                    "step": trace_step["step"],
+
+                    "tool": trace_step["tool"],
+
+                    "event_type": trace_step["event_type"],
+
+                    "success": trace_step["success"],
+
+                    "latency_ms": trace_step["latency_ms"],
+
+                })
+
+        # -------------------------------------------------
+        # Tokens
+        # -------------------------------------------------
+
         for token in model.stream(prompt=context):
+
             full_response += token
-            yield f"data: {json.dumps({'token': token})}\n\n"
 
-        yield f"data: {json.dumps({'token': '[DONE]'})}\n\n"
+            yield self.sse.token(token)
 
-        self.memory.append(session_id, query, full_response)
+        # -------------------------------------------------
+        # Final latency
+        # -------------------------------------------------
+
+        latency_ms = int(
+            (time.time() - start_time) * 1000
+        )
+
+        # -------------------------------------------------
+        # Persist execution trace
+        # -------------------------------------------------
+
+        execution_trace = {
+            "trace_id": trace_id,
+            "query": query,
+            "steps": trace_steps,
+            "latency_ms": latency_ms,
+        }
+
+        try:
+
+            self.evaluation_store.append_trace(
+                execution_trace
+            )
+
+            print(
+                f"[TRACE] Persisted execution trace "
+                f"{trace_id}"
+            )
+
+        except Exception as error:
+
+            # Do not break the user's streaming response
+            # if trace persistence fails.
+            print(
+                f"[TRACE] Failed to persist execution trace: "
+                f"{error}"
+            )
+
+        # -------------------------------------------------
+        # Done
+        # -------------------------------------------------
+
+        yield self.sse.done(
+            latency_ms
+        )
+
+        # -------------------------------------------------
+        # Conversation memory
+        # -------------------------------------------------
+
+        self.memory.append(
+            session_id,
+            query,
+            full_response,
+            metadata={
+                "stream": True,
+                "latency_ms": latency_ms,
+                "routing": decision.to_dict(),
+                "trace_id": trace_id,
+            },
+        )
+
 
     def _normalize_retrieval(self, retrieval: dict) -> dict:
 

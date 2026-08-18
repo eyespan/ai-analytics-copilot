@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: clickhouse-seed
+  namespace: data
+
+spec:
+
+  ttlSecondsAfterFinished: 300
+
+  backoffLimit: 3
+
+  template:
+
+    spec:
+
+      restartPolicy: Never
+
+      containers:
+
+        - name: clickhouse-seed
+
+          image: ${ECR_REGISTRY}/clickhouse-seed:${IMAGE_TAG}
+
+          command:
+            - python
+
+          args:
+            - /scripts/ingest_clickhouse.py
+
+
+          volumeMounts:
+
+            - name: seed-script
+              mountPath: /scripts
+
+
+      volumes:
+
+      - name: seed-script
+
+        configMap:
+          name: clickhouse-seed-script

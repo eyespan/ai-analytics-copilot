@@ -286,6 +286,15 @@ jobs:
 
               ;;
 
+            opensearch)
+  
+              kubectl rollout status \
+                statefulset/opensearch-master \
+                -n search \
+                --timeout=600s
+
+              ;; 
+
             *)
 
               kubectl rollout status \

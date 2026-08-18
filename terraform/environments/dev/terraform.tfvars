@@ -56,25 +56,27 @@ repositories = [
   "indexer-service",
   "rag-service",
   "orchestrator-service",
-  "frontend"
+  "frontend",
+  "clickhouse-seed",
+  "embedding-ingest"
 
 ]
 
 
 node_groups = {
 
-  general = {
+    general = {
 
-    desired_size = 4
+      desired_size = 7
 
-    min_size = 2
+      min_size = 2
 
-    max_size = 8
+      max_size = 8
 
 
-    instance_types = [
-      "t3.medium"
-    ]
+      instance_types = [
+        "t3.medium"
+      ]
 
 
     capacity_type = "ON_DEMAND"

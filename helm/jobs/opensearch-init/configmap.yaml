@@ -1,0 +1,198 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: opensearch-init-script
+  namespace: search
+
+data:
+
+  init_index.py: |
+
+    import time
+
+    from opensearchpy import OpenSearch
+
+
+    HOST = "opensearch-cluster-master"
+
+    PORT = 9200
+
+    USER = "admin"
+
+    PASSWORD = "Opensearch2026!Aa"
+
+
+    INDEX_NAME = "github-repos"
+
+
+
+    mapping = {
+
+        "settings": {
+
+            "index": {
+
+                "knn": True
+
+            }
+
+        },
+
+        "mappings": {
+
+            "properties": {
+
+
+                "repo_name": {
+
+                    "type": "text"
+
+                },
+
+
+                "description": {
+
+                    "type": "text"
+
+                },
+
+
+                "language": {
+
+                    "type": "text"
+
+                },
+
+
+                "stars": {
+
+                    "type": "long"
+
+                },
+
+
+                "forks": {
+
+                    "type": "long"
+
+                },
+
+
+                "embedding": {
+
+                    "type": "knn_vector",
+
+                    "dimension": 384
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+
+    def get_client():
+
+        return OpenSearch(
+
+            hosts=[
+
+                {
+
+                    "host": HOST,
+
+                    "port": PORT
+
+                }
+
+            ],
+
+            http_auth=(USER, PASSWORD),
+
+            use_ssl=True,
+
+            verify_certs=False,
+
+            ssl_show_warn=False
+
+        )
+
+
+
+
+    def wait_for_opensearch(client):
+
+        print("Waiting for OpenSearch...")
+
+
+        for i in range(60):
+
+            try:
+
+                if client.ping():
+
+                    print("OpenSearch ready")
+
+                    return
+
+
+            except Exception:
+
+                pass
+
+
+            time.sleep(5)
+
+
+        raise Exception(
+            "OpenSearch unavailable"
+        )
+
+
+    def create_index(client):
+
+        if client.indices.exists(index=INDEX_NAME):
+
+            print(
+                f"Index '{INDEX_NAME}' already exists. Skipping creation."
+            )
+
+            return
+
+
+        print(
+            f"Creating index '{INDEX_NAME}'..."
+        )
+
+
+        client.indices.create(
+
+            index=INDEX_NAME,
+
+            body=mapping
+
+        )
+
+
+        print(
+            "Index created successfully."
+        )
+
+
+
+
+    if __name__ == "__main__":
+
+        client = get_client()
+
+        wait_for_opensearch(client)
+
+        create_index(client)
+
+        print(
+            "OpenSearch index ready"
+        )

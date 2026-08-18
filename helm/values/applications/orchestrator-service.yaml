@@ -11,18 +11,25 @@ replicaCount: 2
 
 containerPort: 8000
 
+env:
+  RAG_SERVICE_URL: http://rag-service
+  DEFAULT_PROVIDER: "ollama"
+  BEDROCK_ENABLED: "true"
+  BEDROCK_MODEL_ID: "anthropic.claude-3-haiku-20240307-v1:0"
+  OLLAMA_MODEL: "qwen2.5:3b"
+
 service:
   port: 80
 
 resources:
 
   requests:
-    cpu: 500m
-    memory: 1Gi
+    cpu: 250m
+    memory: 512Mi
 
   limits:
-    cpu: 2
-    memory: 4Gi
+    cpu: 1
+    memory: 1Gi
 
 ingress:
 

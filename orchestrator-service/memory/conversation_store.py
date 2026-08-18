@@ -21,7 +21,7 @@ class ConversationStore:
     def __init__(self):
 
         self.client = Client(
-            host=os.getenv("CLICKHOUSE_HOST", "clickhouse"),
+            host=os.getenv("CLICKHOUSE_HOST", "clickhouse.data.svc.cluster.local"),
             port=int(os.getenv("CLICKHOUSE_PORT", "9000")),
             database="ai_memory",
             user="admin",

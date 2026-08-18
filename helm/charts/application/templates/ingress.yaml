@@ -5,14 +5,21 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-
   name: {{ .Values.name }}
 
-  {{- if .Values.ingress.rewrite }}
+{{- if .Values.ingress.rewrite }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/use-regex: "true"
-  {{- end }}
+
+    {{- if .Values.ingress.proxyReadTimeout }}
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "{{ .Values.ingress.proxyReadTimeout }}"
+    {{- end }}
+
+    {{- if .Values.ingress.proxySendTimeout }}
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "{{ .Values.ingress.proxySendTimeout }}"
+    {{- end }}
+{{- end }}
 
 spec:
 
@@ -20,22 +27,22 @@ spec:
 
   rules:
 
-  - http:
+    - http:
 
-      paths:
+        paths:
 
-      - path: {{ if .Values.ingress.rewrite }}{{ .Values.ingress.path }}(/|$)(.*){{ else }}{{ .Values.ingress.path }}{{ end }}
+          - path: {{ if .Values.ingress.rewrite }}{{ .Values.ingress.path }}(/|$)(.*){{ else }}{{ .Values.ingress.path }}{{ end }}
 
-        pathType: {{ if .Values.ingress.rewrite }}ImplementationSpecific{{ else }}Prefix{{ end }}
+            pathType: {{ if .Values.ingress.rewrite }}ImplementationSpecific{{ else }}Prefix{{ end }}
 
-        backend:
+            backend:
 
-          service:
+              service:
 
-            name: {{ .Values.name }}
+                name: {{ .Values.name }}
 
-            port:
+                port:
 
-              number: {{ .Values.service.port }}
+                  number: {{ .Values.service.port }}
 
 {{- end }}

@@ -5,7 +5,13 @@ from evaluation.types import EvalResult, StepScore
 
 class DiffEngine:
 
-    IGNORED_TOOLS = {"planner", "plan_repair", "final_answer"}
+    IGNORED_TOOLS = {
+        "planner",
+        "planner_agent",
+        "plan_repair",
+        "repair_agent",
+        "final_answer",
+    }
 
     # ------------------------------------------------------------
     # MAIN ENTRY (STABLE CONTRACT)
@@ -61,13 +67,31 @@ class DiffEngine:
         # 6. FINAL SCORE (SAFE VERSION)
         # --------------------------------------------------------
         if len(expected_steps) == 0:
+            coverage = 0.0
             final_score = 0.0
+
         else:
             avg_score = total_score / max(len(alignment_result["matches"]), 1)
-            coverage = len(alignment_result["matches"]) / len(expected_steps)
+
+            coverage = (
+                len(alignment_result["matches"])
+                /
+                len(expected_steps)
+            )
+
             penalty = 0.05 * len(extra)
 
-            final_score = max(0.0, min(1.0, 0.7 * avg_score + 0.3 * coverage - penalty))
+            final_score = max(
+                0.0,
+                min(
+                    1.0,
+                    0.7 * avg_score
+                    +
+                    0.3 * coverage
+                    -
+                    penalty
+                )
+            )
 
         passed = final_score >= 0.85 and len(missing) == 0
 
@@ -97,6 +121,11 @@ class DiffEngine:
         for s in steps:
             normalized.append({"tool": s.get("tool"), "args": s.get("args", {}) or {}})
 
+        print("NORMALIZED EXPECTED")
+
+        for step in normalized:
+            print(step)
+
         return normalized
 
     def _normalize_actual(self, trace):
@@ -112,6 +141,11 @@ class DiffEngine:
                 continue
 
             normalized.append({"tool": tool, "args": step.get("args", {}) or {}})
+
+            print("NORMALIZED ACTUAL")
+
+            for step in normalized:
+                print(step)
 
         return normalized
 
@@ -167,6 +201,11 @@ class DiffEngine:
                 missing.append(exp)
 
         extra = [actual[i] for i in range(len(actual)) if i not in used]
+
+        print("MATCHES:", matches)
+        print("MISSING:", missing)
+        print("EXTRA:", extra)
+        print("MISMATCHES:", mismatches)
 
         return {
             "matches": matches,

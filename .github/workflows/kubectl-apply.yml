@@ -20,13 +20,28 @@ on:
 
         type: string
 
+      image_tag:
 
+        required: false
+
+        default: v1.0.0
+
+        type: string
+      
 
 jobs:
 
   apply:
 
     runs-on: ubuntu-latest
+
+    env:
+
+      AWS_REGION: us-east-1
+
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+      IMAGE_TAG: ${{ inputs.image_tag }}
 
 
     steps:
@@ -63,22 +78,54 @@ jobs:
 
       - name: Apply manifests
 
+        shell: bash
+
         run: |
 
-          echo "${{ inputs.manifests }}" | while read manifest
+          while IFS= read -r manifest
           do
-             kubectl apply -f $manifest \
-             -n ${{ inputs.namespace }}
-          done
 
+            if [ -n "$manifest" ]; then
 
+              if grep -q "kind: Job" "$manifest"; then
 
-      - name: Wait for job
+                  JOB_NAME=$(kubectl apply \
+                    --dry-run=client \
+                    -f "$manifest" \
+                    -o jsonpath='{.metadata.name}')
 
-        run: |
+                  echo "Processing job: ${JOB_NAME}"
 
-          kubectl wait \
-          --for=condition=complete \
-          job/clickhouse-init \
-          -n ${{ inputs.namespace }} \
-          --timeout=300s
+                  kubectl delete job ${JOB_NAME} \
+                    -n ${{ inputs.namespace }} \
+                    --ignore-not-found=true
+
+                  echo "Applying ${manifest}"
+
+                  envsubst < "$manifest" | kubectl apply -f -
+
+                  echo "Waiting for job ${JOB_NAME} to complete"
+
+                  kubectl wait \
+                    --for=condition=complete \
+                    job/${JOB_NAME} \
+                    -n ${{ inputs.namespace }} \
+                    --timeout=1800s
+
+                  echo "Logs for ${JOB_NAME}"
+
+                  kubectl logs \
+                    job/${JOB_NAME} \
+                    -n ${{ inputs.namespace }}
+
+              else
+
+                  echo "Applying ${manifest}"
+
+                  envsubst < "$manifest" | kubectl apply -f -
+
+              fi
+
+            fi
+
+          done <<< "${{ inputs.manifests }}"

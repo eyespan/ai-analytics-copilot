@@ -15,7 +15,7 @@ TOP_K = 20
 # Embeddings
 # =====================
 
-EMBEDDING_SERVICE = os.getenv("EMBEDDING_SERVICE", "http://embedding-service:8002/embed")
+EMBEDDING_SERVICE = os.getenv("EMBEDDING_SERVICE", "http://embedding-service:80/embed")
 
 
 # =====================
@@ -24,7 +24,7 @@ EMBEDDING_SERVICE = os.getenv("EMBEDDING_SERVICE", "http://embedding-service:800
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434/api/generate")
 
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 
 
 # =====================

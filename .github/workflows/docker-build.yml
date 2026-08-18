@@ -46,7 +46,7 @@ jobs:
 
           if [ "${{ inputs.service }}" = "all" ]; then
 
-            echo 'services=["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service"]' >> $GITHUB_OUTPUT
+            echo 'services=["api-gateway","embedding-service","frontend","indexer-service","orchestrator-service","rag-service","clickhouse-seed","embedding-ingest"]' >> $GITHUB_OUTPUT
 
           else
 
@@ -116,11 +116,30 @@ jobs:
       - name: Build Docker image
         shell: bash
         run: |
-          if [ "${{ matrix.service }}" = "orchestrator-service" ]; then
-            CONTEXT="orchestrator-service"
-          else
-            CONTEXT="apps/${{ matrix.service }}"
-          fi
+          case "${{ matrix.service }}" in
+
+            orchestrator-service)
+
+                CONTEXT="orchestrator-service"
+                ;;
+
+            clickhouse-seed)
+
+                CONTEXT="helm/jobs/clickhouse-seed"
+                ;;
+
+            embedding-ingest)
+
+                CONTEXT="helm/jobs/embedding-ingest"
+                ;;
+
+
+            *)
+
+                CONTEXT="apps/${{ matrix.service }}"
+                ;;
+
+          esac
 
           IMAGE="${ECR_REGISTRY}/${{ matrix.service }}:${IMAGE_TAG}"
 
