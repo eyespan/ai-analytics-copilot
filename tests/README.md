@@ -47,7 +47,14 @@ These credentials are used by the initial AWS bootstrap workflow.
 ```
 ![Screenshot](images/repo_secretes.jpg)
 
-### Optional local AWS verification
+### Local AWS verification
+
+Make sure the required AWS profile exists in both:
+
+```text
+~/.aws/config
+~/.aws/credentials
+```
 
 Configure the AWS CLI profile that will be used for local access and validation.
 
@@ -75,9 +82,31 @@ Example output:
 
 ### Command-line output placeholder
 
+### AWS profile check
+
+Verify that the profile is available:
+
+```bash
+aws configure list --profile <profile-name>
+```
+
+Verify AWS identity:
+
+```bash
+aws sts get-caller-identity --profile <profile-name>
+```
+
+### Output placeholders
+
+```text
+[ CLI OUTPUT: aws configure list --profile <profile-name> ]
+```
+![Screenshot](images/aws-configure-list.jpg)
+
 ```text
 [ CLI OUTPUT: aws sts get-caller-identity --profile <profile-name> ]
 ```
+
 ![Screenshot](images/aws-get-caller-identity.jpg)
 
 > **Security:** Do not publish access keys, secret keys, session tokens, or other sensitive credentials in screenshots or command output.
@@ -256,7 +285,61 @@ aws ecr describe-repositories \
 
 
 
-# 2. Build the ML Base Image
+# 2. Update Your Kubeconfig
+
+After the EKS cluster has been created and the deployment is available, configure local `kubectl` access.
+
+```bash
+aws eks update-kubeconfig \
+  --name <cluster-name> \
+  --region us-east-1 \
+  --profile <profile-name>
+```
+
+The profile name used below must match the configured AWS CLI profile.
+
+Expected nodes should be:
+
+```text
+Added new context arn:aws:eks:us-east-1:<aws-account-id>:cluster/<cluster-name> to /Users/<user>/.kube/config
+```
+
+Verify the active context:
+
+```bash
+kubectl config current-context
+```
+
+Then verify cluster access:
+
+```bash
+kubectl get nodes
+```
+
+### Output placeholders
+
+
+```tex
+[ CLI OUTPUT: aws eks update-kubeconfig ... ]
+```
+[Screenshot](images/aws-eks-update-config.jpg)
+
+```tex
+[ CLI OUTPUT: kubectl config current-context ]
+```
+![Screenshot](images/kubectl-config-current-context.jpg)
+
+```text
+[ CLI OUTPUT: kubectl get nodes ]
+```
+![Screenshot](images/kube-nodes.jpg)
+
+
+> **Important:** If `kubectl` returns an authentication/authorization error, verify that the AWS profile is the expected identity and that the EKS access configuration allows that identity to access the cluster.
+
+---
+
+# 3. Build the ML Base Image
 
 After the Terraform Apply workflow has completed successfully and the required ECR infrastructure exists, run:
 
@@ -295,7 +378,7 @@ aws ecr describe-images \
 
 
 
-# 3. Build Docker Images and Upload to ECR
+# 4. Build Docker Images and Upload to ECR
 
 Run the GitHub Actions workflow:
 
@@ -361,7 +444,7 @@ Repeat for the application repositories as required.
 ![Screenshot](images/ecr-image-describe-frontend.jpg)
 
 
-# 4. Bootstrap the Kubernetes Platform
+# 5. Bootstrap the Kubernetes Platform
 
 After EKS exists and the required images are available, run:
 
@@ -398,17 +481,9 @@ The exact components should be validated against the workflow output for the spe
 
 ### Local verification
 
-After the workflow succeeds, configure your kubeconfig as described in Section 6, then run:
+After the workflow succeeds, configure your kubeconfig as described in Section 2, then run:
 
-```bash
-aws eks update-kubeconfig --name <cluser-name> --region us-east-1 --profile <profile-name>
-```
 
-Expected nodes should be:
-
-```text
-Added new context arn:aws:eks:us-east-1:<aws-account-id>:cluster/<cluster-name> to /Users/<user>/.kube/config
-```
 
 ```bash
 kubectl get nodes
@@ -435,16 +510,10 @@ kubectl get svc -A
 ### Output placeholders
 
 ```text
-[ CLI OUTPUT: update kube config ]
-```
-
-![Screenshot](images/aws-eks-update-config.jpg)
-
-```text
 [ CLI OUTPUT: kubectl get nodes ]
 ```
 
-![Screenshot](images/kube-get-pods.jpg)
+![Screenshot](images/kube-nodes.jpg)
 
 ```text
 [ CLI OUTPUT: kubectl get pods -A ]
@@ -459,8 +528,7 @@ kubectl get svc -A
 ![Screenshot](images/kube-get-svc-A.jpg)
 
 
-
-# 5. Deploy Dev
+# 6. Deploy Dev
 
 After the Kubernetes platform bootstrap has completed successfully, run:
 
@@ -538,82 +606,6 @@ frontend-...                          1/1     Running   0
 ```
 ![Screenshot](images/kubectl-get-ingress-n-ai-analytics.jpg)
 
-
----
-
-# 6. Update Your Kubeconfig
-
-After the EKS cluster has been created and the deployment is available, configure local `kubectl` access.
-
-Make sure the required AWS profile exists in both:
-
-```text
-~/.aws/config
-~/.aws/credentials
-```
-
-The profile name used below must match the configured AWS CLI profile.
-
-Run:
-
-```bash
-aws eks update-kubeconfig \
-  --name <cluster-name> \
-  --region us-east-1 \
-  --profile <profile-name>
-```
-
-Verify the active context:
-
-```bash
-kubectl config current-context
-```
-
-Then verify cluster access:
-
-```bash
-kubectl get nodes
-```
-
-### AWS profile check
-
-Verify that the profile is available:
-
-```bash
-aws configure list --profile <profile-name>
-```
-
-Verify AWS identity:
-
-```bash
-aws sts get-caller-identity --profile <profile-name>
-```
-
-### Output placeholders
-
-```text
-[ CLI OUTPUT: aws configure list --profile <profile-name> ]
-```
-![Screenshot](images/aws-configure-list.jpg)
-
-```tex
-[ CLI OUTPUT: aws sts get-caller-identity --profile <profile-name> ]
-```
-
-```tex
-[ CLI OUTPUT: aws eks update-kubeconfig ... ]
-```
-
-```tex
-[ CLI OUTPUT: kubectl config current-context ]
-```
-![Screenshot](images/kubectl-config-current-context.jpg)
-
-```tex
-[ CLI OUTPUT: kubectl get nodes ]
-```
-
-> **Important:** If `kubectl` returns an authentication/authorization error, verify that the AWS profile is the expected identity and that the EKS access configuration allows that identity to access the cluster.
 
 ---
 
