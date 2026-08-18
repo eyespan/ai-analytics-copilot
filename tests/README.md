@@ -240,9 +240,6 @@ The environment creates the IAM/IRSA roles required by the platform and workload
 ```
 ![Screenshot](images/ecr-repos.jpg)
 
-```text
-![ SCREENSHOT: AWS Console → IAM roles / relevant deployment roles ]
-```
 
 ### Command-line validation
 
@@ -322,7 +319,7 @@ kubectl get nodes
 ```tex
 [ CLI OUTPUT: aws eks update-kubeconfig ... ]
 ```
-[Screenshot](images/aws-eks-update-config.jpg)
+![Screenshot](images/aws-eks-update-config.jpg)
 
 ```tex
 [ CLI OUTPUT: kubectl config current-context ]
