@@ -227,6 +227,7 @@ The repository contains documentation at both the architectural and component le
 | Kubernetes / Helm | [`helm/`](helm/) |
 | Monitoring | See infrastructure and monitoring documentation |
 | EKS / EKS add-ons | See [`infra/README.md`](infra/README.md) |
+| End-to-End Environment Provisioning and Validation | See [`test/README.md`](test/README.md) |
 
 ---
 
@@ -493,6 +494,7 @@ For the full operational procedure, workflow dependencies, troubleshooting guida
 
 - [`infra/README.md`](infra/README.md)
 - [`.github/workflows/README.md`](.github/workflows/README.md)
+- [`test/README.md`](test/README.md) |
 
 ---
 
