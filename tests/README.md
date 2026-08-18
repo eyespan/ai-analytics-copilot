@@ -245,13 +245,16 @@ aws ecr describe-repositories \
 
 ```text
 [ CLI OUTPUT: aws eks describe-cluster ... ]
+```
 
 [Screenshot](images/eks-cluster-active.jpg)
 
+```text
 [ CLI OUTPUT: aws ecr describe-repositories ... ]
 ```
 [Screenshot](images/ecr-describe.jpg)
----
+
+
 
 # 2. Build the ML Base Image
 
@@ -266,6 +269,7 @@ This workflow builds the ML base image and uploads it to Amazon ECR.
 ```text
 [ SCREENSHOT: GitHub Actions → Build ML Base Image → successful workflow ]
 ```
+
 [Screenshot](images/build-ml-base.jpg)
 
 ### ECR validation
@@ -286,9 +290,10 @@ aws ecr describe-images \
 ```text
 [ CLI OUTPUT: AWS ECR ML base image ]
 ```
+
 [Screenshot](images/base-ml-image.jpg)
 
----
+
 
 # 3. Build Docker Images and Upload to ECR
 
@@ -314,6 +319,7 @@ embedding-ingest
 ```text
 [ SCREENSHOT: GitHub Actions → Docker Image Builder → successful workflow ]
 ```
+
 [Screenshot](images/docker-images-build-run.jpg)
 [Screenshot](images/docker-images-build.jpg)
 [Screenshot](images/docker-images-build-completed.jpg)
@@ -345,6 +351,7 @@ Repeat for the application repositories as required.
 ```text
 [ CLI OUTPUT: ECR repository list ]
 ```
+
 [Screenshot](images/ecr-repo-verification.jpg)
 
 ```text
@@ -352,7 +359,7 @@ Repeat for the application repositories as required.
 ```
 
 [Screenshot](images/ecr-image-describe-frontend.jpg)
----
+
 
 # 4. Bootstrap the Kubernetes Platform
 
@@ -430,16 +437,19 @@ kubectl get svc -A
 ```text
 [ CLI OUTPUT: update kube config ]
 ```
+
 [Screenshot](images/aws-eks-update-config.jpg)
 
-``text
+```text
 [ CLI OUTPUT: kubectl get nodes ]
 ```
+
 [Screenshot](images/kube-get-pods.jpg)
 
 ```text
 [ CLI OUTPUT: kubectl get pods -A ]
 ```
+
 [Screenshot](images/kube-get-pods-A.jpg)
 
 ```text
@@ -449,7 +459,6 @@ kubectl get svc -A
 [Screenshot](images/kube-get-svc-A.jpg)
 
 
----
 
 # 5. Deploy Dev
 
