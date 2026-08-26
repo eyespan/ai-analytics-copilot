@@ -8,6 +8,18 @@
 
 **Repository:** https://github.com/eyespan/ai-analytics-copilot
 
+## 🎥 Watch the Project in Action
+
+### I Built a Production AI Copilot on AWS — Full EKS Deployment & Live Demo
+
+[![Watch the video](https://img.youtube.com/vi/aUqO0LoBPUo/maxresdefault.jpg)](https://youtu.be/aUqO0LoBPUo)
+
+A live end-to-end demonstration of the AI Analytics Copilot running on AWS EKS - from infrastructure provisioning and container deployment through the AI Copilot, evaluation, execution tracing and Grafana observability.
+
+▶ **[Watch the full demo on YouTube](https://youtu.be/aUqO0LoBPUo)**
+
+This video is the first in a series exploring how the platform was progressively built from Level 1 through Level 7.
+
 ---
 
 ## Project Objective
